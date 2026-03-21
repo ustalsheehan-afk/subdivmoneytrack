@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.guest')
 
 @section('content')
 
@@ -6,10 +6,8 @@
 /* SaaS Design System */
 :root {
     --brand-primary: #1F3B5C;
-    --brand-accent: #2E5B8A;
-    --brand-bg-overlay: rgba(15, 42, 68, 0.75);
-    --input-border: #e5e7eb;
-    --input-focus: rgba(31, 59, 92, 0.15);
+    --brand-accent: #3B82F6;
+    --brand-bg-overlay: rgba(15, 42, 68, 0.85);
 }
 
 body {
@@ -21,199 +19,173 @@ body {
     background: linear-gradient(var(--brand-bg-overlay), var(--brand-bg-overlay)),
                 url('{{ asset('bg.png') }}') no-repeat center center fixed;
     background-size: cover;
-    font-family: 'Poppins', 'Inter', sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
-/* Navigation Bar */
-.navbar-brand-custom {
-    padding: 1.5rem 2rem;
-    width: 100%;
+.back-to-landing {
     position: absolute;
-    top: 0;
-    left: 0;
-}
-
-.navbar-logo-text {
-    color: #ffffff;
-    font-weight: 700;
-    font-size: 1.25rem;
-    letter-spacing: -0.02em;
-    text-decoration: none;
+    top: 2rem;
+    left: 2rem;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.625rem 1.25rem;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    z-index: 100;
 }
 
-/* Centered Container */
+.back-to-landing:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateX(-5px);
+    color: white;
+}
+
 .login-container {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 2rem;
+    position: relative;
 }
 
-/* Glassmorphism Card */
 .glass-card {
-    width: 440px;
-    background: rgba(255, 255, 255, 0.96);
+    width: 100%;
+    max-width: 440px;
+    background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 20px;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.35);
-    padding: 3rem 2.5rem;
-    animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 28px;
+    box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.4);
+    padding: 3.5rem 2.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-/* Branding */
 .card-logo {
-    width: 72px;
-    height: 72px;
-    border-radius: 16px;
-    object-fit: cover;
-    margin-bottom: 1.5rem;
+    width: 90px;
+    height: 90px;
+    border-radius: 24px;
+    margin-bottom: 2rem;
+    box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1);
 }
 
 .page-title {
     color: var(--brand-primary);
     font-weight: 800;
-    font-size: 1.75rem;
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.025em;
+    font-size: 1.85rem;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.02em;
 }
 
 .page-subtitle {
     color: #64748b;
     font-size: 0.95rem;
-    margin-bottom: 2.5rem;
+    margin-bottom: 3rem;
 }
 
-/* Form Styling */
 .form-group-custom {
     position: relative;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
+    text-align: left;
 }
 
-.form-group-custom i.input-icon {
+.input-icon {
     position: absolute;
     left: 1.25rem;
     top: 50%;
     transform: translateY(-50%);
     color: #94a3b8;
     font-size: 1.1rem;
-    z-index: 10;
 }
 
 .form-control-custom {
     width: 100%;
-    height: 48px;
-    background: #ffffff;
-    border: 1px solid var(--input-border);
-    border-radius: 12px;
-    padding: 0 1.25rem 0 3.25rem;
-    font-size: 0.95rem;
+    height: 56px;
+    background: #f1f5f9;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    padding: 0 1.25rem 0 3.5rem;
+    font-size: 1rem;
     color: #1e293b;
-    transition: all 0.25s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .form-control-custom:focus {
     outline: none;
     border-color: var(--brand-primary);
-    box-shadow: 0 0 0 3px var(--input-focus);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(31, 59, 92, 0.1);
 }
 
-/* Password Toggle */
-.password-toggle-icon {
-    position: absolute;
-    right: 1.25rem;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    color: #94a3b8;
-    font-size: 1.1rem;
-    z-index: 10;
-    transition: color 0.2s ease;
-}
-
-.password-toggle-icon:hover {
-    color: var(--brand-primary);
-}
-
-/* Button */
 .btn-brand {
     width: 100%;
-    height: 48px;
+    height: 56px;
     background: var(--brand-primary);
-    color: #ffffff;
+    color: white;
     border: none;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 1rem;
-    transition: all 0.25s ease;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     margin-top: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+    cursor: pointer;
+    box-shadow: 0 10px 20px -5px rgba(31, 59, 92, 0.3);
 }
 
 .btn-brand:hover {
     background: #162b44;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(31, 59, 92, 0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 15px 25px -5px rgba(31, 59, 92, 0.4);
 }
 
 .btn-brand:active {
-    transform: translateY(0);
+    transform: translateY(-1px);
 }
 
-/* Utility */
-.form-check-input:checked {
-    background-color: var(--brand-primary);
-    border-color: var(--brand-primary);
+.auth-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 0 0.5rem;
 }
 
-/* Animations */
-@keyframes fadeUp {
-    from {
-        opacity: 0;
-        transform: translateY(40px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.remember-me {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #64748b;
+    font-size: 0.9rem;
+    cursor: pointer;
 }
 
-/* Responsive */
-@media (max-width: 480px) {
-    .glass-card {
-        width: 92%;
-        padding: 2.5rem 1.75rem;
-    }
-    .navbar-brand-custom {
-        padding: 1.25rem 1.5rem;
-    }
-    .page-title {
-        font-size: 1.5rem;
-    }
+.remember-me input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
 }
 </style>
 
-
-
 <div class="login-container">
+    <a href="{{ url('/') }}" class="back-to-landing">
+        <i class="bi bi-arrow-left"></i>
+        <span>Back to Home</span>
+    </a>
+
     <div class="glass-card text-center">
+        <img src="{{ asset('Cdlogo.jpg') }}" alt="Logo" class="card-logo">
+        <h1 class="page-title">Admin Portal</h1>
+        <p class="page-subtitle">Authorized access for subdivision oversight and management.</p>
 
-        <!-- Branding -->
-        <img src="{{ asset('Cdlogo.jpg') }}" alt="Logo" class="card-logo shadow-sm">
-        <h1 class="page-title">Admin Login</h1>
-        <p class="page-subtitle">Authorized access only. Please sign in.</p>
-
-        <!-- Error Handling -->
         @if ($errors->any())
-            <div class="alert alert-danger border-0 small text-center rounded-3 mb-4 py-2 bg-red-50 text-red-600">
+            <div class="alert alert-danger border-0 small rounded-3 mb-4 py-3 bg-red-50 text-red-600 text-start">
                 <i class="bi bi-exclamation-circle-fill me-2"></i>
                 {{ $errors->first() }}
             </div>
@@ -221,54 +193,25 @@ body {
 
         <form method="POST" action="{{ route('admin.login.submit') }}">
             @csrf
-
-            <!-- Email -->
             <div class="form-group-custom">
-                <i class="bi bi-person-badge-fill input-icon"></i>
-                <input type="email" name="email" id="admin-email"
-                       class="form-control-custom @error('email') is-invalid @enderror"
-                       placeholder="Admin email"
-                       value="{{ old('email') }}"
-                       required autofocus>
+                <i class="bi bi-person-badge input-icon"></i>
+                <input type="email" name="email" class="form-control-custom" placeholder="Admin email" value="{{ old('email') }}" required autofocus>
             </div>
 
-            <!-- Password -->
             <div class="form-group-custom">
                 <i class="bi bi-shield-lock input-icon"></i>
-                <input type="password" name="password" id="admin-password"
-                       class="form-control-custom @error('password') is-invalid @enderror"
-                       placeholder="Admin password"
-                       required>
-                <i class="bi bi-eye password-toggle-icon" id="togglePasswordAdmin"></i>
+                <input type="password" name="password" class="form-control-custom" placeholder="Password" required>
             </div>
 
-            <!-- Remember Me -->
-            <div class="d-flex justify-content-start align-items-center mb-4">
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" name="remember" id="admin-remember">
-                    <label class="form-check-label small text-muted" for="admin-remember">Remember me</label>
-                </div>
+            <div class="auth-footer">
+                <label class="remember-me">
+                    <input type="checkbox" name="remember" id="remember">
+                    <span>Remember me</span>
+                </label>
             </div>
 
-            <!-- Submit Button -->
-            <button type="submit" class="btn-brand">
-                <span>Secure Login</span>
-              
-            </button>
+            <button type="submit" class="btn-brand">Secure Login</button>
         </form>
-
     </div>
 </div>
-
-<script>
-document.getElementById('togglePasswordAdmin').addEventListener('click', function() {
-    const passwordInput = document.getElementById('admin-password');
-    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-    passwordInput.setAttribute('type', type);
-    
-    this.classList.toggle('bi-eye');
-    this.classList.toggle('bi-eye-slash');
-});
-</script>
-
 @endsection

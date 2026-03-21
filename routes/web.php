@@ -64,7 +64,9 @@ use App\Http\Controllers\Admin\InvitationController;
 | PUBLIC ROUTES
 |--------------------------------------------------------------------------
 */
-Route::redirect('/', '/resident/login'); // Redirect root to resident login
+Route::get('/', function () {
+    return view('welcome');
+});
 
 // ✅ FIXED: Invitation Registration (TOKEN REQUIRED)
 Route::get('/register/{token}', [InvitationRegistrationController::class, 'show'])->name('register.invitation');
