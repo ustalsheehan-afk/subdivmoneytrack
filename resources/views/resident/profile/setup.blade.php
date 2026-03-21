@@ -33,8 +33,8 @@
 
         <div class="mb-3">
             <label for="contact" class="form-label">Contact Number</label>
-            <input id="contact" name="contact" class="form-control"
-                   value="{{ old('contact', $user->contact ?? '') }}" required>
+            <input id="contact" name="contact_number" class="form-control"
+                   value="{{ old('contact_number', $user->resident->contact_number ?? '') }}" required>
         </div>
 
         <div class="mb-3">

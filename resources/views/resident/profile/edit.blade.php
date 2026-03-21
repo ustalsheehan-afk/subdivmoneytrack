@@ -69,10 +69,10 @@
                 {{-- Contact Number --}}
                 <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2">Contact Number</label>
-                    <input type="text" name="contact" value="{{ old('contact', $resident->contact ?? '') }}"
+                    <input type="text" name="contact_number" value="{{ old('contact_number', $resident->contact_number ?? '') }}"
                            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition outline-none"
                            required>
-                    @error('contact') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    @error('contact_number') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 {{-- Email --}}

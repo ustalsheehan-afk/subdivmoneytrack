@@ -42,7 +42,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     @php
                         $infoCards = [
-                            ['icon'=>'bi-telephone-fill', 'label'=>'Contact Number', 'value'=>$resident->contact, 'color'=>'blue'],
+                            ['icon'=>'bi-telephone-fill', 'label'=>'Contact Number', 'value'=>$resident->contact_number, 'color'=>'blue'],
                             ['icon'=>'bi-envelope-fill', 'label'=>'Email Address', 'value'=>$resident->email, 'color'=>'purple'],
                             ['icon'=>'bi-geo-alt-fill', 'label'=>'Block / Lot', 'value'=>'Block ' . ($resident->block ?? '-') . ' / Lot ' . ($resident->lot ?? '-'), 'color'=>'orange'],
                             ['icon'=>'bi-calendar-check-fill', 'label'=>'Move-in Date', 'value'=>$resident->move_in_date ? $resident->move_in_date->format('M d, Y') : '-', 'color'=>'emerald'],

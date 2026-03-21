@@ -62,10 +62,10 @@
 
         <div>
             <label class="admin-form-label">Contact Number *</label>
-            <input type="text" name="contact" value="{{ old('contact', $resident->contact) }}"
+            <input type="text" name="contact_number" value="{{ old('contact_number', $resident->resident->contact_number) }}"
                    class="admin-form-input"
                    required>
-            @error('contact') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+            @error('contact_number') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
         </div>
 
         <div>

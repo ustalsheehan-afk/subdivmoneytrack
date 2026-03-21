@@ -25,7 +25,7 @@
         'resident_initials' => substr($req->resident->first_name ?? '?', 0, 1) . substr($req->resident->last_name ?? '?', 0, 1),
         'resident_name' => $req->resident->full_name ?? 'Unknown Resident',
         'resident_property' => 'Block ' . ($req->resident->block ?? '-') . ' Lot ' . ($req->resident->lot ?? '-'),
-        'resident_contact' => $req->resident->contact ?? 'No contact info',
+        'resident_contact' => $req->resident->contact_number ?? 'No contact info',
         'status' => $req->status,
         'status_text' => ucfirst($req->status),
         'priority_text' => ucfirst($req->priority),

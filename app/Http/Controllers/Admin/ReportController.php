@@ -273,7 +273,7 @@ class ReportController extends Controller
                     $rows[] = [
                         $item->full_name,
                         ($item->block ?? '') . '-' . ($item->lot ?? ''),
-                        $item->contact,
+                        $item->contact_number,
                         ucfirst($item->status),
                         $item->move_in_date ? $item->move_in_date->format('Y-m-d') : 'N/A'
                     ];

@@ -40,8 +40,9 @@
                 <p class="text-sm text-gray-500">Block {{ $resident->block }}</p>
 
                 <div class="flex gap-3 mt-4">
-                    <a href="tel:{{ $resident->contact }}"
-                       class="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
+                    <a href="tel:{{ $resident->contact_number }}"
+                       class="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
+                       title="{{ $resident->contact_number }}">
                         <i class="bi bi-telephone-fill"></i>
                     </a>
                     <a href="mailto:{{ $resident->email }}"

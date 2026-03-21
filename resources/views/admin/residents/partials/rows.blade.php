@@ -29,7 +29,7 @@
     <td class="p-4 text-gray-600 text-sm whitespace-nowrap">{{ $resident->email }}</td>
 
     {{-- CONTACT --}}
-    <td class="p-4 text-gray-600 text-sm font-mono whitespace-nowrap">{{ $resident->contact }}</td>
+    <td class="p-4 text-gray-600 text-sm font-mono whitespace-nowrap">{{ $resident->contact_number }}</td>
 
     {{-- BLOCK --}}
     <td class="p-4 text-gray-600 text-sm text-center font-mono whitespace-nowrap">

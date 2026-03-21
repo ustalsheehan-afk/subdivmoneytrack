@@ -196,7 +196,7 @@
                                     </label>
                                 @endforeach
                             @elseif($type == 'custom_resident')
-                                @foreach(['full_name' => 'Name', 'unit' => 'Unit (Block/Lot)', 'contact' => 'Contact', 'email' => 'Email', 'status' => 'Status', 'move_in_date' => 'Move In Date'] as $col => $label)
+                                @foreach(['full_name' => 'Name', 'unit' => 'Unit (Block/Lot)', 'contact_number' => 'Contact', 'email' => 'Email', 'status' => 'Status', 'move_in_date' => 'Move In Date'] as $col => $label)
                                     <label class="flex items-center space-x-2">
                                         <input type="checkbox" name="columns[]" value="{{ $col }}" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
                                         <span class="text-sm text-gray-700">{{ $label }}</span>

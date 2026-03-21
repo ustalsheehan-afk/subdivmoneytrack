@@ -45,8 +45,8 @@
                             <td class="px-6 py-3 text-gray-600 truncate">{{ $user->email }}</td>
 
                             <td class="px-6 py-3 text-gray-600">
-                                @if($user->resident && $user->resident->contact)
-                                    {{ $user->resident->contact }}
+                                @if($user->resident && $user->resident->contact_number)
+                                    {{ $user->resident->contact_number }}
                                 @else
                                     <span class="text-gray-400 italic">—</span>
                                 @endif

@@ -18,7 +18,7 @@
             <div>
                 <h3 class="font-bold text-gray-900 text-lg">{{ $request->resident->full_name ?? 'Unknown' }}</h3>
                 <p class="text-sm text-gray-500">Block {{ $request->resident->block ?? '-' }} Lot {{ $request->resident->lot ?? '-' }}</p>
-                <p class="text-sm text-gray-500">{{ $request->resident->contact ?? '' }}</p>
+                <p class="text-sm text-gray-500">{{ $request->resident->contact_number ?? '' }}</p>
             </div>
         </div>
 

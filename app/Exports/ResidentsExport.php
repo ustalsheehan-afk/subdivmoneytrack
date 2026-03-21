@@ -68,7 +68,7 @@ class ResidentsExport implements FromCollection, WithHeadings
             'first_name',
             'last_name',
             'email',
-            'contact',
+            'contact_number',
             'block',
             'lot',
             'move_in_date',

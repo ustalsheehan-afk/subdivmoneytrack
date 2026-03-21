@@ -17,7 +17,7 @@ class ResidentFactory extends Factory
             'first_name' => $this->faker->firstName(),
             'last_name' => $this->faker->lastName(),
             'email' => $this->faker->unique()->safeEmail(),
-            'contact' => $this->faker->phoneNumber(),
+            'contact_number' => $this->faker->phoneNumber(),
             'block' => $this->faker->numberBetween(1, 10),
             'lot' => $this->faker->numberBetween(1, 50),
             'move_in_date' => $this->faker->date(),

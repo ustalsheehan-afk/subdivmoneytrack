@@ -146,7 +146,7 @@ class ResidentController extends Controller
                     'first_name'     => $validated['first_name'],
                     'last_name'      => $validated['last_name'],
                     'email'          => $validated['email'],
-                    'contact_number' => $validated['contact'],
+                    'contact_number' => $validated['contact_number'],
                     'block'          => $validated['block'],
                     'lot'            => $validated['lot'],
                     'move_in_date'   => $validated['move_in_date'],
@@ -221,12 +221,6 @@ class ResidentController extends Controller
     {
         $data = $this->validateResident($request, $resident->id);
 
-        // Map 'contact' from validation to 'contact_number' for the model
-        if (isset($data['contact'])) {
-            $data['contact_number'] = $data['contact'];
-            unset($data['contact']);
-        }
-
         // Remove password from update as per requirement
         unset($data['password']);
 
@@ -288,11 +282,11 @@ class ResidentController extends Controller
     private function validateResident(Request $request, ?int $residentId = null): array
     {
         return $request->validate([
-            'first_name'   => 'required|string|max:255',
-            'last_name'    => 'required|string|max:255',
-            'contact'      => 'required|string|max:255',
-            'block'        => 'required|integer|min:1',
-            'lot'          => 'required|integer|min:1',
+            'first_name'     => 'required|string|max:255',
+            'last_name'      => 'required|string|max:255',
+            'contact_number' => 'required|string|max:255',
+            'block'          => 'required|integer|min:1',
+            'lot'            => 'required|integer|min:1',
             'email'        => $residentId
                 ? 'required|email|max:255|unique:residents,email,' . $residentId
                 : 'required|email|max:255|unique:residents,email|unique:users,email',
