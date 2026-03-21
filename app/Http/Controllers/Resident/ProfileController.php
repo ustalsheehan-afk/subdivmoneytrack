@@ -79,7 +79,7 @@ class ProfileController extends Controller
         $data = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name'  => 'required|string|max:255',
-            'contact' => 'required|string|max:255',
+            'contact_number' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $user->id, // Validate against users table
             'block' => 'required|integer|min:1',
             'lot' => 'required|integer|min:1',
@@ -112,7 +112,7 @@ class ProfileController extends Controller
                     'first_name' => $data['first_name'],
                     'last_name' => $data['last_name'],
                     'email' => $data['email'], // Keep synced
-                    'contact' => $data['contact'],
+                    'contact_number' => $data['contact_number'],
                     'block' => $data['block'],
                     'lot' => $data['lot'],
                     'move_in_date' => $data['move_in_date'],

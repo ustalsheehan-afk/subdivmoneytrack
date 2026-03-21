@@ -533,7 +533,7 @@ class ReportController extends Controller
                 $availableColumns = [
                     'full_name' => 'Name', 
                     'unit' => 'Unit', 
-                    'contact' => 'Contact', 
+                    'contact_number' => 'Contact', 
                     'email' => 'Email', 
                     'status' => 'Status', 
                     'move_in_date' => 'Move In Date'

@@ -33,9 +33,7 @@ class ResidentController extends Controller
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhereHas('resident', function ($sub) use ($search) {
-                      $sub->where('block_lot', 'like', "%{$search}%")
-                          ->orWhere('contact', 'like', "%{$search}%")
-                          ->orWhere('contact_number', 'like', "%{$search}%")
+                      $sub->where('contact_number', 'like', "%{$search}%")
                           ->orWhere('address', 'like', "%{$search}%");
                   });
             });
@@ -79,10 +77,8 @@ class ResidentController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'contact' => 'nullable|string|max:255',
             'contact_number' => 'nullable|string|max:255',
             'address' => 'nullable|string|max:255',
-            'block_lot' => 'nullable|string|max:255',
             'move_in_date' => 'nullable|date',
             'password' => 'required|string|min:6|confirmed',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
@@ -104,10 +100,8 @@ class ResidentController extends Controller
             'user_id' => $user->id,
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'contact' => $validated['contact'] ?? $validated['contact_number'] ?? null,
             'contact_number' => $validated['contact_number'] ?? null,
             'address' => $validated['address'] ?? null,
-            'block_lot' => $validated['block_lot'] ?? null,
             'move_in_date' => $validated['move_in_date'] ?? null,
             'photo' => $validated['photo'] ?? null,
         ]);
@@ -136,10 +130,8 @@ class ResidentController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => "required|email|unique:users,email,{$user->id}",
-            'contact' => 'nullable|string|max:255',
             'contact_number' => 'nullable|string|max:255',
             'address' => 'nullable|string|max:255',
-            'block_lot' => 'nullable|string|max:255',
             'move_in_date' => 'nullable|date',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
@@ -163,10 +155,8 @@ class ResidentController extends Controller
             $resident->update([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
-                'contact' => $validated['contact'] ?? $validated['contact_number'] ?? $resident->contact,
                 'contact_number' => $validated['contact_number'] ?? $resident->contact_number,
                 'address' => $validated['address'],
-                'block_lot' => $validated['block_lot'],
                 'move_in_date' => $validated['move_in_date'],
                 'photo' => $validated['photo'] ?? $resident->photo,
             ]);
@@ -175,10 +165,8 @@ class ResidentController extends Controller
                 'user_id' => $user->id,
                 'name' => $validated['name'],
                 'email' => $validated['email'],
-                'contact' => $validated['contact'] ?? $validated['contact_number'] ?? null,
                 'contact_number' => $validated['contact_number'] ?? null,
                 'address' => $validated['address'],
-                'block_lot' => $validated['block_lot'],
                 'move_in_date' => $validated['move_in_date'],
                 'photo' => $validated['photo'] ?? null,
             ]);

@@ -61,11 +61,10 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => $request->password,
             'status' => 'active',
-            'contact' => null,
+            'contact_number' => null,
             'block' => null,
             'lot' => null,
             'move_in_date' => null,
-            'move_history' => null,
             'photo' => null,
         ]);
 

@@ -121,20 +121,14 @@ class ResidentSeeder extends Seeder
 
             Resident::create([
                 'user_id' => $user->id,
-                'name' => $fullName,
                 'first_name' => $firstName,
                 'last_name' => $lastName,
                 'email' => $email,
-                'password' => Hash::make('password123'),
+                'contact_number' => $contact,
                 'photo' => $photo,
-                'contact' => $contact,
-                'address' => 'Sample Address',
                 'block' => $block,
                 'lot' => $lot,
-                'block_lot' => $block . '-' . $lot,
                 'move_in_date' => $moveInDate,
-                'move_out_date' => null,
-                'move_history' => null,
                 'status' => $status,
             ]);
         }
