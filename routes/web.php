@@ -145,10 +145,6 @@ Route::middleware(['auth:admin', 'admin'])->prefix('admin')->name('admin.')->gro
     Route::patch('announcements/{announcement}/toggle-pin', [AnnouncementController::class, 'togglePin'])->name('announcements.togglePin');
     Route::resource('announcements', AnnouncementController::class);
 
-    // Custom Resident Creation (Minimal)
-    Route::get('residents/create', [ResidentController::class, 'create'])->name('residents.create');
-    Route::post('residents', [ResidentController::class, 'store'])->name('residents.store');
-
     // Dues actions (New Batched System)
     Route::get('dues/dashboard', [DuesBatchController::class, 'dashboard'])->name('dues.dashboard');
     Route::post('dues/{due}/pay', [DuesBatchController::class, 'markAsPaid'])->name('dues.markAsPaid');
@@ -265,16 +261,13 @@ Route::middleware(['auth:resident', 'resident'])->prefix('resident')->name('resi
     // Amenities & Reservations
     Route::get('amenities', [ResidentAmenityController::class, 'index'])->name('amenities.index');
     Route::get('amenities/{amenity}', [ResidentAmenityController::class, 'show'])->name('amenities.show');
-    Route::get('amenities/{amenity}/reserve', [ResidentAmenityReservationController::class, 'store'])->name('amenities.reserve');
+    Route::get('amenities/{amenity}/reserve', [ResidentAmenityReservationController::class, 'store']);
     Route::post('amenities/{amenity}/reserve', [ResidentAmenityReservationController::class, 'store'])->name('amenities.reserve'); // Allow POST for form
     Route::get('amenities/{amenity}/unavailable-slots', [ResidentAmenityReservationController::class, 'getUnavailableSlots'])->name('amenities.unavailable-slots');
     Route::get('amenities/reservation/{reservation}/confirmation', [ResidentAmenityReservationController::class, 'confirmation'])->name('amenities.confirmation');
     Route::get('amenities/reservation/{reservation}', [ResidentAmenityReservationController::class, 'show'])->name('amenities.reservation.show');
     Route::post('amenities/reservation/{reservation}/payment', [ResidentAmenityReservationController::class, 'uploadPayment'])->name('amenities.reservation.payment');
     Route::get('my-reservations', [ResidentAmenityReservationController::class, 'index'])->name('my-reservations.index');
-
-    // Notifications
-    Route::post('notifications/mark-all-read', [App\Http\Controllers\Admin\NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
 
     // Profile
     Route::get('profile', [ResidentProfileController::class, 'index'])->name('profile.index');
