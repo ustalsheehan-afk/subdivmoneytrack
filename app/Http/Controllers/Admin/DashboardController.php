@@ -10,10 +10,23 @@ use App\Models\Payment;
 use App\Models\Penalty;
 use App\Models\Announcement;
 use App\Models\ServiceRequest;
+use App\Models\Notification;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
+    /**
+     * Mark all notifications as read for the authenticated admin.
+     */
+    public function markAllNotificationsAsRead()
+    {
+        Notification::where('admin_id', auth()->id())
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+
+        return back()->with('success', 'All notifications marked as read.');
+    }
+
     // =====================
     // MAIN DASHBOARD PAGE
     // =====================
@@ -33,9 +46,11 @@ class DashboardController extends Controller
             'monthlyCollectionData' => $monthlyCollectionData,
             'batchStatusDistribution' => $batchStatusDistribution,
             'recentAnnouncements' => Announcement::latest()->take(6)->get(),
+            'pendingRequestsCount' => ServiceRequest::where('status', 'pending')->count(),
             'recentRequests' => ServiceRequest::with(['resident.user'])->latest()->take(5)->get(),
             'latestPayments' => Payment::with(['resident.user'])->where('status', 'approved')->latest()->take(5)->get(),
-            'upcomingDues' => Due::selectRaw('title, MIN(due_date) as due_date, MAX(amount) as amount, COUNT(*) as count')
+            'upcomingDues' => Due::with(['resident.user'])
+                ->selectRaw('title, MIN(due_date) as due_date, MAX(amount) as amount, COUNT(*) as count')
                 ->where('status', 'unpaid')
                 ->where('due_date', '>=', now())
                 ->groupBy('title')

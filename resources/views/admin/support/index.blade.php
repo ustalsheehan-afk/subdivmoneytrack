@@ -4,153 +4,224 @@
 @section('page-title', 'Support')
 
 @section('content')
-<div class="space-y-8 pb-20">
-    {{-- SUMMARY CARDS --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center">
-                <i class="bi bi-clock-history text-2xl"></i>
-            </div>
+<div class="space-y-8 animate-fade-in">
+
+    {{-- ===================== --}}
+    {{-- HEADER SECTION --}}
+    {{-- ===================== --}}
+    <div class="glass-card p-8 relative overflow-hidden group">
+        {{-- Subtle gradient glow in background --}}
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-brand-accent/5 rounded-full blur-3xl group-hover:bg-brand-accent/10 transition-all duration-700"></div>
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
             <div>
-                <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Pending</p>
-                <h4 class="text-2xl font-black text-gray-900">{{ $summary['pending'] }}</h4>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
+                    Support Messages
+                </h1>
+                <p class="mt-2 text-gray-600 text-lg max-w-xl">
+                    Manage resident inquiries, concerns, and maintenance reports.
+                </p>
             </div>
-        </div>
-        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center">
-                <i class="bi bi-eye text-2xl"></i>
-            </div>
-            <div>
-                <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Unread</p>
-                <h4 class="text-2xl font-black text-gray-900">{{ $summary['unread'] }}</h4>
-            </div>
-        </div>
-        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center">
-                <i class="bi bi-check2-circle text-2xl"></i>
-            </div>
-            <div>
-                <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Replied</p>
-                <h4 class="text-2xl font-black text-gray-900">{{ $summary['replied'] }}</h4>
+
+            <div class="flex items-center gap-3">
+                <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-100">
+                    <i class="bi bi-headset text-2xl"></i>
+                </div>
             </div>
         </div>
     </div>
 
-    {{-- FILTER BAR --}}
-    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-        <form action="{{ route('admin.support.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="relative">
-                <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search resident or message..." 
-                    class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-100 bg-gray-50 text-sm focus:bg-white focus:border-blue-500 transition-all outline-none">
+    {{-- ===================== --}}
+    {{-- SUMMARY STATS --}}
+    {{-- ===================== --}}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {{-- Pending --}}
+        <div class="glass-card p-8 flex items-center gap-6 group hover:shadow-xl transition-all duration-300">
+            <div class="w-16 h-16 rounded-[24px] bg-amber-50 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-all duration-500 border border-amber-100/50 shadow-sm">
+                <i class="bi bi-hourglass-split text-2xl"></i>
             </div>
-            <select name="status" class="px-4 py-2.5 rounded-xl border border-gray-100 bg-gray-50 text-sm focus:bg-white focus:border-blue-500 transition-all outline-none">
-                <option value="">All Status</option>
-                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                <option value="replied" {{ request('status') == 'replied' ? 'selected' : '' }}>Replied</option>
-            </select>
-            <select name="category" class="px-4 py-2.5 rounded-xl border border-gray-100 bg-gray-50 text-sm focus:bg-white focus:border-blue-500 transition-all outline-none">
-                <option value="">All Categories</option>
-                <option value="General Inquiry" {{ request('category') == 'General Inquiry' ? 'selected' : '' }}>General Inquiry</option>
-                <option value="Payment Concern" {{ request('category') == 'Payment Concern' ? 'selected' : '' }}>Payment Concern</option>
-                <option value="Maintenance Follow-up" {{ request('category') == 'Maintenance Follow-up' ? 'selected' : '' }}>Maintenance Follow-up</option>
-                <option value="Reservation Concern" {{ request('category') == 'Reservation Concern' ? 'selected' : '' }}>Reservation Concern</option>
-                <option value="Complaint / Report" {{ request('category') == 'Complaint / Report' ? 'selected' : '' }}>Complaint / Report</option>
-            </select>
-            <div class="flex gap-2">
-                <select name="date" class="flex-1 px-4 py-2.5 rounded-xl border border-gray-100 bg-gray-50 text-sm focus:bg-white focus:border-blue-500 transition-all outline-none">
-                    <option value="">All Time</option>
-                    <option value="today" {{ request('date') == 'today' ? 'selected' : '' }}>Today</option>
-                    <option value="week" {{ request('date') == 'week' ? 'selected' : '' }}>This Week</option>
-                    <option value="month" {{ request('date') == 'month' ? 'selected' : '' }}>This Month</option>
-                </select>
-                <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">
-                    <i class="bi bi-filter"></i>
-                </button>
+            <div>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Pending Review</p>
+                <h3 class="text-3xl font-black text-gray-900 tracking-tight tabular-nums">{{ $summary['pending'] }}</h3>
             </div>
+        </div>
+        
+        {{-- Unread --}}
+        <div class="glass-card p-8 flex items-center gap-6 group hover:shadow-xl transition-all duration-300">
+            <div class="w-16 h-16 rounded-[24px] bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-all duration-500 border border-emerald-100/50 shadow-sm">
+                <i class="bi bi-chat-left-text text-2xl"></i>
+            </div>
+            <div>
+                <p class="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] mb-1">New Messages</p>
+                <h3 class="text-3xl font-black text-gray-900 tracking-tight tabular-nums">{{ $summary['unread'] }}</h3>
+            </div>
+        </div>
+
+        {{-- Replied --}}
+        <div class="glass-card p-8 flex items-center gap-6 group hover:shadow-xl transition-all duration-300">
+            <div class="w-16 h-16 rounded-[24px] bg-gray-900 flex items-center justify-center text-brand-accent group-hover:scale-110 transition-all duration-500 border border-white/10 shadow-lg">
+                <i class="bi bi-check-all text-2xl"></i>
+            </div>
+            <div>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Resolved</p>
+                <h3 class="text-3xl font-black text-gray-900 tracking-tight tabular-nums">{{ $summary['replied'] }}</h3>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===================== --}}
+    {{-- TOOLBAR SECTION --}}
+    {{-- ===================== --}}
+    <div class="glass-card p-4">
+        <form action="{{ route('admin.support.index') }}" method="GET" class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div class="flex flex-wrap items-center gap-4 flex-1">
+                {{-- Search --}}
+                <div class="relative group flex-1 max-w-md">
+                    <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors"></i>
+                    <input type="text" name="search" value="{{ request('search') }}" 
+                        placeholder="Search resident or message..." 
+                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all placeholder-gray-400">
+                </div>
+
+                {{-- Status Filter --}}
+                <div class="relative group min-w-[160px]">
+                    <select name="status" onchange="this.form.submit()" 
+                        class="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-600 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all appearance-none cursor-pointer">
+                        <option value="">ALL STATUSES</option>
+                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>PENDING</option>
+                        <option value="replied" {{ request('status') == 'replied' ? 'selected' : '' }}>REPLIED</option>
+                    </select>
+                    <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[8px] opacity-50 pointer-events-none"></i>
+                </div>
+
+                {{-- Category Filter --}}
+                <div class="relative group min-w-[200px]">
+                    <select name="category" onchange="this.form.submit()" 
+                        class="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-600 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all appearance-none cursor-pointer">
+                        <option value="">ALL CATEGORIES</option>
+                        <option value="General Inquiry" {{ request('category') == 'General Inquiry' ? 'selected' : '' }}>GENERAL INQUIRY</option>
+                        <option value="Payment Concern" {{ request('category') == 'Payment Concern' ? 'selected' : '' }}>PAYMENT CONCERN</option>
+                        <option value="Maintenance Follow-up" {{ request('category') == 'Maintenance Follow-up' ? 'selected' : '' }}>MAINTENANCE FOLLOW-UP</option>
+                        <option value="Reservation Concern" {{ request('category') == 'Reservation Concern' ? 'selected' : '' }}>RESERVATION CONCERN</option>
+                        <option value="Complaint / Report" {{ request('category') == 'Complaint / Report' ? 'selected' : '' }}>COMPLAINT / REPORT</option>
+                    </select>
+                    <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[8px] opacity-50 pointer-events-none"></i>
+                </div>
+            </div>
+
+            {{-- Reset Filters --}}
+            @if(request()->anyFilled(['search', 'status', 'category', 'date']))
+                <a href="{{ route('admin.support.index') }}" class="btn-secondary px-6">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                    Reset Filters
+                </a>
+            @endif
         </form>
     </div>
 
+    {{-- ===================== --}}
     {{-- MESSAGE TABLE --}}
-    <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+    {{-- ===================== --}}
+    <div class="glass-card overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-gray-50/50 border-b border-gray-100">
-                        <th class="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Resident</th>
-                        <th class="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Category</th>
-                        <th class="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Message</th>
-                        <th class="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                        <th class="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Date</th>
-                        <th class="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-widest text-right">Action</th>
+                        <th class="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Resident</th>
+                        <th class="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Category</th>
+                        <th class="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Message Preview</th>
+                        <th class="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Status</th>
+                        <th class="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Received</th>
+                        <th class="px-8 py-5 w-16"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
                     @forelse($messages as $message)
-                    <tr class="group hover:bg-gray-50/50 transition-colors cursor-pointer {{ !$message->is_read_by_admin ? 'bg-blue-50/30' : '' }}" 
+                    <tr class="group hover:bg-emerald-50/30 transition-all duration-300 cursor-pointer border-l-4 border-transparent hover:border-emerald-500 {{ !$message->is_read_by_admin ? 'bg-emerald-50/10' : '' }}" 
                         onclick="openReplyModal({{ json_encode($message) }})">
                         <td class="px-8 py-6">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
-                                    {{ substr($message->resident->first_name, 0, 1) }}{{ substr($message->resident->last_name, 0, 1) }}
-                                </div>
-                                <div>
-                                    <div class="text-sm font-bold text-gray-900 flex items-center gap-2">
-                                        {{ $message->resident->full_name }}
-                                        @if(!$message->is_read_by_admin)
-                                            <span class="w-2 h-2 rounded-full bg-blue-500 shadow-sm shadow-blue-200 animate-pulse"></span>
-                                        @endif
+                            <div class="flex items-center gap-4">
+                                <div class="relative shrink-0">
+                                    <div class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-sm font-black text-gray-600 border border-gray-100 shadow-sm group-hover:scale-110 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-all duration-500">
+                                        {{ substr($message->resident?->first_name ?? '?', 0, 1) }}{{ substr($message->resident?->last_name ?? '?', 0, 1) }}
                                     </div>
-                                    <div class="text-[10px] font-medium text-gray-400 tracking-wider">B{{ $message->resident->block }} / L{{ $message->resident->lot }}</div>
+                                    @if(!$message->is_read_by_admin)
+                                        <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-white flex items-center justify-center shadow-sm border border-gray-100">
+                                            <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-black text-gray-900 group-hover:text-emerald-700 transition-colors truncate">{{ $message->resident?->full_name ?? 'Unknown Resident' }}</p>
+                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Blk {{ $message->resident?->block ?? '-' }} • Lot {{ $message->resident?->lot ?? '-' }}</p>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-8 py-6">
-                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-600 uppercase tracking-wider">
+                        <td class="px-8 py-6 text-center">
+                            <span class="px-3 py-1.5 rounded-lg text-[10px] font-black bg-gray-50 text-gray-500 uppercase tracking-widest border border-gray-100 group-hover:bg-emerald-50 group-hover:text-emerald-600 group-hover:border-emerald-100 transition-all">
                                 {{ $message->category }}
                             </span>
                         </td>
-                        <td class="px-8 py-6 text-sm text-gray-500 max-w-xs truncate font-medium">{{ $message->message }}</td>
                         <td class="px-8 py-6">
-                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border
-                                {{ $message->status === 'replied' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-orange-50 text-orange-600 border-orange-100' }}">
-                                {{ $message->status }}
-                            </span>
+                            <p class="text-sm text-gray-600 font-medium max-w-xs truncate group-hover:text-gray-900 transition-colors">{{ $message->message }}</p>
                         </td>
-                        <td class="px-8 py-6 text-[11px] font-bold text-gray-400 uppercase">{{ $message->created_at->format('M d, H:i') }}</td>
+                        <td class="px-8 py-6 text-center">
+                            @if($message->status === 'replied')
+                                <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    Replied
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-amber-50 text-amber-600 border border-amber-100">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                    Pending
+                                </span>
+                            @endif
+                        </td>
+                        <td class="px-8 py-6 text-center">
+                            <div class="flex flex-col items-center">
+                                <span class="text-[11px] font-black text-gray-900 tracking-tight">{{ $message->created_at->format('M d, Y') }}</span>
+                                <span class="text-[9px] font-bold text-gray-400 uppercase mt-0.5 tracking-widest">{{ $message->created_at->format('g:i A') }}</span>
+                            </div>
+                        </td>
                         <td class="px-8 py-6 text-right">
-                            <button type="button" class="w-8 h-8 rounded-lg hover:bg-blue-600 hover:text-white text-gray-400 transition-all flex items-center justify-center">
-                                <i class="bi bi-chevron-right"></i>
-                            </button>
+                            <i class="bi bi-chevron-right text-gray-300 group-hover:text-emerald-500 transition-all transform group-hover:translate-x-1"></i>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-8 py-20 text-center text-gray-400 font-medium tracking-wide">No support messages match your filters.</td>
+                        <td colspan="6" class="px-8 py-24 text-center">
+                            <div class="w-24 h-24 bg-gray-50 rounded-[32px] flex items-center justify-center mb-6 mx-auto text-gray-200 shadow-inner">
+                                <i class="bi bi-chat-dots text-5xl"></i>
+                            </div>
+                            <h3 class="text-2xl font-black text-gray-900 mb-2 uppercase tracking-tight">No messages found</h3>
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Adjust filters to find support tickets</p>
+                        </td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-        <div class="px-8 py-4 bg-gray-50/50">
-            {{ $messages->links() }}
-        </div>
+    </div>
+
+    <div class="mt-8">
+        {{ $messages->links() }}
     </div>
 </div>
 
 {{-- REPLY MODAL --}}
 <div id="replyModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
-    <div class="bg-white w-full max-w-2xl rounded-[2rem] shadow-2xl overflow-hidden animate-zoom-in">
+    <div class="bg-white w-full max-w-2xl rounded-[2rem] shadow-2xl overflow-hidden animate-zoom-in border border-gray-100">
         <div class="p-8 border-b border-gray-50 flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <div id="modalResidentAvatar" class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black text-lg shadow-sm"></div>
+                <div id="modalResidentAvatar" class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-lg shadow-sm ring-4 ring-white"></div>
                 <div>
                     <h4 id="modalResidentName" class="text-lg font-black text-gray-900 tracking-tight leading-none mb-1"></h4>
-                    <p id="modalCategoryLabel" class="text-[10px] font-bold text-blue-500 uppercase tracking-widest"></p>
+                    <p id="modalCategoryLabel" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]"></p>
                 </div>
             </div>
-            <button onclick="closeModal()" class="w-10 h-10 rounded-xl hover:bg-gray-100 text-gray-400 transition-colors">
-                <i class="bi bi-x-lg"></i>
+            <button onclick="closeModal()" class="w-10 h-10 rounded-xl hover:bg-gray-50 text-gray-400 hover:text-brand-accent transition-all flex items-center justify-center">
+                <i class="bi bi-x-lg text-lg"></i>
             </button>
         </div>
         
@@ -161,7 +232,7 @@
                     <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Resident Message</span>
                     <span id="modalDate" class="text-[10px] font-bold text-gray-400"></span>
                 </div>
-                <div class="p-6 bg-gray-50 border border-gray-100 rounded-[1.5rem] text-sm text-gray-700 leading-relaxed font-medium shadow-inner">
+                <div class="p-6 bg-gray-50 border border-gray-100 rounded-[1.5rem] text-sm text-gray-700 leading-relaxed font-medium shadow-sm">
                     <p id="modalMessage"></p>
                     <div id="modalResidentAttachment" class="mt-4 hidden">
                         <img id="modalResidentImg" src="#" class="max-w-[150px] rounded-xl border border-gray-100 shadow-sm cursor-pointer hover:brightness-95 transition-all" onclick="openLightbox(this.src)">
@@ -172,13 +243,13 @@
             {{-- Admin Reply --}}
             <div id="adminReplyContainer" class="space-y-3 hidden">
                 <div class="flex items-center justify-between px-1">
-                    <span class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Office Response</span>
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Office Response</span>
                     <span id="modalReplyDate" class="text-[10px] font-bold text-gray-400"></span>
                 </div>
-                <div class="p-6 bg-blue-50/30 border border-blue-100 rounded-[1.5rem] text-sm text-gray-700 leading-relaxed font-medium">
+                <div class="p-6 bg-emerald-50/20 border border-emerald-100 rounded-[1.5rem] text-sm text-gray-700 leading-relaxed font-medium">
                     <p id="modalAdminReply"></p>
                     <div id="modalAdminAttachmentView" class="mt-4 hidden">
-                        <img id="modalAdminImgView" src="#" class="max-w-[150px] rounded-xl border border-blue-100 shadow-sm cursor-pointer hover:brightness-95 transition-all" onclick="openLightbox(this.src)">
+                        <img id="modalAdminImgView" src="#" class="max-w-[150px] rounded-xl border border-emerald-100 shadow-sm cursor-pointer hover:brightness-95 transition-all" onclick="openLightbox(this.src)">
                     </div>
                 </div>
             </div>
@@ -190,8 +261,8 @@
                     {{-- Suggested Replies (Pills) --}}
                     <div id="suggestedRepliesSection" class="space-y-3">
                         <div class="flex items-center justify-between px-1">
-                            <label class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Suggested Replies</label>
-                            <span class="text-[10px] font-bold text-gray-400 italic">Click a pill to auto-fill</span>
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Suggested Replies</label>
+                            <span class="text-[10px] font-bold text-gray-400 italic opacity-60">Click a pill to auto-fill</span>
                         </div>
                         <div id="templatePillsContainer" class="flex flex-wrap gap-2 min-h-[40px]">
                             <!-- Pills injected via JS -->
@@ -199,22 +270,22 @@
                     </div>
 
                     <div class="flex items-center justify-between px-1 pt-2">
-                        <label class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Office Response</label>
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Type Response</label>
                     </div>
                     <textarea name="admin_reply" id="admin_reply" rows="5" 
-                        class="w-full px-6 py-5 rounded-[1.5rem] border border-gray-100 bg-gray-50 text-sm font-medium focus:bg-white focus:border-blue-500 transition-all outline-none resize-none shadow-sm" 
+                        class="w-full px-6 py-5 rounded-[1.5rem] border border-gray-100 bg-gray-50 text-sm font-medium focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none resize-none shadow-sm" 
                         placeholder="Type your response here..." required></textarea>
                 </div>
 
                 {{-- ATTACHMENT SECTION --}}
                 <div id="adminAttachmentSection" class="space-y-3">
-                    <label class="text-[10px] font-black text-blue-500 uppercase tracking-widest flex items-center gap-2">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
                         <i class="bi bi-paperclip"></i> Attachment (Optional)
                     </label>
                     <div class="flex items-center gap-4">
                         <label class="shrink-0 cursor-pointer group">
                             <input type="file" name="attachment" class="hidden" accept="image/*" onchange="previewAdminFile(this)">
-                            <div class="px-5 py-2.5 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 group-hover:border-blue-400 group-hover:text-blue-500 transition-all flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider">
+                            <div class="px-5 py-2.5 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 group-hover:border-emerald-400 group-hover:text-emerald-600 transition-all flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider">
                                 <i class="bi bi-image"></i>
                                 <span>Attach Photo</span>
                             </div>
@@ -229,8 +300,11 @@
                 </div>
                 
                 <div class="flex justify-end gap-4 pt-4">
-                    <button type="button" onclick="closeModal()" class="px-6 py-3 rounded-xl text-gray-400 text-sm font-bold hover:bg-gray-50 transition-all uppercase tracking-widest">Cancel</button>
-                    <button type="submit" id="submitBtn" class="px-12 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 uppercase tracking-widest">Send Response</button>
+                    <button type="button" onclick="closeModal()" class="btn-secondary px-8">Cancel</button>
+                    <button type="submit" id="submitBtn" class="btn-premium px-12">
+                        <i class="bi bi-send-fill"></i>
+                        Send Response
+                    </button>
                 </div>
             </form>
         </div>
@@ -379,24 +453,26 @@
         // Setup Templates
         pillsContainer.innerHTML = '';
         if (message.status !== 'replied' && categoryTemplates[message.category]) {
-            suggestedSection.style.display = 'block';
+            suggestedSection.classList.remove('hidden');
             categoryTemplates[message.category].forEach(template => {
                 const pill = document.createElement('button');
                 pill.type = 'button';
-                pill.className = 'px-4 py-1.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm';
+                pill.className = 'px-4 py-1.5 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-[#081412] hover:text-white hover:border-[#081412] transition-all shadow-sm uppercase tracking-wider';
                 pill.textContent = template.label;
                 pill.onclick = () => applyTemplate(template.text);
                 pillsContainer.appendChild(pill);
             });
         } else {
-            suggestedSection.style.display = 'none';
+            suggestedSection.classList.add('hidden');
         }
 
         // Setup Read-only / Reply state
         if (message.status === 'replied') {
             document.getElementById('adminReplyContainer').classList.remove('hidden');
             document.getElementById('modalAdminReply').textContent = message.admin_reply;
-            document.getElementById('modalReplyDate').textContent = new Date(message.replied_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' });
+            
+            const repliedAt = message.replied_at ? new Date(message.replied_at) : new Date();
+            document.getElementById('modalReplyDate').textContent = repliedAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' });
             
             // Admin Attachment View
             if (message.admin_attachment) {
@@ -406,20 +482,25 @@
                 adminAttachView.classList.add('hidden');
             }
 
-            textarea.style.display = 'none';
-            adminAttachSection.style.display = 'none';
-            submitBtn.style.display = 'none';
-            document.querySelector('label[for="admin_reply"]')?.parentElement.style.setProperty('display', 'none');
-            document.getElementById('replyModal').querySelector('label[class*="text-blue-500"]').style.display = 'none';
+            textarea.classList.add('hidden');
+            adminAttachSection.classList.add('hidden');
+            submitBtn.classList.add('hidden');
+            
+            // Hide "Type Response" label
+            const typeResponseLabel = Array.from(document.querySelectorAll('label')).find(el => el.textContent.includes('Type Response'));
+            if (typeResponseLabel) typeResponseLabel.parentElement.classList.add('hidden');
         } else {
             document.getElementById('adminReplyContainer').classList.add('hidden');
             textarea.value = '';
-            textarea.style.display = 'block';
+            textarea.classList.remove('hidden');
             textarea.readOnly = false;
-            textarea.classList.remove('bg-gray-100');
-            adminAttachSection.style.display = 'block';
+            adminAttachSection.classList.remove('hidden');
             removeAdminFile();
-            submitBtn.style.display = 'block';
+            submitBtn.classList.remove('hidden');
+
+            // Show "Type Response" label
+            const typeResponseLabel = Array.from(document.querySelectorAll('label')).find(el => el.textContent.includes('Type Response'));
+            if (typeResponseLabel) typeResponseLabel.parentElement.classList.remove('hidden');
         }
 
         document.getElementById('replyModal').classList.remove('hidden');

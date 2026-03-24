@@ -106,7 +106,7 @@ body {
         @endif
 
         <!-- Forgot Password Form -->
-        <form method="POST" action="{{ route('resident.password.email') }}">
+        <form method="POST" action="{{ route('password.email') }}">
             @csrf
 
             <!-- Email -->

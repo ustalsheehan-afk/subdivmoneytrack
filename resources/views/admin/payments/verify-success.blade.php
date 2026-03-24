@@ -41,15 +41,15 @@
                 <div class="space-y-3">
                     <div class="flex justify-between">
                         <span class="text-xs text-slate-500">Resident Name</span>
-                        <span class="text-xs font-bold text-slate-900">{{ $payment->resident->full_name }}</span>
+                        <span class="text-xs font-bold text-slate-900">{{ $payment->resident?->full_name ?? 'Unknown' }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-xs text-slate-500">Property</span>
-                        <span class="text-xs font-bold text-slate-900">Blk {{ $payment->resident->block }} Lot {{ $payment->resident->lot }}</span>
+                        <span class="text-xs font-bold text-slate-900">Blk {{ $payment->resident?->block ?? '-' }} Lot {{ $payment->resident?->lot ?? '-' }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-xs text-slate-500">Payment For</span>
-                        <span class="text-xs font-bold text-slate-900">{{ $payment->due->title }}</span>
+                        <span class="text-xs font-bold text-slate-900">{{ $payment->due?->title ?? 'N/A' }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-xs text-slate-500">Amount Paid</span>

@@ -10,36 +10,14 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        // Check if logged in as Admin
-        if (Auth::guard('admin')->check()) {
-            $user = Auth::guard('admin')->user();
-            
-            if ($user->role === 'admin') {
-                return $next($request);
-            }
-            
-            if ($user->role === 'resident') {
-                return redirect()->route('resident.dashboard');
-            }
+        if (Auth::check() && Auth::user()->role === 'admin') {
+            return $next($request);
         }
 
-        // Check if logged in as Resident (but trying to access admin route)
-        if (Auth::guard('resident')->check()) {
-            $user = Auth::guard('resident')->user();
-            
-            if ($user->role === 'resident') {
-                return redirect()->route('resident.dashboard');
-            }
-            
-            // If they are admin but logged in via resident guard, 
-            // we redirect them to admin login to establish the correct session
-            if ($user->role === 'admin') {
-                 // Optional: We could auto-login here, but redirecting to login is safer/simpler
-                 return redirect()->route('admin.login');
-            }
+        if (Auth::check() && Auth::user()->role === 'resident') {
+            return redirect()->route('resident.dashboard')->with('error', 'Unauthorized access to admin area.');
         }
 
-        // Not logged in at all -> redirect to login
-        return redirect()->route('admin.login');
+        return redirect()->route('login')->with('error', 'Please login as administrator.');
     }
 }

@@ -6,97 +6,91 @@
     @endphp
 
     <tr onclick="loadPenaltyDetails({{ $penalty->id }})"
-        class="hover:bg-gray-50 cursor-pointer transition group border-b border-gray-100 last:border-0">
+        class="hover:bg-emerald-50/20 cursor-pointer transition-all duration-200 group border-b border-gray-50 last:border-0">
         
         {{-- Checkbox --}}
-        <td class="px-6 py-4 text-center bulk-checkbox hidden" onclick="event.stopPropagation()">
-            <input type="checkbox" name="selected_penalties[]" value="{{ $penalty->id }}" class="penalty-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+        <td class="p-6 text-center bulk-checkbox hidden" onclick="event.stopPropagation()">
+            <input type="checkbox" name="selected_penalties[]" value="{{ $penalty->id }}" class="rounded-lg border-gray-200 text-brand-accent focus:ring-brand-accent/20 focus:ring-offset-0 penalty-checkbox">
         </td>
 
         {{-- Resident --}}
-        <td class="px-6 py-4">
-            <div class="flex items-center gap-3">
-                @if($penalty->resident)
+        <td class="p-6">
+            <div class="flex items-center gap-4">
+                <div class="relative shrink-0">
                     <img 
-                        src="{{ $penalty->resident->photo ? asset('storage/' . $penalty->resident->photo) : asset('CDlogo.jpg') }}"
+                        src="{{ $penalty->resident?->photo ? asset('storage/' . $penalty->resident->photo) : asset('CDlogo.jpg') }}"
                         onerror="this.onerror=null; this.src='{{ asset('CDlogo.jpg') }}';"
-                        class="h-10 w-10 rounded-full object-cover ring-2 ring-gray-100 group-hover:ring-indigo-200 transition-all duration-300"
-                        alt="{{ $penalty->resident->full_name ?? 'Resident' }}">
-                    <div>
-                        <p class="font-bold text-gray-900 group-hover:text-blue-700 transition">{{ $penalty->resident->full_name ?? 'Unknown' }}</p>
-                        <p class="text-xs text-gray-500 mt-0.5">B{{ $penalty->resident->block ?? '-' }} L{{ $penalty->resident->lot ?? '-' }}</p>
+                        class="w-10 h-10 rounded-xl object-cover ring-4 ring-white shadow-sm group-hover:ring-emerald-50 transition-all duration-300"
+                        alt="{{ $penalty->resident?->full_name ?? 'Resident' }}">
+                    <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-white flex items-center justify-center shadow-sm">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
                     </div>
-                @else
-                    <img 
-                        src="{{ asset('CDlogo.jpg') }}"
-                        class="h-10 w-10 rounded-full object-cover ring-2 ring-gray-100 group-hover:ring-indigo-200 transition-all duration-300"
-                        alt="Resident">
-                    <div>
-                        <p class="font-bold text-gray-900 group-hover:text-blue-700 transition">Unknown</p>
-                        <p class="text-xs text-gray-500 mt-0.5">B- L-</p>
-                    </div>
-                @endif
+                </div>
+                <div class="min-w-0">
+                    <p class="text-sm font-black text-gray-900 group-hover:text-brand-accent transition truncate">{{ $penalty->resident?->full_name ?? 'Unknown' }}</p>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Blk {{ $penalty->resident?->block ?? '-' }} - Lot {{ $penalty->resident?->lot ?? '-' }}</p>
+                </div>
             </div>
         </td>
 
         {{-- Type --}}
-        <td class="px-6 py-4">
-            <span class="text-sm font-medium text-gray-700">
-                {{ ucfirst(strtolower(str_replace('_', ' ', $penalty->type ?? 'General'))) }}
+        <td class="p-6">
+            <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                {{ str_replace('_', ' ', $penalty->type ?? 'GENERAL') }}
             </span>
         </td>
 
         {{-- Reason --}}
-        <td class="px-6 py-4 max-w-xs">
-            <span class="text-gray-600 text-sm block truncate" title="{{ $penalty->reason }}">
+        <td class="p-6 max-w-xs">
+            <span class="text-sm font-medium text-gray-600 block truncate" title="{{ $penalty->reason }}">
                 {{ $penalty->reason ?? '-' }}
             </span>
         </td>
 
         {{-- Date Issued --}}
-        <td class="px-6 py-6 whitespace-nowrap">
-            <div class="flex flex-col">
-                <span class="text-gray-900 font-medium text-sm">{{ $penalty->date_issued ? $penalty->date_issued->format('M d, Y') : '-' }}</span>
-                <span class="text-xs text-gray-400">{{ $penalty->date_issued ? $penalty->date_issued->diffForHumans() : '' }}</span>
+        <td class="p-6 text-center whitespace-nowrap">
+            <div class="flex flex-col items-center">
+                <span class="text-sm font-black text-gray-900 tracking-tight">{{ $penalty->date_issued ? $penalty->date_issued->format('M d, Y') : '-' }}</span>
+                <span class="text-[10px] font-bold text-gray-400 uppercase mt-0.5">{{ $penalty->date_issued ? $penalty->date_issued->diffForHumans() : '' }}</span>
             </div>
         </td>
 
         {{-- Amount --}}
-        <td class="px-6 py-6 text-right">
-            <span class="text-sm font-bold text-gray-900">₱{{ number_format($penalty->amount, 2) }}</span>
+        <td class="p-6 text-right">
+            <span class="text-base font-black text-gray-900 tabular-nums">₱{{ number_format($penalty->amount, 2) }}</span>
         </td>
 
         {{-- Status --}}
-        <td class="px-6 py-6 text-center">
+        <td class="p-6 text-center">
             @php
                 $statusConfig = [
                     'paid' => [
-                        'pill' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                        'pill' => 'bg-emerald-50 text-emerald-600 border-emerald-100',
                         'dot' => 'bg-emerald-500'
                     ],
                     'unpaid' => [
-                        'pill' => 'bg-red-50 text-red-700 border-red-100',
+                        'pill' => 'bg-red-50 text-red-600 border-red-100',
                         'dot' => 'bg-red-500'
                     ],
                     'pending' => [
-                        'pill' => 'bg-orange-50 text-orange-700 border-orange-100',
+                        'pill' => 'bg-orange-50 text-orange-600 border-orange-100',
                         'dot' => 'bg-orange-500'
                     ]
                 ];
                 $config = $statusConfig[$penalty->status] ?? [
-                    'pill' => 'bg-gray-50 text-gray-700 border-gray-100',
+                    'pill' => 'bg-gray-50 text-gray-600 border-gray-100',
                     'dot' => 'bg-gray-500'
                 ];
             @endphp
-            <span class="inline-flex items-center justify-center w-24 px-3 py-1 rounded-full text-xs font-bold border capitalize tracking-wide {{ $config['pill'] }}">
-                <span class="w-1.5 h-1.5 rounded-full {{ $config['dot'] }} mr-1.5"></span>
+            <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border {{ $config['pill'] }}">
+                <span class="w-1.5 h-1.5 rounded-full {{ $config['dot'] }}"></span>
                 {{ $penalty->status }}
             </span>
         </td>
 
         {{-- Action Arrow --}}
-        <td class="px-6 py-6 text-right">
-            <i class="bi bi-chevron-right text-gray-300 group-hover:text-blue-500 transition-colors"></i>
+        <td class="p-6 text-right">
+            <i class="bi bi-chevron-right text-gray-300 group-hover:text-brand-accent transition-colors"></i>
         </td>
     </tr>
     @endforeach

@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\ServiceRequest;
 
+use App\Traits\LogsActivity;
+
 class ServiceRequestController extends Controller
 {
+    use LogsActivity;
     public function index(Request $request)
     {
         $requests = ServiceRequest::with('resident');
@@ -134,6 +137,10 @@ class ServiceRequestController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $req = ServiceRequest::findOrFail($id);
+        $request->validate([
+            'status' => 'required|in:pending,approved,in progress,completed,rejected',
+        ]);
+
         $status = $request->status;
         
         $updateData = ['status' => $status];
@@ -149,6 +156,11 @@ class ServiceRequestController extends Controller
         }
 
         $req->update($updateData);
+
+        $this->logActivity('updated_status', 'requests', "Updated service request #{$id} status to {$request->status}", [
+            'request_id' => $id,
+            'new_status' => $request->status
+        ]);
 
         // Create Notification
         $title = match($status) {

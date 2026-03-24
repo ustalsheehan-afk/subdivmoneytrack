@@ -12,13 +12,13 @@
         
         {{-- RESIDENT INFO --}}
         <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
-             <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-lg font-bold">
-                {{ substr($request->resident->first_name ?? '?', 0, 1) }}{{ substr($request->resident->last_name ?? '?', 0, 1) }}
+             <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black text-lg shadow-sm">
+                {{ substr($request->resident?->first_name ?? '?', 0, 1) }}{{ substr($request->resident?->last_name ?? '?', 0, 1) }}
             </div>
             <div>
-                <h3 class="font-bold text-gray-900 text-lg">{{ $request->resident->full_name ?? 'Unknown' }}</h3>
-                <p class="text-sm text-gray-500">Block {{ $request->resident->block ?? '-' }} Lot {{ $request->resident->lot ?? '-' }}</p>
-                <p class="text-sm text-gray-500">{{ $request->resident->contact_number ?? '' }}</p>
+                <h3 class="font-bold text-gray-900 text-lg">{{ $request->resident?->full_name ?? 'Unknown' }}</h3>
+                <p class="text-sm text-gray-500">Block {{ $request->resident?->block ?? '-' }} Lot {{ $request->resident?->lot ?? '-' }}</p>
+                <p class="text-sm text-gray-500">{{ $request->resident?->contact_number ?? '' }}</p>
             </div>
         </div>
 

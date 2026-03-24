@@ -15,10 +15,10 @@ class PenaltyController extends Controller
     {
         // Get all penalties for the authenticated resident
         $user = auth()->user();
-        $resident = $user->resident;
+        $resident = $user?->resident;
 
         if (!$resident) {
-            abort(403, 'Resident profile not found.');
+            return redirect()->route('resident.dashboard')->with('error', 'Resident profile not found.');
         }
 
         // Auto-update statuses to overdue if due_date passed
@@ -43,10 +43,10 @@ class PenaltyController extends Controller
     public function show($id)
     {
         $user = auth()->user();
-        $resident = $user->resident;
+        $resident = $user?->resident;
 
         if (!$resident) {
-            abort(403, 'Resident profile not found.');
+            return redirect()->route('resident.dashboard')->with('error', 'Resident profile not found.');
         }
 
         $penalty = Penalty::with(['resident', 'due'])

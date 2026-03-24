@@ -2,228 +2,332 @@
 
 @section('title', 'Edit Amenity')
 @section('page-title', 'Edit Amenity')
+
 @section('content')
-<div class="max-w-3xl mx-auto">
-    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-        <form action="{{ route('admin.amenities.update', $amenity) }}" method="POST" enctype="multipart/form-data" 
-              x-data="{ 
-                  equipmentList: {{ json_encode($amenity->equipment ?? []) }},
-                  addEquipment() { this.equipmentList.push({ name: '', price: '' }); },
-                  removeEquipment(index) { this.equipmentList.splice(index, 1); },
-                  imagePreview: {{ json_encode($amenity->image ? Storage::url($amenity->image) : null) }},
-                  fileChosen(event) {
-                      this.fileToDataUrl(event, src => this.imagePreview = src)
-                  },
-                  fileToDataUrl(event, callback) {
-                      if (! event.target.files.length) return
-                      let file = event.target.files[0],
-                          reader = new FileReader()
-                      reader.readAsDataURL(file)
-                      reader.onload = e => callback(e.target.result)
-                  }
-              }">
-            @csrf
-            @method('PUT')
-            
-            <div class="p-8 space-y-8">
-                
-                <!-- Amenity Name -->
+<div class="space-y-8 animate-fade-in pb-20">
+
+    {{-- ===================== --}}
+    {{-- HEADER SECTION --}}
+    {{-- ===================== --}}
+    <div class="glass-card p-8 relative overflow-hidden group">
+        {{-- Subtle gradient glow in background --}}
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-brand-accent/5 rounded-full blur-3xl group-hover:bg-brand-accent/10 transition-all duration-700"></div>
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-6">
+                <a href="{{ route('admin.amenities.index') }}" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-emerald-600 hover:border-emerald-100 hover:shadow-sm transition-all shadow-sm">
+                    <i class="bi bi-arrow-left text-xl"></i>
+                </a>
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Amenity Name <span class="text-red-500">*</span></label>
-                    <input type="text" name="name" value="{{ old('name', $amenity->name) }}" required
-                           class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 p-3 text-sm"
-                           placeholder="e.g., Community Pool">
-                    @error('name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
+                        Edit Amenity
+                    </h1>
+                    <p class="mt-2 text-gray-600 text-lg max-w-xl">
+                        Update details for <span class="font-bold text-gray-900">{{ $amenity->name }}</span>.
+                    </p>
                 </div>
-
-                <!-- Days Available -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-3">Days Available <span class="text-red-500">*</span></label>
-                    <div class="flex flex-wrap gap-2">
-                        @php $selectedDays = old('days_available', $amenity->days_available ?? []); @endphp
-                        @foreach(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $day)
-                            <label class="cursor-pointer">
-                                <input type="checkbox" name="days_available[]" value="{{ $day }}" class="peer sr-only"
-                                    {{ in_array($day, $selectedDays) ? 'checked' : '' }}>
-                                <div class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-all text-center min-w-[3.5rem]">
-                                    {{ $day }}
-                                </div>
-                            </label>
-                        @endforeach
-                    </div>
-                    @error('days_available') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                </div>
-
-                <!-- Time Slots -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-3">Time Slots <span class="text-red-500">*</span></label>
-                    <div class="space-y-2">
-                        @php $selectedSlots = old('time_slots', $amenity->time_slots ?? []); @endphp
-                        @foreach(['Morning', 'Afternoon', 'Evening'] as $slot)
-                            <label class="flex items-center gap-3 cursor-pointer group">
-                                <div class="relative flex items-center">
-                                    <input type="checkbox" name="time_slots[]" value="{{ $slot }}" 
-                                           class="peer h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                           {{ in_array($slot, $selectedSlots) ? 'checked' : '' }}>
-                                </div>
-                                <span class="text-sm text-gray-700 group-hover:text-gray-900">{{ $slot }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                    @error('time_slots') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                </div>
-
-                <!-- Capacity & Price -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Max Capacity <span class="text-red-500">*</span></label>
-                        <input type="number" name="max_capacity" value="{{ old('max_capacity', $amenity->max_capacity) }}" required min="1"
-                               class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 p-3 text-sm"
-                               placeholder="1">
-                        @error('max_capacity') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Price (₱)</label>
-                        <input type="number" name="price" value="{{ old('price', $amenity->price) }}" step="0.01" min="0"
-                               class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 p-3 text-sm"
-                               placeholder="0">
-                        @error('price') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                    </div>
-                </div>
-
-                <!-- Buffer Time -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Buffer Time (Minutes)</label>
-                    <input type="number" name="buffer_minutes" value="{{ old('buffer_minutes', $amenity->buffer_minutes) }}" min="0" step="5"
-                           class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 p-3 text-sm"
-                           placeholder="e.g., 30">
-                    <p class="text-xs text-gray-500 mt-1">Time to block after each reservation for cleaning/maintenance.</p>
-                    @error('buffer_minutes') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                </div>
-
-                <!-- Description -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Description</label>
-                    <textarea name="description" rows="4"
-                              class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 p-3 text-sm"
-                              placeholder="Describe the amenity and its features...">{{ old('description', $amenity->description) }}</textarea>
-                </div>
-
-                <!-- Images (Drag & Drop Style) -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Images</label>
-                    <div class="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:bg-gray-50 transition-colors">
-                        <input type="file" name="image" accept="image/*" @change="fileChosen"
-                               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                        <div x-show="!imagePreview">
-                            <i class="bi bi-upload text-3xl text-gray-400 mb-2 block"></i>
-                            <p class="text-sm text-gray-600 font-medium">Click to upload images or drag and drop</p>
-                            <p class="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</p>
-                        </div>
-                        <div x-show="imagePreview" class="relative z-20">
-                            <img :src="imagePreview" class="h-32 mx-auto rounded-lg object-cover shadow-sm">
-                            <p class="text-xs text-gray-500 mt-2">Click area to change</p>
-                        </div>
-                    </div>
-                    @error('image') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                </div>
-
-                <!-- PDF Rules -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">PDF Rules (Optional)</label>
-                    <div class="flex items-center gap-3">
-                        <label class="cursor-pointer inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
-                            <i class="bi bi-file-earmark-pdf mr-2"></i> Upload PDF
-                            <input type="file" name="pdf_rules" accept="application/pdf" class="hidden">
-                        </label>
-                        @if($amenity->pdf_rules)
-                            <a href="{{ Storage::url($amenity->pdf_rules) }}" target="_blank" class="text-sm text-blue-600 hover:underline">
-                                View Current Rules
-                            </a>
-                        @else
-                            <span class="text-xs text-gray-500">No file chosen</span>
-                        @endif
-                    </div>
-                    @error('pdf_rules') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                </div>
-
-                <!-- Status & Highlight -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Status</label>
-                        <select name="status" class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 p-3 text-sm">
-                            <option value="active" {{ in_array(old('status', $amenity->status), ['active', '1', 1, true]) ? 'selected' : '' }}>Active</option>
-                            <option value="maintenance" {{ old('status', $amenity->status) === 'maintenance' ? 'selected' : '' }}>Maintenance</option>
-                            <option value="inactive" {{ in_array(old('status', $amenity->status), ['inactive', '0', 0, false]) ? 'selected' : '' }}>Inactive</option>
-                        </select>
-                    </div>
-
-                    <div class="flex items-center pt-8">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="hidden" name="highlight" value="0">
-                            <input type="checkbox" name="highlight" value="1" class="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                   {{ old('highlight', $amenity->highlight) ? 'checked' : '' }}>
-                            <span class="text-sm font-medium text-gray-700">Highlight Amenity</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Equipment & Add-ons (Collapsible or just below) -->
-                <div class="border-t pt-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-bold text-gray-900">Equipment & Add-ons</h3>
-                        <button type="button" @click="addEquipment()" class="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center">
-                            <i class="bi bi-plus-circle mr-1"></i> Add Item
-                        </button>
-                    </div>
-                    
-                    <div class="space-y-3">
-                        <template x-for="(item, index) in equipmentList" :key="index">
-                            <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                <div class="grid grid-cols-3 gap-3 flex-1">
-                                    <div class="col-span-2">
-                                        <input type="text" :name="`equipment[${index}][name]`" x-model="item.name" placeholder="Item Name (e.g. Chair)" required
-                                               class="w-full rounded border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
-                                    </div>
-                                    <div>
-                                        <input type="number" :name="`equipment[${index}][price]`" x-model="item.price" placeholder="Price" step="0.01" min="0" required
-                                               class="w-full rounded border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
-                                    </div>
-                                </div>
-                                <button type="button" @click="removeEquipment(index)" class="text-red-500 hover:text-red-700 p-2">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </template>
-                        <div x-show="equipmentList.length === 0" class="text-sm text-gray-500 italic">
-                            No equipment added. Click "Add Item" to add rental items.
-                        </div>
-                    </div>
-                </div>
-
             </div>
 
-            <!-- Buttons -->
-            <div class="px-8 py-6 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
-                <a href="{{ route('admin.amenities.index') }}" class="px-6 py-2.5 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition-colors">
-                    Cancel
-                </a>
-                <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-sm transition-all transform hover:scale-[1.02]">
+            <div class="flex items-center gap-3">
+                <button type="submit" form="amenity-form" class="btn-premium">
+                    <i class="bi bi-check2-circle"></i>
                     Update Amenity
                 </button>
             </div>
-        </form>
+        </div>
     </div>
+
+    @if ($errors->any())
+        <div class="glass-card border-red-100 bg-red-50/50 p-6 animate-fade-in">
+            <div class="flex items-center gap-3 mb-4 text-red-700">
+                <i class="bi bi-exclamation-circle-fill text-xl"></i>
+                <span class="font-black text-sm uppercase tracking-widest">Validation Errors</span>
+            </div>
+            <ul class="space-y-2">
+                @foreach ($errors->all() as $error)
+                    <li class="text-sm font-bold text-red-600 flex items-center gap-2">
+                        <span class="w-1 h-1 rounded-full bg-red-400"></span>
+                        {{ $error }}
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form id="amenity-form" action="{{ route('admin.amenities.update', $amenity) }}" method="POST" enctype="multipart/form-data" 
+          x-data="{ 
+              equipmentList: {{ json_encode($amenity->equipment ?? []) }},
+              addEquipment() { this.equipmentList.push({ name: '', price: '' }); },
+              removeEquipment(index) { this.equipmentList.splice(index, 1); },
+              imagePreview: {{ json_encode($amenity->image ? Storage::url($amenity->image) : null) }},
+              fileChosen(event) {
+                  this.fileToDataUrl(event, src => this.imagePreview = src)
+              },
+              fileToDataUrl(event, callback) {
+                  if (! event.target.files.length) return
+                  let file = event.target.files[0],
+                      reader = new FileReader()
+                  reader.readAsDataURL(file)
+                  reader.onload = e => callback(e.target.result)
+              }
+          }">
+        @csrf
+        @method('PUT')
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {{-- LEFT COLUMN: CORE INFO --}}
+            <div class="lg:col-span-2 space-y-8">
+                
+                {{-- 1. Basic Information --}}
+                <section class="glass-card p-8 space-y-8 relative overflow-hidden group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xl border border-emerald-100 shadow-sm">1</div>
+                        <div>
+                            <h4 class="text-xl font-black text-gray-900 tracking-tight">Basic Information</h4>
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Identify and describe the facility</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-8">
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Amenity Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="name" value="{{ old('name', $amenity->name) }}" 
+                                class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none" 
+                                placeholder="e.g. Community Swimming Pool" required>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Description</label>
+                            <textarea name="description" rows="4" 
+                                class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium focus:bg-white focus:border-emerald-500 transition-all outline-none resize-none" 
+                                placeholder="Provide a brief description of the amenity and its features...">{{ old('description', $amenity->description) }}</textarea>
+                        </div>
+                    </div>
+                </section>
+
+                {{-- 2. Availability & Capacity --}}
+                <section class="glass-card p-8 space-y-8 relative overflow-hidden group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xl border border-emerald-100 shadow-sm">2</div>
+                        <div>
+                            <h4 class="text-xl font-black text-gray-900 tracking-tight">Availability & Capacity</h4>
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Set operational constraints</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        {{-- Days Available --}}
+                        <div class="space-y-4">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Operational Days <span class="text-red-500">*</span></label>
+                            <div class="flex flex-wrap gap-2">
+                                @php $selectedDays = old('days_available', $amenity->days_available ?? []); @endphp
+                                @foreach(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $day)
+                                    <label class="cursor-pointer group">
+                                        <input type="checkbox" name="days_available[]" value="{{ $day }}" class="peer sr-only"
+                                            {{ in_array($day, $selectedDays) ? 'checked' : '' }}>
+                                        <div class="px-4 py-2.5 rounded-xl border border-gray-100 text-[10px] font-black text-gray-400 bg-gray-50 group-hover:bg-gray-100 peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 peer-checked:shadow-sm transition-all text-center min-w-[3.5rem] uppercase tracking-widest">
+                                            {{ $day }}
+                                        </div>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        {{-- Time Slots --}}
+                        <div class="space-y-4">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Available Slots <span class="text-red-500">*</span></label>
+                            <div class="grid grid-cols-3 gap-2">
+                                @php $selectedSlots = old('time_slots', $amenity->time_slots ?? []); @endphp
+                                @foreach(['Morning', 'Afternoon', 'Evening'] as $slot)
+                                    <label class="cursor-pointer group">
+                                        <input type="checkbox" name="time_slots[]" value="{{ $slot }}" class="peer sr-only"
+                                               {{ in_array($slot, $selectedSlots) ? 'checked' : '' }}>
+                                        <div class="px-3 py-2.5 rounded-xl border border-gray-100 text-[10px] font-black text-gray-400 bg-gray-50 group-hover:bg-gray-100 peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 peer-checked:shadow-sm transition-all text-center uppercase tracking-widest">
+                                            {{ $slot }}
+                                        </div>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-gray-50">
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Max Capacity (PAX) <span class="text-red-500">*</span></label>
+                            <div class="relative group/input">
+                                <i class="bi bi-people absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within/input:text-emerald-600 transition-colors"></i>
+                                <input type="number" name="max_capacity" value="{{ old('max_capacity', $amenity->max_capacity) }}" min="1" required
+                                    class="w-full pl-12 pr-6 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-black focus:bg-white focus:border-emerald-500 transition-all outline-none tabular-nums">
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Buffer Time (Minutes)</label>
+                            <div class="relative group/input">
+                                <i class="bi bi-clock-history absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within/input:text-emerald-600 transition-colors"></i>
+                                <input type="number" name="buffer_minutes" value="{{ old('buffer_minutes', $amenity->buffer_minutes) }}" min="0" step="5"
+                                    class="w-full pl-12 pr-6 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-black focus:bg-white focus:border-emerald-500 transition-all outline-none tabular-nums">
+                                <span class="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-300 uppercase tracking-widest">MINS</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {{-- 3. Equipment & Add-ons --}}
+                <section class="glass-card p-8 space-y-8 relative overflow-hidden group">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xl border border-emerald-100 shadow-sm">3</div>
+                            <div>
+                                <h4 class="text-xl font-black text-gray-900 tracking-tight">Equipment Rental</h4>
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Optional equipment for booking</p>
+                            </div>
+                        </div>
+                        <button type="button" @click="addEquipment()" class="btn-secondary py-2 px-4 text-[10px]">
+                            <i class="bi bi-plus-lg"></i>
+                            Add Item
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <template x-for="(item, index) in equipmentList" :key="index">
+                            <div class="flex items-center gap-3 bg-gray-50/50 p-4 rounded-2xl border border-gray-100 animate-fade-in group/item">
+                                <div class="flex-1 grid grid-cols-2 gap-3">
+                                    <input type="text" :name="`equipment[${index}][name]`" x-model="item.name" placeholder="EQUIPMENT NAME" required
+                                           class="w-full px-4 py-3 rounded-xl border border-gray-100 bg-white text-[10px] font-black uppercase tracking-widest focus:border-emerald-500 transition-all outline-none">
+                                    <div class="relative">
+                                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400">₱</span>
+                                        <input type="number" :name="`equipment[${index}][price]`" x-model="item.price" placeholder="0.00" step="0.01" min="0" required
+                                               class="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-100 bg-white text-[10px] font-black uppercase tracking-widest focus:border-emerald-500 transition-all outline-none tabular-nums">
+                                    </div>
+                                </div>
+                                <button type="button" @click="removeEquipment(index)" class="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div x-show="equipmentList.length === 0" class="py-12 text-center border-2 border-dashed border-gray-100 rounded-3xl">
+                        <div class="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center mx-auto text-gray-200 mb-3">
+                            <i class="bi bi-tools text-2xl"></i>
+                        </div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">No rental equipment added</p>
+                    </div>
+                </section>
+            </div>
+
+            {{-- RIGHT COLUMN: MEDIA & STATUS --}}
+            <div class="space-y-8">
+                
+                {{-- Pricing Card --}}
+                <div class="glass-card bg-gray-900 p-8 relative overflow-hidden group border-none">
+                    <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all duration-700"></div>
+                    
+                    <div class="relative z-10 space-y-6">
+                        <div class="space-y-2">
+                            <p class="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Financial Configuration</p>
+                            <h4 class="text-xl font-black text-white tracking-tight leading-tight">Booking Rate</h4>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Amount (₱) <span class="text-emerald-500">*</span></label>
+                            <div class="relative group/price">
+                                <span class="absolute left-6 top-1/2 -translate-y-1/2 text-emerald-500 font-black text-2xl tracking-tighter transition-all group-focus-within/price:scale-110">₱</span>
+                                <input type="number" name="price" value="{{ old('price', $amenity->price) }}" step="0.01" min="0" required
+                                    class="w-full pl-14 pr-6 py-6 bg-white/5 border border-white/10 rounded-2xl text-3xl font-black text-white focus:bg-white/10 focus:border-emerald-500 transition-all outline-none tabular-nums">
+                            </div>
+                        </div>
+
+                        <p class="text-[11px] font-medium text-gray-500 leading-relaxed">
+                            This is the base price for booking one slot of this amenity.
+                        </p>
+                    </div>
+                </div>
+
+                {{-- Status & Highlight --}}
+                <div class="glass-card p-8 space-y-8">
+                    <div class="space-y-4">
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Visibility Status</label>
+                        <div class="relative group/select">
+                            <select name="status" class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-[10px] font-black uppercase tracking-widest text-gray-700 appearance-none focus:bg-white focus:border-emerald-500 transition-all outline-none cursor-pointer">
+                                <option value="active" {{ in_array(old('status', $amenity->status), ['active', '1', 1, true]) ? 'selected' : '' }}>Active (Public)</option>
+                                <option value="maintenance" {{ old('status', $amenity->status) === 'maintenance' ? 'selected' : '' }}>Maintenance</option>
+                                <option value="inactive" {{ in_array(old('status', $amenity->status), ['inactive', '0', 0, false]) ? 'selected' : '' }}>Inactive (Hidden)</option>
+                            </select>
+                            <i class="bi bi-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-hover/select:text-emerald-600 transition-colors"></i>
+                        </div>
+                    </div>
+
+                    <label class="flex items-center gap-4 cursor-pointer group p-5 bg-emerald-50/30 rounded-2xl border border-emerald-100 hover:bg-emerald-50 transition-all shadow-sm">
+                        <div class="relative flex items-center">
+                            <input type="hidden" name="highlight" value="0">
+                            <input type="checkbox" name="highlight" value="1" class="peer h-6 w-6 rounded-lg border-emerald-300 text-emerald-600 focus:ring-emerald-500/20 transition-all" {{ old('highlight', $amenity->highlight) ? 'checked' : '' }}>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-black text-emerald-900 uppercase tracking-widest">Featured Amenity</p>
+                            <p class="text-[9px] font-bold text-emerald-600 uppercase tracking-tighter mt-0.5">Showcase on dashboard</p>
+                        </div>
+                    </label>
+                </div>
+
+                {{-- Image Upload --}}
+                <div class="glass-card p-8 space-y-6">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Amenity Photo</label>
+                    <div class="relative group/upload">
+                        <div class="border-2 border-dashed border-gray-100 rounded-3xl p-8 text-center bg-gray-50/50 group-hover/upload:bg-emerald-50/30 group-hover/upload:border-emerald-200 transition-all duration-300">
+                            <input type="file" name="image" accept="image/*" @change="fileChosen"
+                                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                            
+                            <div x-show="!imagePreview" class="space-y-3">
+                                <div class="w-16 h-16 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center mx-auto text-emerald-500 group-hover/upload:scale-110 transition-transform duration-500">
+                                    <i class="bi bi-cloud-arrow-up text-2xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-black text-gray-900 uppercase tracking-widest">Upload Image</p>
+                                    <p class="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-tighter">PNG, JPG up to 5MB</p>
+                                </div>
+                            </div>
+
+                            <div x-show="imagePreview" class="relative z-20 animate-fade-in">
+                                <img :src="imagePreview" class="h-40 mx-auto rounded-2xl object-cover shadow-xl ring-8 ring-white/50">
+                                <div class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 backdrop-blur-sm border border-gray-100 text-[9px] font-black text-gray-500 uppercase tracking-widest shadow-sm">
+                                    <i class="bi bi-arrow-repeat"></i> Change Photo
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- PDF Rules --}}
+                <div class="glass-card p-8 space-y-6">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Facility Rules (PDF)</label>
+                    <div class="p-5 bg-gray-50/50 rounded-2xl border border-gray-100 flex items-center gap-4 group/pdf">
+                        <label class="shrink-0 cursor-pointer">
+                            <input type="file" name="pdf_rules" accept="application/pdf" class="hidden" id="pdf_rules_input">
+                            <div class="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center text-gray-400 group-hover/pdf:text-emerald-500 group-hover/pdf:border-emerald-200 transition-all">
+                                <i class="bi bi-file-earmark-pdf text-xl"></i>
+                            </div>
+                        </label>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-[10px] font-black text-gray-900 uppercase tracking-widest truncate" id="pdf-filename">
+                                {{ $amenity->pdf_rules ? basename($amenity->pdf_rules) : 'No file selected' }}
+                            </p>
+                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mt-0.5">Guidelines & Policies</p>
+                        </div>
+                        @if($amenity->pdf_rules)
+                            <a href="{{ Storage::url($amenity->pdf_rules) }}" target="_blank" class="text-[10px] font-black text-emerald-600 uppercase tracking-widest hover:text-emerald-700 transition-colors">View</a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
 
 <script>
-    // Simple script to update file name for PDF
-    document.querySelector('input[name="pdf_rules"]').addEventListener('change', function(e) {
-        const fileName = e.target.files[0]?.name || 'No file chosen';
-        const label = this.parentElement.nextElementSibling;
-        if (label && label.tagName === 'SPAN') {
-             label.textContent = fileName;
-        }
+    document.getElementById('pdf_rules_input')?.addEventListener('change', function(e) {
+        const fileName = e.target.files[0]?.name || 'No file selected';
+        document.getElementById('pdf-filename').textContent = fileName;
     });
 </script>
 @endsection

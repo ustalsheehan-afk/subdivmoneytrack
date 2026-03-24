@@ -30,6 +30,11 @@ class Due extends Model
         'archived_at',
     ];
 
+    public function batch()
+    {
+        return $this->belongsTo(DuesBatch::class, 'batch_id');
+    }
+
     public function duesBatch()
     {
         return $this->belongsTo(DuesBatch::class, 'batch_id');
@@ -196,9 +201,12 @@ class Due extends Model
      */
     public function markPaidIfFullyCollected(): void
     {
-        if ($this->totalCollected() >= $this->amount) {
-            $this->update(['status' => self::STATUS_PAID]);
-        }
+        $totalPaid = $this->totalCollected();
+        
+        $this->update([
+            'paid_amount' => $totalPaid,
+            'status' => ($totalPaid >= $this->amount) ? self::STATUS_PAID : $this->status
+        ]);
     }
 
     /**

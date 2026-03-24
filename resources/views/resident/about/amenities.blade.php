@@ -15,47 +15,65 @@
     ];
 @endphp
 
-<div class="w-full bg-gray-50 py-16 md:py-24">
-    <div class="max-w-7xl mx-auto px-6 md:px-12 space-y-12">
-        <div class="max-w-3xl mx-auto text-center space-y-4">
-            <h2 class="text-3xl md:text-4xl font-bold text-slate-900">Subdivision Amenities</h2>
-            <p class="text-lg font-medium text-slate-700">Built for Convenience. Maintained for Excellence.</p>
-            <p class="text-base text-slate-500 leading-relaxed max-w-2xl mx-auto">
-               Vistabellas provides top-tier infrastructure and well-maintained facilities for residents' convenience.
-            </p>
+<div class="h-full bg-[#F8F9FB] overflow-y-auto custom-scrollbar">
+    <div class="max-w-7xl mx-auto px-6 py-10 flex flex-col gap-12 pb-24">
+
+        {{-- Header --}}
+        <div class="relative overflow-hidden bg-[#081412] rounded-[40px] p-12 shadow-2xl group animate-fade-in">
+            <div class="absolute -right-20 -top-20 w-80 h-80 bg-brand-accent/10 rounded-full blur-3xl group-hover:bg-brand-accent/20 transition-all duration-1000"></div>
+            <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl"></div>
+            
+            <div class="max-w-3xl relative z-10 space-y-4">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                    <i class="bi bi-building-fill text-emerald-400 text-xs"></i>
+                    <span class="text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em]">Community Facilities</span>
+                </div>
+                <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
+                    Subdivision Amenities
+                </h2>
+                <p class="text-[15px] font-medium text-white/50 leading-relaxed">
+                   Built for convenience. Maintained for excellence. Vistabellas provides top-tier infrastructure and well-maintained facilities for residents' convenience.
+                </p>
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             @foreach ($amenities as $amenity)
-                <div class="group relative h-[450px] bg-white border border-gray-200 shadow-lg overflow-hidden rounded-xl hover:shadow-2xl transition-all duration-500">
+                <div class="group relative h-[450px] bg-[#081412] border border-white/5 shadow-2xl overflow-hidden rounded-[32px] hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all duration-500 hover:-translate-y-2">
                     <!-- Image -->
-                    <img 
-                        src="{{ $amenity['img'] }}" 
-                        alt="{{ $amenity['title'] }}" 
-                        class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    >
-                    <!-- Gradient Overlay -->
-                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500"></div>
+                    <div class="absolute inset-0 w-full h-full bg-white/5">
+                        <img 
+                            src="{{ $amenity['img'] }}" 
+                            alt="{{ $amenity['title'] }}" 
+                            class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-70 group-hover:opacity-90"
+                        >
+                    </div>
+
+                    <!-- Dark Overlay -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#081412] via-[#081412]/60 to-transparent transition-opacity duration-500 opacity-90 group-hover:opacity-95"></div>
+
+                    <!-- Accent Blur -->
+                    <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-brand-accent/5 rounded-full blur-3xl group-hover:bg-brand-accent/10 transition-all duration-700"></div>
 
                     <!-- Content Panel -->
-                    <div class="absolute bottom-0 left-0 right-0 p-6 translate-y-[20px] group-hover:translate-y-0 transition-transform duration-500 ease-out">
-                        <div class="space-y-1">
-                            <h3 class="text-2xl font-bold text-white tracking-wide">
+                    <div class="absolute bottom-0 left-0 right-0 p-8 translate-y-8 group-hover:translate-y-0 transition-all duration-500 ease-out">
+                        <div class="space-y-2">
+                            <h3 class="text-2xl font-black text-white tracking-tight">
                                 {{ $amenity['title'] }}
                             </h3>
-                            <p class="text-xs font-bold tracking-widest text-emerald-400 uppercase">
+                            <p class="text-[10px] font-black tracking-[0.2em] text-emerald-400 uppercase">
                                 {{ $amenity['category'] }}
                             </p>
                         </div>
                         
-                        <div class="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
-                            <p class="text-sm text-slate-200 leading-relaxed">
+                        <div class="mt-6 opacity-0 group-hover:opacity-100 transition-all duration-500 delay-100 space-y-4">
+                            <p class="text-sm text-white/60 leading-relaxed font-medium">
                                 {{ $amenity['desc'] }}
                             </p>
                             
-                            <div class="mt-4">
-                                <span class="inline-flex items-center text-xs font-medium text-emerald-300">
-                                    <i class="bi bi-check-circle-fill mr-1"></i> Available for use
+                            <div class="pt-2">
+                                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
+                                    <i class="bi bi-check2-circle"></i> Available for use
                                 </span>
                             </div>
                         </div>
@@ -65,4 +83,19 @@
         </div>
     </div>
 </div>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #CBD5E0; }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+    }
+</style>
 @endsection

@@ -3,88 +3,160 @@
 @section('title', 'Create Account')
 
 @section('content')
-<div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Create Account</h1>
+<div class="space-y-8 animate-fade-in">
+    {{-- ===================== --}}
+    {{-- HEADER SECTION --}}
+    {{-- ===================== --}}
+    <div class="glass-card p-8 relative overflow-hidden group">
+        {{-- Subtle gradient glow in background --}}
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-brand-accent/5 rounded-full blur-3xl group-hover:bg-brand-accent/10 transition-all duration-700"></div>
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
+                    Create Account
+                </h1>
+                <p class="mt-2 text-gray-600 text-lg max-w-xl">
+                    Provision a new system account for a resident or administrator.
+                </p>
+            </div>
 
-    <a href="{{ route('admin.accounts.index') }}"
-        class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg transition">
-        ← Back to Accounts
-    </a>
-</div>
-
-@if ($errors->any())
-    <div class="bg-red-100 text-red-700 p-3 rounded mb-4">
-        <ul class="list-disc pl-5">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('admin.accounts.index') }}" class="btn-secondary">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Accounts
+                </a>
+            </div>
+        </div>
     </div>
-@endif
 
-<div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 max-w-xl mx-auto">
-    <form action="{{ route('admin.accounts.store') }}" method="POST" class="space-y-5">
-        @csrf
-
-        {{-- Homeowner Dropdown --}}
-        <div>
-            <label for="homeowner_id" class="block text-gray-700 dark:text-gray-300 font-semibold mb-1">
-                Select Homeowner
-            </label>
-            <select name="homeowner_id" id="homeowner_id" required
-                class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
-                <option value="">-- Choose Homeowner --</option>
-                @foreach($homeowners as $homeowner)
-                    <option value="{{ $homeowner->id }}" {{ old('homeowner_id') == $homeowner->id ? 'selected' : '' }}>
-                        {{ $homeowner->name }} ({{ $homeowner->email ?? 'No Email' }})
-                    </option>
+    @if ($errors->any())
+        <div class="glass-card border-red-100 bg-red-50/50 p-6 animate-zoom-in">
+            <div class="flex items-center gap-3 mb-4 text-red-600">
+                <i class="bi bi-exclamation-triangle-fill text-xl"></i>
+                <h3 class="font-black uppercase tracking-widest text-sm">Validation Errors</h3>
+            </div>
+            <ul class="space-y-1">
+                @foreach ($errors->all() as $error)
+                    <li class="text-sm font-bold text-red-500 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                        {{ $error }}
+                    </li>
                 @endforeach
-            </select>
+            </ul>
         </div>
+    @endif
 
-        {{-- Email --}}
-        <div>
-            <label for="email" class="block text-gray-700 dark:text-gray-300 font-semibold mb-1">Email</label>
-            <input type="email" name="email" id="email" value="{{ old('email') }}" required
-                class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
-        </div>
+    <div class="max-w-3xl mx-auto">
+        <form action="{{ route('admin.accounts.store') }}" method="POST" class="space-y-8">
+            @csrf
 
-        {{-- Password --}}
-        <div>
-            <label for="password" class="block text-gray-700 dark:text-gray-300 font-semibold mb-1">Password</label>
-            <input type="password" name="password" id="password" required
-                class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
-        </div>
+            <div class="glass-card overflow-hidden">
+                <div class="p-8 space-y-8">
+                    {{-- Form Sections --}}
+                    <div class="space-y-8">
+                        {{-- Identity Section --}}
+                        <div>
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">1</div>
+                                <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest">Identity & Ownership</h3>
+                            </div>
 
-        {{-- Role Selector --}}
-        <div>
-            <label for="role" class="block text-gray-700 dark:text-gray-300 font-semibold mb-1">Role</label>
-            <select name="role" id="role" required
-                class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
-                <option value="resident" {{ old('role') == 'resident' ? 'selected' : '' }}>Resident</option>
-                <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
-            </select>
-        </div>
+                            <div class="space-y-6">
+                                {{-- Homeowner Dropdown --}}
+                                <div class="space-y-2">
+                                    <label for="homeowner_id" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">
+                                        Select Homeowner / Resident
+                                    </label>
+                                    <div class="relative group">
+                                        <select name="homeowner_id" id="homeowner_id" required
+                                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none appearance-none cursor-pointer">
+                                            <option value="">-- Choose Homeowner --</option>
+                                            @foreach($homeowners as $homeowner)
+                                                <option value="{{ $homeowner->id }}" {{ old('homeowner_id') == $homeowner->id ? 'selected' : '' }}>
+                                                    {{ $homeowner->name }} ({{ $homeowner->email ?? 'No Email' }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <i class="bi bi-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-focus-within:text-emerald-500 transition-colors"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-        {{-- Status (Active Toggle) --}}
-        <div class="flex items-center gap-2">
-            <input type="checkbox" name="active" id="active" value="1" checked
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded">
-            <label for="active" class="text-gray-700 dark:text-gray-300">Active Account</label>
-        </div>
+                        {{-- Security Section --}}
+                        <div>
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">2</div>
+                                <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest">Security Credentials</h3>
+                            </div>
 
-        {{-- Buttons --}}
-        <div class="flex justify-end gap-3 mt-6">
-            <a href="{{ route('admin.accounts.index') }}"
-                class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition">
-                Cancel
-            </a>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {{-- Email --}}
+                                <div class="space-y-2">
+                                    <label for="email" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Account Email</label>
+                                    <input type="email" name="email" id="email" value="{{ old('email') }}" required
+                                        class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none"
+                                        placeholder="e.g. login@example.com">
+                                </div>
 
-            <button type="submit"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
-                💾 Create Account
-            </button>
-        </div>
-    </form>
+                                {{-- Password --}}
+                                <div class="space-y-2">
+                                    <label for="password" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Initial Password</label>
+                                    <input type="password" name="password" id="password" required
+                                        class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none"
+                                        placeholder="Minimum 8 characters">
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Permissions Section --}}
+                        <div>
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">3</div>
+                                <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest">Permissions & Status</h3>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {{-- Role Selector --}}
+                                <div class="space-y-2">
+                                    <label for="role" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">System Role</label>
+                                    <div class="relative group">
+                                        <select name="role" id="role" required
+                                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none appearance-none cursor-pointer">
+                                            <option value="resident" {{ old('role') == 'resident' ? 'selected' : '' }}>Resident (Limited Access)</option>
+                                            <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Administrator (Full Access)</option>
+                                        </select>
+                                        <i class="bi bi-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-focus-within:text-emerald-500 transition-colors"></i>
+                                    </div>
+                                </div>
+
+                                {{-- Status (Active Toggle) --}}
+                                <div class="flex items-center px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl h-[60px] self-end">
+                                    <label for="active" class="flex items-center gap-3 cursor-pointer group">
+                                        <div class="relative inline-flex items-center">
+                                            <input type="checkbox" name="active" id="active" value="1" checked class="sr-only peer">
+                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                                        </div>
+                                        <span class="text-[11px] font-black text-gray-500 uppercase tracking-widest group-hover:text-emerald-600 transition-colors">Active Account</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-8 bg-gray-50/50 border-t border-gray-100 flex items-center justify-end gap-4">
+                    <a href="{{ route('admin.accounts.index') }}" class="btn-secondary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn-premium px-12">
+                        <i class="bi bi-check-lg"></i>
+                        Create Account
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 @endsection

@@ -9,174 +9,211 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         
+        :root {
+            --brand-green: #0D1F1C;
+            --brand-accent: #B6FF5C;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f3f4f6;
+            -webkit-print-color-adjust: exact;
+        }
+
+        /* A4 Page Wrapper for PDF/Print centering */
+        .a4-wrapper {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 20px auto;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        /* Half A4 Receipt Design */
+        .receipt-half-a4 {
+            width: 148mm;
+            min-height: 210mm;
+            padding: 15mm;
+            background: white;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #f0f0f0;
+            box-sizing: border-box;
+        }
+
+        @media screen {
+            .receipt-half-a4 {
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            }
         }
 
         @media print {
-            .no-print { display: none !important; }
-            body { background: white !important; padding: 0; margin: 0; }
-            .receipt-container { box-shadow: none !important; border: none !important; max-width: 100% !important; }
-            .watermark { opacity: 0.03 !important; }
+            body {
+                background: white;
+            }
+            .a4-wrapper {
+                margin: 0;
+                box-shadow: none;
+                width: 210mm;
+                height: 297mm;
+            }
+            .receipt-half-a4 {
+                border: none;
+                box-shadow: none;
+                border-radius: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+            @page {
+                size: A4;
+                margin: 0;
+            }
         }
 
-        .receipt-gradient {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        .custom-dashed {
+            background-image: linear-gradient(to right, #e5e7eb 50%, transparent 50%);
+            background-position: bottom;
+            background-size: 10px 1px;
+            background-repeat: repeat-x;
         }
     </style>
 </head>
-<body class="bg-slate-100 flex items-center justify-center min-h-screen p-4 sm:p-8">
+<body class="bg-gray-100">
 
-    @php
-        $receiptNo = str_pad($payment->id, 8, '0', STR_PAD_LEFT);
-        
-        // Use the current request's host if APP_URL is not scannable
-        // This helps if testing via local IP
-        $verificationURL = route('payments.verify', $payment->id);
-        
-        // QR Code API with higher error correction and size
-        $qr = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=".urlencode($verificationURL)."&ecc=M&margin=1";
-    @endphp
+    <div class="no-print fixed top-6 right-6 z-50 flex gap-3">
+        <button onclick="window.print()" class="flex items-center gap-2 px-6 py-3 bg-[#0D1F1C] text-white rounded-xl font-bold text-sm shadow-xl hover:bg-emerald-900 transition-all active:scale-95">
+            <i class="bi bi-printer"></i>
+            Print Receipt
+        </button>
+        <a href="{{ url()->previous() }}" class="flex items-center gap-2 px-6 py-3 bg-white text-gray-600 border border-gray-200 rounded-xl font-bold text-sm shadow-xl hover:bg-gray-50 transition-all active:scale-95">
+            <i class="bi bi-arrow-left"></i>
+            Back
+        </a>
+    </div>
 
-    <div class="receipt-container relative max-w-2xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
-        
-        {{-- Watermark --}}
-        <div class="watermark absolute inset-0 flex items-center justify-center pointer-events-none select-none opacity-[0.03] overflow-hidden">
-            <span class="text-[150px] font-black tracking-widest text-slate-900 rotate-[-25deg] whitespace-nowrap">
-                VISTABELLA
-            </span>
-        </div>
-
-        {{-- Header --}}
-        <div class="receipt-gradient px-8 py-10 text-white relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-            
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-6 relative z-10">
+    <div class="a4-wrapper">
+        <div class="receipt-half-a4">
+            {{-- HEADER SECTION --}}
+            <div class="flex justify-between items-start mb-10">
                 <div class="flex items-center gap-4">
-                    <div class="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-xl">
-                        <span class="text-slate-900 text-3xl font-black">V</span>
+                    <div class="w-14 h-14 bg-[#0D1F1C] rounded-xl flex items-center justify-center shadow-lg">
+                        <span class="text-[#B6FF5C] text-2xl font-black italic">V</span>
                     </div>
-                    <div class="text-center sm:text-left">
-                        <h2 class="text-xs font-bold tracking-[0.3em] uppercase text-slate-400 mb-1">Vistabella Subdivision</h2>
-                        <h1 class="text-2xl font-black uppercase tracking-tight">Official Receipt</h1>
+                    <div>
+                        <h1 class="text-lg font-black text-[#0D1F1C] tracking-tight leading-none uppercase">Vistabella</h1>
+                        <p class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-1">Subdivision Management</p>
                     </div>
                 </div>
-                
-                <div class="text-center sm:text-right">
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Receipt Number</p>
-                    <p class="text-xl font-mono font-bold">#{{ $receiptNo }}</p>
+                <div class="text-right">
+                    <h2 class="text-2xl font-black text-[#0D1F1C] uppercase tracking-tighter italic">Official Receipt</h2>
+                    <div class="inline-block px-3 py-1 bg-emerald-50 border border-emerald-100 rounded-lg mt-2">
+                        <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Receipt No. #{{ str_pad($payment->id, 8, '0', STR_PAD_LEFT) }}</p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="p-8 sm:p-10 relative z-10 space-y-8">
-            
-            {{-- Top Info Grid --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+            {{-- INFO GRID --}}
+            <div class="grid grid-cols-2 gap-8 mb-10 pb-8 border-b border-gray-100">
                 <div class="space-y-4">
                     <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Payer Details</p>
-                        <p class="text-lg font-extrabold text-slate-900 leading-tight">{{ $payment->resident->full_name }}</p>
-                        <p class="text-sm text-slate-500 font-medium">Block {{ $payment->resident->block }} • Lot {{ $payment->resident->lot }}</p>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Date & Time Issued</p>
+                        <p class="text-sm font-bold text-gray-800">{{ $payment->date_paid->format('M d, Y • h:i A') }}</p>
                     </div>
                     <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Payment Method</p>
-                        <div class="flex items-center gap-2">
-                            <span class="px-2 py-1 bg-slate-100 rounded text-[10px] font-bold text-slate-700 uppercase tracking-wider border border-slate-200">
-                                {{ $payment->payment_method }}
-                            </span>
-                            @if($payment->reference_no)
-                                <span class="text-[10px] font-mono text-slate-400">Ref: {{ $payment->reference_no }}</span>
-                            @endif
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Processed By</p>
+                        <p class="text-sm font-bold text-gray-800">System Administrator</p>
+                    </div>
+                </div>
+                <div class="space-y-4 text-right">
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Resident Payer</p>
+                        <p class="text-sm font-black text-gray-900 uppercase">{{ $payment->resident->full_name }}</p>
+                        <p class="text-[11px] font-bold text-emerald-600 mt-0.5">Block {{ $payment->resident->block }} / Lot {{ $payment->resident->lot }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- BILLING DETAILS --}}
+            <div class="flex-grow">
+                <div class="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-100/50">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Billing Information</p>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-base font-black text-gray-900 uppercase">{{ $payment->due->title }}</h3>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">{{ str_replace('_', ' ', $payment->due->type) }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xl font-black text-gray-900 italic">₱{{ number_format($payment->amount, 2) }}</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="sm:text-right space-y-4">
-                    <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Transaction Date</p>
-                        <p class="text-sm font-bold text-slate-900">{{ \Carbon\Carbon::parse($payment->date_paid)->format('F j, Y') }}</p>
-                        <p class="text-xs text-slate-500 font-medium">{{ \Carbon\Carbon::parse($payment->date_paid)->format('g:i A') }}</p>
+                {{-- PAYMENT SUMMARY --}}
+                <div class="space-y-3 px-2">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-500 font-medium">Payment Method</span>
+                        <span class="font-black text-gray-900 uppercase tracking-widest text-xs px-3 py-1 bg-white border border-gray-200 rounded-lg">{{ $payment->payment_method }}</span>
                     </div>
-                    <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Status</p>
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100">
-                            <i class="bi bi-patch-check-fill text-xs"></i>
-                            Verified & Approved
-                        </span>
+                    @if($payment->reference_no)
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-500 font-medium">Reference No.</span>
+                        <span class="font-bold text-gray-800">{{ $payment->reference_no }}</span>
+                    </div>
+                    @endif
+                    <div class="pt-4 mt-4 border-t border-gray-100 flex justify-between items-end">
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Amount Paid</p>
+                            <p class="text-4xl font-black text-[#0D1F1C] tracking-tighter mt-1 italic">₱{{ number_format($payment->amount, 2) }}</p>
+                        </div>
+                        <div class="text-right">
+                            @php $balance = $payment->due->balance; @endphp
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Remaining Balance</p>
+                            <p class="text-lg font-black {{ $balance > 0 ? 'text-red-500' : 'text-emerald-500' }} mt-1 italic">
+                                ₱{{ number_format($balance, 2) }}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {{-- Description Table --}}
-            <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            <th class="px-6 py-4 text-left">Description</th>
-                            <th class="px-6 py-4 text-right">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        <tr class="text-slate-700 font-medium">
-                            <td class="px-6 py-5">
-                                <p class="text-slate-900 font-bold">{{ $payment->due->title }}</p>
-                                <p class="text-[10px] text-slate-400 mt-0.5">Subdivision Maintenance & Services</p>
-                            </td>
-                            <td class="px-6 py-5 text-right font-bold text-slate-900">₱{{ number_format($payment->amount, 2) }}</td>
-                        </tr>
-                    </tbody>
-                    <tfoot>
-                        <tr class="bg-slate-50/50">
-                            <td class="px-6 py-5 text-right text-slate-500 font-bold uppercase tracking-widest text-[10px]">Total Amount Paid</td>
-                            <td class="px-6 py-5 text-right text-2xl font-black text-emerald-600">₱{{ number_format($payment->amount, 2) }}</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            {{-- QR & Verification --}}
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-8 pt-4">
-                <div class="flex flex-col items-center sm:items-start text-center sm:text-left gap-3">
-                    <div class="border-t-2 border-slate-900 pt-3 w-48">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Authorized Signature</p>
-                        <p class="text-xs font-black text-slate-900 uppercase tracking-tight">Subdivision Administrator</p>
-                    </div>
-                    <p class="text-[9px] text-slate-400 uppercase tracking-widest italic mt-2">
-                        This is a system-generated receipt.<br>No physical signature required.
-                    </p>
-                </div>
-
-                <div class="flex flex-col items-center gap-2">
-                    <div class="p-3 bg-white border border-slate-200 rounded-2xl shadow-sm">
-                        <img src="{{ $qr }}" alt="Verification QR" class="w-24 h-24 sm:w-28 sm:h-28">
-                    </div>
-                    <div class="text-center">
-                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Scan to Verify</p>
-                        <p class="text-[8px] text-slate-300 font-mono mt-1 break-all max-w-[150px] leading-tight">
-                            {{ str_replace(['http://', 'https://'], '', $verificationURL) }}
+            {{-- FOOTER SECTION --}}
+            <div class="mt-12 pt-8 border-t border-gray-100">
+                <div class="flex justify-between items-center">
+                    <div class="max-w-[280px]">
+                        <p class="text-[10px] font-black text-[#0D1F1C] uppercase tracking-widest leading-relaxed">
+                            This serves as your official receipt for the transaction stated above.
+                        </p>
+                        <p class="text-[9px] text-gray-400 font-bold uppercase mt-2 tracking-wider">
+                            System Generated • Valid without signature
                         </p>
                     </div>
+                    <div class="text-right">
+                        @php
+                            $verificationURL = route('payments.verify', $payment->id);
+                            $qr = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=".urlencode($verificationURL)."&ecc=M&margin=0";
+                        @endphp
+                        <div class="inline-block p-2 bg-white border border-gray-100 rounded-xl shadow-sm mb-2">
+                            <img src="{{ $qr }}" alt="Verification QR" class="w-16 h-16 grayscale contrast-125 opacity-80">
+                        </div>
+                        <p class="text-[8px] font-bold text-gray-300 uppercase tracking-[0.2em]">Scan to verify</p>
+                    </div>
+                </div>
+                
+                <div class="mt-10 flex justify-center">
+                    <div class="px-6 py-2 bg-gray-50 rounded-full border border-gray-100">
+                        <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.4em]">Vistabella Subdivision System</p>
+                    </div>
                 </div>
             </div>
-        </div>
-
-        {{-- Footer --}}
-        <div class="bg-slate-50 px-8 py-6 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em]">Vistabella Subdivision Management System</p>
-            <p class="text-[9px] text-slate-400 font-medium">Generated: {{ now()->format('M d, Y • h:i A') }}</p>
-        </div>
-
-        {{-- Buttons --}}
-        <div class="no-print p-8 bg-white border-t border-slate-100 flex flex-wrap justify-center gap-4 relative z-20">
-            <button onclick="window.print()" class="inline-flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl active:scale-95">
-                <i class="bi bi-printer-fill"></i>
-                Print Receipt
-            </button>
-            <a href="{{ route('admin.payments.index') }}" class="inline-flex items-center gap-2 px-8 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all active:scale-95">
-                <i class="bi bi-arrow-left"></i>
-                Back to Dashboard
-            </a>
         </div>
     </div>
 

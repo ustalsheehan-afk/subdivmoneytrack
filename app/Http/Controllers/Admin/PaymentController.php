@@ -13,8 +13,11 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
+use App\Traits\LogsActivity;
+
 class PaymentController extends Controller
 {
+    use LogsActivity;
     /* =========================
        Status & Method Constants
        ========================= */
@@ -231,6 +234,31 @@ class PaymentController extends Controller
     }
 
     // ==============================
+    // REVIEW PAYMENT (GET)
+    // ==============================
+    public function review($id)
+    {
+        $payment = Payment::with(['resident', 'due'])->findOrFail($id);
+        
+        // This is for reviewing an EXISTING payment
+        // We reuse the review view but with different data structure if needed
+        return view('admin.payments.review', [
+            'data' => [
+                'resident_id' => $payment->resident_id,
+                'due_id' => $payment->due_id,
+                'amount' => $payment->amount,
+                'date_paid' => $payment->date_paid,
+                'payment_method' => $payment->payment_method,
+            ],
+            'resident' => $payment->resident,
+            'due' => $payment->due,
+            'proofPath' => $payment->proof,
+            'is_existing' => true,
+            'payment' => $payment
+        ]);
+    }
+
+    // ==============================
     // CREATE FORM
     // ==============================
     public function create()
@@ -240,78 +268,77 @@ class PaymentController extends Controller
         return view('admin.payments.form', compact('residents', 'dues'));
     }
 
-    // ==============================
-    // REVIEW PAYMENT
-    // ==============================
-    public function review(Request $request)
+    public function store(Request $request)
     {
-        $data = $request->validate([
-            'resident_id'    => 'required|exists:residents,id',
-            'due_id'         => 'required|exists:dues,id',
-            'amount'         => 'required|numeric|min:0',
-            'date_paid'      => 'required|date',
-            'payment_method' => 'required|string|max:100',
-            'proof'          => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        $validated = $request->validate([
+            'resident_id' => 'required|exists:residents,id',
+            'due_id' => 'required|exists:dues,id',
+            'amount' => 'required|numeric|min:0.01',
+            'date_paid' => 'required|date',
+            'payment_method' => 'required|string',
+            'proof' => 'nullable|image|max:2048',
         ]);
 
-        $resident = Resident::findOrFail($data['resident_id']);
-        $due = Due::findOrFail($data['due_id']);
-
-        // Handle proof preview if uploaded
         $proofPath = null;
         if ($request->hasFile('proof')) {
             $proofPath = $request->file('proof')->store('temp_proofs', 'public');
         }
 
-        return view('admin.payments.review', compact('data', 'resident', 'due', 'proofPath'));
+        $resident = \App\Models\Resident::findOrFail($validated['resident_id']);
+        $due = \App\Models\Due::findOrFail($validated['due_id']);
+
+        return view('admin.payments.review', [
+            'data' => $validated,
+            'resident' => $resident,
+            'due' => $due,
+            'proofPath' => $proofPath
+        ]);
     }
 
-    // ==============================
-    // CONFIRM AND STORE PAYMENT
-    // ==============================
     public function confirm(Request $request)
     {
-        $validatedData = $request->validate([
-            'resident_id'    => 'required|exists:residents,id',
-            'due_id'         => 'required|exists:dues,id',
-            'amount'         => 'required|numeric|min:0',
-            'date_paid'      => 'required|date',
-            'payment_method' => 'required|string|max:100',
-            'temp_proof'     => 'nullable|string',
+        $data = $request->validate([
+            'resident_id' => 'required|exists:residents,id',
+            'due_id' => 'required|exists:dues,id',
+            'amount' => 'required|numeric',
+            'date_paid' => 'required|date',
+            'payment_method' => 'required|string',
+            'temp_proof' => 'nullable|string'
         ]);
 
-        // Move temp proof to permanent storage if exists
-        if (!empty($validatedData['temp_proof'])) {
-            $oldPath = $validatedData['temp_proof'];
-            $newPath = str_replace('temp_proofs/', 'proofs/', $oldPath);
-            Storage::disk('public')->move($oldPath, $newPath);
-            $validatedData['proof'] = $newPath;
+        $payment = new Payment();
+        $payment->resident_id = $data['resident_id'];
+        $payment->due_id = $data['due_id'];
+        $payment->amount = $data['amount'];
+        $payment->date_paid = $data['date_paid'];
+        $payment->payment_method = $data['payment_method'];
+        $payment->status = 'approved'; // Recorded by admin is auto-approved
+
+        if ($data['temp_proof']) {
+            $newPath = str_replace('temp_proofs/', 'payments/', $data['temp_proof']);
+            \Storage::disk('public')->move($data['temp_proof'], $newPath);
+            $payment->proof = $newPath;
         }
 
-        // Cash payments by admin are automatically approved
-        if (strtolower($validatedData['payment_method']) === 'cash') {
-            $validatedData['status'] = self::STATUS_APPROVED;
-            $validatedData['reference_no'] = 'CASH-' . date('Ymd') . '-' . strtoupper(Str::random(6));
-        } else {
-            $validatedData['status'] = self::STATUS_PENDING;
-            $validatedData['reference_no'] = 'MANUAL-' . date('Ymd') . '-' . strtoupper(Str::random(6));
-        }
+        $payment->save();
 
-        $payment = Payment::create($validatedData);
-
-        $this->handlePenaltyAndMarkDue($payment);
-
+        // Update balance logic here if needed
+        // Generate receipt
         return redirect()->route('admin.payments.receipt', $payment->id)
-                         ->with('success', 'Payment recorded and approved.');
+            ->with('success', 'Payment recorded successfully and receipt generated.');
     }
 
-    // ==============================
-    // STORE NEW PAYMENT (Directly if needed, but we prefer review flow)
-    // ==============================
-    public function store(Request $request)
+    public function receipt($id, Request $request)
     {
-        // For simple direct store if review is skipped
-        return $this->confirm($request);
+        $payment = Payment::with(['resident', 'due'])->findOrFail($id);
+        
+        if ($request->has('download')) {
+            // Simplified for now, usually requires a PDF library like DomPDF
+            // For now we just return the view which the browser can print to PDF
+            return view('admin.payments.receipt', compact('payment'));
+        }
+
+        return view('admin.payments.receipt', compact('payment'));
     }
 
     // ==============================
@@ -397,6 +424,11 @@ class PaymentController extends Controller
             $this->handlePenaltyAndMarkDue($payment);
         });
 
+        $this->logActivity('approved', 'payments', 'Approved payment of ₱' . number_format($payment->amount, 2) . ' from ' . $payment->resident->full_name, [
+            'payment_id' => $payment->id,
+            'resident_id' => $payment->resident_id
+        ]);
+
         return back()->with('success', 'Payment approved and resident notified.');
     }
 
@@ -411,6 +443,11 @@ class PaymentController extends Controller
 
         $payment->update(['status' => self::STATUS_REJECTED]);
         $this->handlePenaltyAndMarkDue($payment);
+
+        $this->logActivity('rejected', 'payments', 'Rejected payment of ₱' . number_format($payment->amount, 2) . ' from ' . $payment->resident->full_name, [
+            'payment_id' => $payment->id,
+            'resident_id' => $payment->resident_id
+        ]);
 
         return back()->with('success', 'Payment rejected and resident notified.');
     }
@@ -555,11 +592,9 @@ class PaymentController extends Controller
         }
 
         // -----------------------------
-        // Automatically mark due as paid if fully collected
+        // Automatically sync due status and paid_amount
         // -----------------------------
-        if ($payment->status === self::STATUS_APPROVED) {
-            $due->markPaidIfFullyCollected();
-        }
+        $due->markPaidIfFullyCollected();
 
         // -----------------------------
         // NOTIFICATIONS (In-App & SMS)

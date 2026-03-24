@@ -18,8 +18,11 @@ use App\Models\Invitation;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
+use App\Traits\LogsActivity;
+
 class ResidentController extends Controller
 {
+    use LogsActivity;
     // ================================
     // IMPERSONATION
     // ================================
@@ -83,8 +86,8 @@ class ResidentController extends Controller
                 break;
         }
 
-        // 3. GET DATA (Load ALL at once as requested)
-        $residents = $query->get();
+        // 3. GET DATA (Paginated for SaaS performance)
+        $residents = $query->paginate(12);
 
         // 4. DISTINCT BLOCKS & LOTS (For Filter Dropdown)
         $blocks = Resident::whereNotNull('block')
@@ -154,6 +157,11 @@ class ResidentController extends Controller
                     'photo'          => $photoPath,
                 ]);
 
+                $this->logActivity('created', 'residents', 'Added new resident: ' . $resident->full_name, [
+                    'resident_id' => $resident->id,
+                    'email' => $resident->email
+                ]);
+
                 // 4. Generate Invitation Token
                 $token = Str::random(40);
                 $expiresAt = Carbon::now()->addDays(7);
@@ -177,7 +185,7 @@ class ResidentController extends Controller
             });
 
             return redirect()->route('admin.residents.index')
-                             ->with('success', 'Resident created successfully.')
+                             ->with('success', 'Resident added successfully.')
                              ->with('invitation_link', $invitationLink);
 
         } catch (Throwable $e) {
@@ -242,11 +250,18 @@ class ResidentController extends Controller
     // ================================
     public function destroy(Resident $resident)
     {
+        $name = $resident->full_name;
+        $id = $resident->id;
+
         if ($resident->photo && Storage::disk('public')->exists($resident->photo)) {
             Storage::disk('public')->delete($resident->photo);
         }
 
         $resident->delete();
+
+        $this->logActivity('deleted', 'residents', 'Deleted resident: ' . $name, [
+            'resident_id' => $id
+        ]);
 
         return redirect()->route('admin.residents.index')
                          ->with('success', 'Resident deleted successfully.');

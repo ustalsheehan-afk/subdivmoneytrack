@@ -17,28 +17,28 @@ class AmenityReservationController extends Controller
 
     public function index()
     {
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
 
         if (!$resident) {
-            abort(403, 'Resident profile not found.');
+            return redirect()->route('resident.dashboard')->with('error', 'Resident profile not found.');
         }
 
         $reservations = AmenityReservation::where('resident_id', $resident->id)
             ->with('amenity')
             ->latest()
-            ->get();
+            ->paginate(10);
             
         return view('resident.reservations.index', compact('reservations'));
     }
 
     public function store(Request $request, Amenity $amenity)
     {
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
 
         if (!$resident) {
-            abort(403, 'Resident profile not found.');
+            return redirect()->route('resident.dashboard')->with('error', 'Resident profile not found.');
         }
 
         $request->validate([
@@ -137,8 +137,12 @@ class AmenityReservationController extends Controller
 
     public function show($id)
     {
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
+
+        if (!$resident) {
+            abort(403, 'Resident profile not found.');
+        }
 
         $reservation = AmenityReservation::where('id', $id)
             ->where('resident_id', $resident->id)
@@ -150,8 +154,12 @@ class AmenityReservationController extends Controller
 
     public function uploadPayment(Request $request, $id)
     {
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
+
+        if (!$resident) {
+            abort(403, 'Resident profile not found.');
+        }
 
         $reservation = AmenityReservation::where('id', $id)
             ->where('resident_id', $resident->id)
@@ -180,8 +188,12 @@ class AmenityReservationController extends Controller
 
     public function confirmation($id)
     {
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
+
+        if (!$resident) {
+            abort(403, 'Resident profile not found.');
+        }
 
         $reservation = AmenityReservation::where('id', $id)
             ->where('resident_id', $resident->id)

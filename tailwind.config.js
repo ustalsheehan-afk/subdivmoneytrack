@@ -13,7 +13,10 @@ module.exports = {
                 sans: ['Nunito', ...defaultTheme.fontFamily.sans],
             },
             colors: {
-                burgundy: '#800020', // added burgundy
+                burgundy: '#800020',
+                'brand-accent': '#B6FF5C',
+                'brand-dark': '#0D1F1C',
+                'brand-darker': '#081412',
             },
         },
     },

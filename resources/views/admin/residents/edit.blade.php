@@ -4,126 +4,203 @@
 @section('page-title', 'Edit Resident')
 
 @section('content')
-<div class="admin-form-card">
+<div class="space-y-8 animate-fade-in pb-20">
 
-    {{-- Success message --}}
-    @if(session('success'))
-        <div class="bg-green-100 text-green-800 p-3 rounded mb-5">
-            {{ session('success') }}
+    {{-- ===================== --}}
+    {{-- HEADER SECTION --}}
+    {{-- ===================== --}}
+    <div class="glass-card p-8 relative overflow-hidden group">
+        {{-- Subtle gradient glow in background --}}
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-brand-accent/5 rounded-full blur-3xl group-hover:bg-brand-accent/10 transition-all duration-700"></div>
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-6">
+                <a href="{{ route('admin.residents.index') }}" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-emerald-600 hover:border-emerald-100 hover:shadow-sm transition-all shadow-sm">
+                    <i class="bi bi-arrow-left text-xl"></i>
+                </a>
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
+                        Edit Resident
+                    </h1>
+                    <p class="mt-2 text-gray-600 text-lg max-w-xl">
+                        Update personal and property details for <span class="font-black text-emerald-600">{{ $resident->full_name }}</span>.
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button type="submit" form="edit-resident-form" class="btn-premium">
+                    <i class="bi bi-check2-circle"></i>
+                    Update Resident
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if ($errors->any())
+        <div class="glass-card border-red-100 bg-red-50/50 p-6 animate-zoom-in">
+            <div class="flex items-center gap-3 mb-4 text-red-600">
+                <i class="bi bi-exclamation-triangle-fill text-xl"></i>
+                <h3 class="font-black uppercase tracking-widest text-sm">Validation Errors</h3>
+            </div>
+            <ul class="space-y-1">
+                @foreach ($errors->all() as $error)
+                    <li class="text-sm font-bold text-red-500 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                        {{ $error }}
+                    </li>
+                @endforeach
+            </ul>
         </div>
     @endif
 
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-semibold text-gray-900">Edit Resident</h2>
-        <a href="{{ route('admin.residents.index') }}"
-           class="admin-btn-secondary">
-           ← Back
-        </a>
-    </div>
+    <div class="max-w-5xl mx-auto">
+        <form id="edit-resident-form" action="{{ route('admin.residents.update', $resident->id) }}" method="POST" enctype="multipart/form-data" class="space-y-8">
+            @csrf
+            @method('PUT')
 
-    {{-- Form --}}
-    <form action="{{ route('admin.residents.update', $resident->id) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
-        @csrf
-        @method('PUT')
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {{-- LEFT: PHOTO & STATUS --}}
+                <div class="lg:col-span-1 space-y-8">
+                    <div class="glass-card p-8 flex flex-col items-center text-center space-y-6">
+                        <div class="relative group/photo">
+                            <img id="photoPreview"
+                                 src="{{ $resident->photo ? asset('storage/' . $resident->photo) : asset('CDlogo.jpg') }}"
+                                 onerror="this.onerror=null; this.src='{{ asset('CDlogo.jpg') }}';"
+                                 class="w-40 h-40 rounded-[40px] object-cover border-4 border-white shadow-2xl group-hover/photo:scale-105 transition-all duration-500">
+                            
+                            <label for="photoInput" class="absolute -bottom-2 -right-2 w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg border-4 border-white cursor-pointer hover:bg-emerald-600 transition-all active:scale-90">
+                                <i class="bi bi-camera-fill text-xl"></i>
+                            </label>
+                            <input type="file" name="photo" id="photoInput" accept="image/*" class="hidden">
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-sm font-black text-gray-900 uppercase tracking-widest">Profile Photo</h4>
+                            <p class="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Click icon to upload</p>
+                        </div>
 
-        <div class="flex flex-col items-center mb-5">
-            <label class="admin-form-label">Profile Photo</label>
-            <div class="relative">
-                <img id="photoPreview"
-                     src="{{ $resident->photo ? asset('storage/' . $resident->photo) : asset('CDlogo.jpg') }}"
-                     onerror="this.onerror=null; this.src='{{ asset('CDlogo.jpg') }}';"
-                     alt="Profile Photo"
-                     class="w-32 h-32 rounded-full object-cover shadow mb-2">
-                <input type="file" name="photo" id="photoInput" accept="image/*" class="hidden">
-                <button type="button"
-                        onclick="document.getElementById('photoInput').click()"
-                        class="admin-btn-secondary">
-                    Upload Photo
-                </button>
+                        <div class="w-full pt-6 border-t border-gray-50">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-4">Account Status</label>
+                            <div class="flex p-1.5 bg-gray-100 rounded-[20px] border border-gray-200 shadow-inner">
+                                <label class="flex-1 cursor-pointer">
+                                    <input type="radio" name="status" value="active" class="peer hidden" {{ old('status', $resident->status) === 'active' ? 'checked' : '' }}>
+                                    <div class="py-3 text-center text-[10px] font-black uppercase tracking-widest rounded-[16px] transition-all peer-checked:bg-white peer-checked:text-emerald-600 peer-checked:shadow-lg text-gray-400 hover:text-gray-600">
+                                        Active
+                                    </div>
+                                </label>
+                                <label class="flex-1 cursor-pointer">
+                                    <input type="radio" name="status" value="inactive" class="peer hidden" {{ old('status', $resident->status) === 'inactive' ? 'checked' : '' }}>
+                                    <div class="py-3 text-center text-[10px] font-black uppercase tracking-widest rounded-[16px] transition-all peer-checked:bg-white peer-checked:text-red-600 peer-checked:shadow-lg text-gray-400 hover:text-gray-600">
+                                        Inactive
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- RIGHT: FORM DETAILS --}}
+                <div class="lg:col-span-2 space-y-8">
+                    <div class="glass-card p-8 space-y-8">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xl border border-emerald-100 shadow-sm">
+                                <i class="bi bi-person-lines-fill"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xl font-black text-gray-900 tracking-tight">Resident Information</h4>
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Update personal and contact data</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {{-- First Name --}}
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">First Name</label>
+                                <input type="text" name="first_name" value="{{ old('first_name', $resident->first_name) }}" 
+                                    class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none" required>
+                            </div>
+
+                            {{-- Last Name --}}
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Last Name</label>
+                                <input type="text" name="last_name" value="{{ old('last_name', $resident->last_name) }}" 
+                                    class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none" required>
+                            </div>
+
+                            {{-- Contact --}}
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Contact Number</label>
+                                <input type="text" name="contact_number" value="{{ old('contact_number', $resident->contact_number) }}" 
+                                    class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none" required>
+                            </div>
+
+                            {{-- Email --}}
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
+                                <input type="email" name="email" value="{{ old('email', $resident->email) }}" 
+                                    class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none" required>
+                            </div>
+                        </div>
+
+                        <div class="pt-8 border-t border-gray-50">
+                            <div class="flex items-center gap-4 mb-8">
+                                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xl border border-emerald-100 shadow-sm">
+                                    <i class="bi bi-house-door-fill"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-black text-gray-900 tracking-tight">Property Details</h4>
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Location and move-in records</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                {{-- Block --}}
+                                <div class="space-y-3">
+                                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Block No.</label>
+                                    <input type="number" name="block" value="{{ old('block', $resident->block) }}" 
+                                        class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium focus:bg-white focus:border-emerald-500 transition-all outline-none" required>
+                                </div>
+
+                                {{-- Lot --}}
+                                <div class="space-y-3">
+                                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Lot No.</label>
+                                    <input type="number" name="lot" value="{{ old('lot', $resident->lot) }}" 
+                                        class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium focus:bg-white focus:border-emerald-500 transition-all outline-none" required>
+                                </div>
+
+                                {{-- Move In --}}
+                                <div class="space-y-3">
+                                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Move-in Date</label>
+                                    <input type="date" name="move_in_date" value="{{ old('move_in_date', $resident->move_in_date ? $resident->move_in_date->format('Y-m-d') : '') }}" 
+                                        class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium focus:bg-white focus:border-emerald-500 transition-all outline-none" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-4">
+                        <a href="{{ route('admin.residents.index') }}" class="btn-secondary px-10 py-4">
+                            Cancel Changes
+                        </a>
+                        <button type="submit" class="btn-premium px-10 py-4">
+                            Save Resident Profile
+                        </button>
+                    </div>
+                </div>
             </div>
-            @error('photo') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
-        </div>
-
-        <div>
-            <label class="admin-form-label">First Name *</label>
-            <input type="text" name="first_name" value="{{ old('first_name', $resident->first_name) }}"
-                   class="admin-form-input"
-                   required>
-            @error('first_name') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
-        </div>
-
-        <div>
-            <label class="admin-form-label">Last Name *</label>
-            <input type="text" name="last_name" value="{{ old('last_name', $resident->last_name) }}"
-                   class="admin-form-input"
-                   required>
-            @error('last_name') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
-        </div>
-
-        <div>
-            <label class="admin-form-label">Contact Number *</label>
-            <input type="text" name="contact_number" value="{{ old('contact_number', $resident->resident->contact_number) }}"
-                   class="admin-form-input"
-                   required>
-            @error('contact_number') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
-        </div>
-
-        <div>
-            <label class="admin-form-label">Block *</label>
-            <input type="number" name="block" value="{{ old('block', $resident->block) }}"
-                   class="admin-form-input"
-                   min="1" required>
-            @error('block') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
-        </div>
-
-        <div>
-            <label class="admin-form-label">Lot *</label>
-            <input type="number" name="lot" value="{{ old('lot', $resident->lot) }}"
-                   class="admin-form-input"
-                   min="1" required>
-            @error('lot') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
-        </div>
-
-        <div>
-            <label class="admin-form-label">Email Address *</label>
-            <input type="email" name="email" value="{{ old('email', $resident->email) }}"
-                   class="admin-form-input"
-                   required>
-            @error('email') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
-        </div>
-
-        <div>
-            <label class="admin-form-label">Move-in Date *</label>
-            <input type="date" name="move_in_date"
-                   value="{{ old('move_in_date', $resident->move_in_date ? $resident->move_in_date->format('Y-m-d') : '') }}"
-                   class="admin-form-input"
-                   required>
-            @error('move_in_date') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
-        </div>
-
-        <div>
-            <label class="admin-form-label">Status *</label>
-            <select name="status"
-                    class="admin-form-select"
-                    required>
-                <option value="active" {{ old('status', $resident->status) === 'active' ? 'selected' : '' }}>Active</option>
-                <option value="inactive" {{ old('status', $resident->status) === 'inactive' ? 'selected' : '' }}>Inactive</option>
-            </select>
-            @error('status') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
-        </div>
-
-        <div class="flex justify-end gap-3">
-            <a href="{{ route('admin.residents.index') }}"
-               class="admin-btn-secondary">
-               Cancel
-            </a>
-            <button type="submit"
-                    class="admin-btn-primary">
-                Update Resident
-            </button>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
+
+<script>
+document.getElementById('photoInput').addEventListener('change', function(event) {
+    const [file] = event.target.files;
+    if (file) {
+        document.getElementById('photoPreview').src = URL.createObjectURL(file);
+    }
+});
+</script>
 
 {{-- Live Photo Preview --}}
 <script>

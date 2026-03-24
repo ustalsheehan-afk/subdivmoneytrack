@@ -98,7 +98,12 @@ class DueController extends Controller
         // 4. GET DATA
         $dues = $query->get();
 
-        // 5. STATS (Global for the Year context)
+        // 5. GROUP DATA BY MONTH
+        $groupedDues = $dues->groupBy(function($due) {
+            return Carbon::parse($due->billing_period_end)->format('F Y');
+        });
+
+        // 6. STATS (Global for the Year context)
         $statsYear = $year ?: now()->year;
         $yearStats = [
             'total_expected' => Due::whereYear('billing_period_end', $statsYear)->sum('amount'),
@@ -124,7 +129,7 @@ class DueController extends Controller
         ];
 
         return view('admin.dues.index', compact(
-            'dues', 
+            'groupedDues', 
             'yearStats', 
             'monthComparison', 
             'year',

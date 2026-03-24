@@ -11,7 +11,10 @@ class SupportController extends Controller
 {
     public function index()
     {
-        $resident = Auth::user()->resident;
+        $resident = Auth::user()?->resident;
+        if (!$resident) {
+            return redirect()->route('resident.dashboard')->with('error', 'Please complete your profile first.');
+        }
         $messages = SupportMessage::where('resident_id', $resident->id)
             ->latest()
             ->paginate(10);
@@ -21,13 +24,17 @@ class SupportController extends Controller
 
     public function store(Request $request)
     {
+        $resident = Auth::user()?->resident;
+        if (!$resident) {
+             return redirect()->route('resident.dashboard')->with('error', 'Please complete your profile first.');
+        }
+
         $request->validate([
             'category' => 'required|string|max:255',
             'message' => 'required|string|max:2000',
             'attachment' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
-        $resident = Auth::user()->resident;
         $attachmentPath = null;
 
         if ($request->hasFile('attachment')) {
@@ -60,7 +67,10 @@ class SupportController extends Controller
 
     public function show($id)
     {
-        $resident = Auth::user()->resident;
+        $resident = Auth::user()?->resident;
+        if (!$resident) {
+             return response()->json(['error' => 'Resident profile not found.'], 403);
+        }
         $message = SupportMessage::where('resident_id', $resident->id)->findOrFail($id);
 
         return response()->json($message);

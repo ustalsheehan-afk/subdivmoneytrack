@@ -4,115 +4,160 @@
 @section('page-title', 'Add Board Member')
 
 @section('content')
-<div class="p-6 lg:p-8 space-y-8 bg-gray-50/50 min-h-screen">
-    {{-- Header Section --}}
-    <div class="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-50"></div>
+<div class="space-y-8 animate-fade-in">
+    {{-- ===================== --}}
+    {{-- HEADER SECTION --}}
+    {{-- ===================== --}}
+    <div class="glass-card p-8 relative overflow-hidden group">
+        {{-- Subtle gradient glow in background --}}
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-brand-accent/5 rounded-full blur-3xl group-hover:bg-brand-accent/10 transition-all duration-700"></div>
         
-        <div class="relative z-10 text-center md:text-left">
-            <h1 class="text-3xl font-black text-gray-900 tracking-tight mb-2">Add Member</h1>
-            <p class="text-sm text-gray-500 font-medium">Add a new board member to the subdivision board.</p>
-        </div>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
+                    Add Member
+                </h1>
+                <p class="mt-2 text-gray-600 text-lg max-w-xl">
+                    Add a new board member to the subdivision leadership.
+                </p>
+            </div>
 
-        <a href="{{ route('admin.board.index') }}" 
-           class="relative z-10 px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-2xl font-bold text-sm hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm active:scale-95">
-            <i class="bi bi-arrow-left"></i>
-            Back to List
-        </a>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('admin.board.index') }}" class="btn-secondary">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to List
+                </a>
+            </div>
+        </div>
     </div>
 
     <div class="max-w-4xl mx-auto">
         <form action="{{ route('admin.board.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
             @csrf
             
-            <div class="bg-white border border-gray-200 rounded-3xl shadow-sm overflow-hidden">
+            <div class="glass-card overflow-hidden">
                 <div class="p-8 space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {{-- Name --}}
-                        <div class="space-y-2">
-                            <label for="name" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Full Name</label>
-                            <input type="text" name="name" id="name" value="{{ old('name') }}" 
-                                   class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none" 
-                                   placeholder="e.g. Juan Dela Cruz" required>
-                        </div>
+                    {{-- Form Sections --}}
+                    <div class="space-y-8">
+                        {{-- Basic Info Section --}}
+                        <div>
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">1</div>
+                                <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest">Basic Information</h3>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {{-- Name --}}
+                                <div class="space-y-2">
+                                    <label for="name" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Full Name</label>
+                                    <input type="text" name="name" id="name" value="{{ old('name') }}" 
+                                           class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none" 
+                                           placeholder="e.g. Juan Dela Cruz" required>
+                                </div>
 
-                        {{-- Position --}}
-                        <div class="space-y-2">
-                            <label for="position" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Board Position</label>
-                            <select name="position" id="position" 
-                                    class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none appearance-none" required>
-                                <option value="" disabled selected>Select Position</option>
-                                @foreach($positions as $position)
-                                    <option value="{{ $position }}" {{ old('position') == $position ? 'selected' : '' }}>{{ $position }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {{-- Email --}}
-                        <div class="space-y-2">
-                            <label for="email" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Email Address</label>
-                            <input type="email" name="email" id="email" value="{{ old('email') }}" 
-                                   class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none" 
-                                   placeholder="e.g. juan@example.com">
-                        </div>
-
-                        {{-- Phone --}}
-                        <div class="space-y-2">
-                            <label for="phone" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Phone Number</label>
-                            <input type="text" name="phone" id="phone" value="{{ old('phone') }}" 
-                                   class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none" 
-                                   placeholder="e.g. 09123456789">
-                        </div>
-
-                        {{-- Facebook --}}
-                        <div class="space-y-2">
-                            <label for="facebook" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Facebook Link</label>
-                            <input type="url" name="facebook" id="facebook" value="{{ old('facebook') }}" 
-                                   class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none" 
-                                   placeholder="https://facebook.com/profile">
-                        </div>
-                    </div>
-
-                    {{-- Bio --}}
-                    <div class="space-y-2">
-                        <label for="bio" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Bio / Quote (Optional)</label>
-                        <textarea name="bio" id="bio" rows="4" 
-                                  class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none resize-none" 
-                                  placeholder="Brief description or quote...">{{ old('bio') }}</textarea>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {{-- Photo --}}
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Profile Photo (Optional)</label>
-                            <div class="relative">
-                                <input type="file" name="photo" id="photo" accept="image/*" onchange="previewImage(event)" class="hidden">
-                                <label for="photo" class="flex items-center justify-center gap-3 w-full px-5 py-4 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl text-sm font-bold text-gray-500 hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer">
-                                    <i class="bi bi-camera text-lg"></i>
-                                    <span id="photoLabel">Upload Photo</span>
-                                </label>
+                                {{-- Position --}}
+                                <div class="space-y-2">
+                                    <label for="position" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Board Position</label>
+                                    <div class="relative group">
+                                        <select name="position" id="position" 
+                                                class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none appearance-none cursor-pointer" required>
+                                            <option value="" disabled selected>Select Position</option>
+                                            @foreach($positions as $position)
+                                                <option value="{{ $position }}" {{ old('position') == $position ? 'selected' : '' }}>{{ $position }}</option>
+                                            @endforeach
+                                        </select>
+                                        <i class="bi bi-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-focus-within:text-emerald-500 transition-colors"></i>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {{-- Image Preview --}}
-                    <div id="imagePreviewContainer" class="hidden pt-4 border-t border-gray-50 text-center">
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Photo Preview</p>
-                        <div class="relative inline-block group">
-                            <img id="imagePreview" src="#" alt="Preview" class="max-h-64 rounded-2xl shadow-xl border border-gray-100">
-                            <button type="button" onclick="clearImage()" class="absolute -top-3 -right-3 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-all opacity-0 group-hover:opacity-100">
-                                <i class="bi bi-x-lg"></i>
-                            </button>
+                        {{-- Contact Section --}}
+                        <div>
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">2</div>
+                                <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest">Contact & Social</h3>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {{-- Email --}}
+                                <div class="space-y-2">
+                                    <label for="email" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Email Address</label>
+                                    <input type="email" name="email" id="email" value="{{ old('email') }}" 
+                                           class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none" 
+                                           placeholder="e.g. juan@example.com">
+                                </div>
+
+                                {{-- Phone --}}
+                                <div class="space-y-2">
+                                    <label for="phone" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Phone Number</label>
+                                    <input type="text" name="phone" id="phone" value="{{ old('phone') }}" 
+                                           class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none" 
+                                           placeholder="e.g. 09123456789">
+                                </div>
+
+                                {{-- Facebook --}}
+                                <div class="space-y-2">
+                                    <label for="facebook" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Facebook Link</label>
+                                    <input type="url" name="facebook" id="facebook" value="{{ old('facebook') }}" 
+                                           class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none" 
+                                           placeholder="https://facebook.com/profile">
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Bio & Profile Section --}}
+                        <div>
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">3</div>
+                                <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest">Bio & Profile</h3>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                {{-- Bio --}}
+                                <div class="space-y-2">
+                                    <label for="bio" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Bio / Quote (Optional)</label>
+                                    <textarea name="bio" id="bio" rows="4" 
+                                              class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none resize-none" 
+                                              placeholder="Brief description or quote...">{{ old('bio') }}</textarea>
+                                </div>
+
+                                {{-- Photo --}}
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                                    <div class="space-y-2">
+                                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Profile Photo (Optional)</label>
+                                        <div class="relative">
+                                            <input type="file" name="photo" id="photo" accept="image/*" onchange="previewImage(event)" class="hidden">
+                                            <label for="photo" class="flex flex-col items-center justify-center gap-3 w-full p-8 bg-gray-50 border-2 border-dashed border-gray-200 rounded-[32px] text-sm font-bold text-gray-500 hover:border-emerald-400 hover:bg-emerald-50 transition-all cursor-pointer group/upload">
+                                                <div class="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-sm border border-gray-100 group-hover/upload:scale-110 transition-transform duration-500">
+                                                    <i class="bi bi-camera text-2xl text-emerald-500"></i>
+                                                </div>
+                                                <span id="photoLabel">Click to upload photo</span>
+                                                <span class="text-[10px] font-medium text-gray-400">JPG, PNG or GIF (Max 2MB)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    {{-- Image Preview --}}
+                                    <div id="imagePreviewContainer" class="hidden">
+                                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 mb-2 block">Photo Preview</label>
+                                        <div class="relative inline-block group">
+                                            <img id="imagePreview" src="#" alt="Preview" class="w-48 h-48 rounded-[32px] object-cover shadow-2xl border-4 border-white">
+                                            <button type="button" onclick="clearImage()" class="absolute -top-3 -right-3 w-10 h-10 bg-red-500 text-white rounded-2xl flex items-center justify-center shadow-lg hover:bg-red-600 transition-all active:scale-95">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="p-8 bg-gray-50 border-t border-gray-100">
-                    <button type="submit" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all active:scale-95 flex items-center justify-center gap-2">
-                        <i class="bi bi-save-fill"></i>
-                        Add Member
+                <div class="p-8 bg-gray-50/50 border-t border-gray-100 flex items-center justify-end gap-4">
+                    <button type="submit" class="btn-premium w-full md:w-auto px-12">
+                        <i class="bi bi-check-lg"></i>
+                        Add Board Member
                     </button>
                 </div>
             </div>

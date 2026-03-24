@@ -4,182 +4,272 @@
 @section('page-title', 'Support')
 
 @section('content')
-<div class="max-w-5xl mx-auto px-4 py-8 space-y-8">
-    
-    {{-- SEND MESSAGE SECTION --}}
-    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden animate-fade-in">
-        <div class="p-6 border-b border-slate-50 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                <i class="bi bi-chat-left-text text-xl"></i>
-            </div>
-            <div>
-                <h2 class="text-lg font-bold text-slate-900 leading-tight">Send a Message</h2>
-                <p class="text-xs text-slate-500 font-medium">We usually respond within 24 hours.</p>
+<div class="h-full bg-[#F8F9FB] overflow-y-auto custom-scrollbar">
+    <div class="max-w-5xl mx-auto px-6 py-8 flex flex-col gap-10 pb-24 animate-fade-in">
+        
+        {{-- Header --}}
+        <div class="relative overflow-hidden bg-[#081412] rounded-[32px] p-10 shadow-2xl group">
+            <div class="absolute -right-20 -top-20 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all duration-1000"></div>
+            <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl"></div>
+            
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
+                <div class="space-y-3">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                        <i class="bi bi-chat-left-text-fill text-emerald-400 text-xs"></i>
+                        <span class="text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em]">Support Center</span>
+                    </div>
+                    <h1 class="text-4xl font-black text-white tracking-tight leading-none">Messages & Support</h1>
+                    <p class="text-[13px] font-medium text-white/50">
+                        We're here to help. Send us a message and we'll get back to you soon.
+                    </p>
+                </div>
             </div>
         </div>
-        
-        <form action="{{ route('resident.support.store') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
-            @csrf
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-2">
-                    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Category</label>
-                    <select name="category" class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 text-sm font-medium focus:bg-white focus:border-blue-500 transition-all outline-none appearance-none cursor-pointer" required>
-                        <option value="" disabled selected>Select category</option>
-                        <option value="General Inquiry">General Inquiry</option>
-                        <option value="Payment Concern">Payment Concern</option>
-                        <option value="Maintenance Follow-up">Maintenance Follow-up</option>
-                        <option value="Reservation Concern">Reservation Concern</option>
-                        <option value="Complaint / Report">Complaint / Report</option>
-                    </select>
+
+        @if(session('success'))
+            <div class="bg-emerald-50 border border-emerald-100 p-5 rounded-[24px] shadow-sm flex items-center gap-4 animate-fade-in">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <i class="bi bi-check-lg text-xl"></i>
+                </div>
+                <p class="text-sm font-black text-emerald-800 uppercase tracking-tight">{{ session('success') }}</p>
+            </div>
+        @endif
+
+        {{-- SEND MESSAGE SECTION --}}
+        <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden transition-all duration-500 hover:shadow-xl group/form">
+            <div class="p-8 border-b border-gray-50 flex items-center gap-4 bg-gray-50/30">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 border border-emerald-400 group-hover/form:scale-110 transition-transform">
+                    <i class="bi bi-chat-dots-fill text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-black text-gray-900 tracking-tight leading-tight">Send a Message</h2>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Average response time: 24 hours</p>
                 </div>
             </div>
             
-            <div class="space-y-2">
-                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Your Concern</label>
-                <textarea name="message" rows="3" class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 text-sm font-medium focus:bg-white focus:border-blue-500 transition-all outline-none resize-none" placeholder="Type your message or concern..." required></textarea>
-            </div>
-
-            {{-- ATTACHMENT SECTION --}}
-            <div class="space-y-3">
-                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <i class="bi bi-paperclip"></i> Attachment (Optional)
-                </label>
-                <div class="flex items-center gap-4">
-                    <label class="shrink-0 cursor-pointer group">
-                        <input type="file" name="attachment" class="hidden" accept="image/*" onchange="previewFile(this)">
-                        <div class="px-5 py-2.5 rounded-xl border-2 border-dashed border-slate-200 text-slate-400 group-hover:border-blue-400 group-hover:text-blue-500 transition-all flex items-center gap-2 text-xs font-bold">
-                            <i class="bi bi-image"></i>
-                            <span>Attach Photo</span>
-                        </div>
-                    </label>
-                    <div id="filePreview" class="hidden relative group">
-                        <img id="previewImg" src="#" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm">
-                        <button type="button" onclick="removeFile()" class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                            <i class="bi bi-x"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="flex justify-end">
-                <button type="submit" class="px-8 py-3 bg-[#385780] text-white text-sm font-bold rounded-xl hover:bg-[#2B3A4F] transition-all shadow-lg shadow-blue-900/10 flex items-center gap-2">
-                    <span>Send Message</span>
-                    <i class="bi bi-send-fill text-xs"></i>
-                </button>
-            </div>
-        </form>
-    </div>
-
-    {{-- MESSAGE HISTORY --}}
-    <div class="space-y-4">
-        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Message History</h3>
-        
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm divide-y divide-slate-50 overflow-hidden">
-            @forelse($messages as $message)
-            <div class="group hover:bg-slate-50 transition-colors cursor-pointer" onclick="openMessageDetail({{ $message->id }})">
-                <div class="p-5 flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-4 flex-1 min-w-0">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 
-                            {{ $message->status === 'replied' ? 'bg-emerald-50 text-emerald-500' : 'bg-orange-50 text-orange-500' }}">
-                            <i class="bi {{ $message->status === 'replied' ? 'bi-check-circle' : 'bi-clock' }} text-lg"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="text-sm font-bold text-slate-900 truncate">{{ $message->category }}</span>
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest 
-                                    {{ $message->status === 'replied' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-orange-50 text-orange-600 border border-orange-100' }}">
-                                    {{ strtoupper($message->status) }}
-                                </span>
+            <form action="{{ route('resident.support.store') }}" method="POST" enctype="multipart/form-data" class="p-10 space-y-8">
+                @csrf
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div class="space-y-4">
+                        <label class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
+                            <span class="w-8 h-px bg-gray-200"></span>
+                            01. Select Category
+                        </label>
+                        <div class="relative">
+                            <select name="category" class="w-full p-6 text-sm font-black border-2 border-gray-50 rounded-[24px] focus:border-emerald-500 focus:ring-0 bg-gray-50 hover:bg-white transition-all appearance-none cursor-pointer outline-none" required>
+                                <option value="" disabled selected>Select concern type</option>
+                                <option value="General Inquiry">General Inquiry</option>
+                                <option value="Payment Concern">Payment Concern</option>
+                                <option value="Maintenance Follow-up">Maintenance Follow-up</option>
+                                <option value="Reservation Concern">Reservation Concern</option>
+                                <option value="Complaint / Report">Complaint / Report</option>
+                            </select>
+                            <div class="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                                <i class="bi bi-chevron-down"></i>
                             </div>
-                            <p class="text-xs text-slate-500 truncate leading-relaxed font-medium">{{ $message->message }}</p>
                         </div>
                     </div>
-                    <div class="text-right shrink-0">
-                        <div class="text-xs font-bold text-slate-400 mb-1">{{ $message->created_at->format('M d, Y') }}</div>
-                        <i class="bi bi-chevron-right text-slate-300 group-hover:text-blue-500 transition-colors"></i>
+
+                    {{-- ATTACHMENT SECTION --}}
+                    <div class="space-y-4">
+                        <label class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
+                            <span class="w-8 h-px bg-gray-200"></span>
+                            02. Attachment (Optional)
+                        </label>
+                        <div class="flex items-center gap-4">
+                            <label class="flex-1 cursor-pointer group/upload">
+                                <input type="file" name="attachment" class="hidden" accept="image/*" onchange="previewFile(this)">
+                                <div class="p-5 rounded-[24px] border-2 border-dashed border-gray-100 bg-gray-50 text-gray-400 group-hover/upload:border-emerald-500/30 group-hover/upload:bg-white group-hover/upload:text-emerald-500 transition-all flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest">
+                                    <i class="bi bi-camera-fill text-lg"></i>
+                                    <span>Upload Photo</span>
+                                </div>
+                            </label>
+                            <div id="filePreview" class="hidden relative group/preview">
+                                <img id="previewImg" src="#" class="w-20 h-20 rounded-[20px] object-cover border-4 border-white shadow-xl">
+                                <button type="button" onclick="removeFile()" class="absolute -top-3 -right-3 w-8 h-8 bg-red-500 text-white rounded-xl flex items-center justify-center text-sm shadow-lg hover:scale-110 transition-transform">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            @empty
-            <div class="p-12 text-center">
-                <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="bi bi-chat-dots text-slate-300 text-3xl"></i>
+                
+                <div class="space-y-4">
+                    <label class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
+                        <span class="w-8 h-px bg-gray-200"></span>
+                        03. Your Concern
+                    </label>
+                    <textarea name="message" rows="4" class="w-full p-8 rounded-[32px] border-2 border-gray-50 bg-gray-50 text-sm font-medium focus:bg-white focus:border-emerald-500 transition-all outline-none resize-none leading-relaxed" placeholder="Type your message or concern here..." required></textarea>
                 </div>
-                <p class="text-sm text-slate-500 font-medium">No messages found.</p>
-            </div>
-            @endforelse
+                
+                <div class="flex justify-end pt-4">
+                    <button type="submit" class="px-10 py-5 bg-[#081412] text-white text-[11px] font-black uppercase tracking-widest rounded-2xl hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] transition-all flex items-center gap-3 group/btn border border-white/5">
+                        <span>Send Message</span>
+                        <i class="bi bi-send-fill text-emerald-400 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform"></i>
+                    </button>
+                </div>
+            </form>
         </div>
-        
-        <div class="mt-4">
-            {{ $messages->links() }}
+
+        {{-- MESSAGE HISTORY --}}
+        <div class="space-y-6">
+            <h3 class="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] flex items-center gap-3">
+                <span class="w-8 h-px bg-gray-200"></span>
+                Message History
+            </h3>
+            
+            <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm divide-y divide-gray-50 overflow-hidden">
+                @forelse($messages as $message)
+                <div class="group hover:bg-emerald-50/30 transition-all duration-300 cursor-pointer border-l-4 border-transparent hover:border-emerald-500" onclick="openMessageDetail({{ $message->id }})">
+                    <div class="p-8 flex items-center justify-between gap-6">
+                        <div class="flex items-center gap-6 flex-1 min-w-0">
+                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-gray-50
+                                {{ $message->status === 'replied' ? 'bg-emerald-50 text-emerald-500' : 'bg-orange-50 text-orange-500' }}">
+                                <i class="bi {{ $message->status === 'replied' ? 'bi-chat-left-check-fill' : 'bi-clock-fill' }} text-xl"></i>
+                            </div>
+                            <div class="flex-1 min-w-0 space-y-1.5">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-lg font-black text-gray-900 truncate tracking-tight group-hover:text-emerald-700 transition-colors">{{ $message->category }}</span>
+                                    <span class="badge-standard 
+                                        {{ $message->status === 'replied' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-orange-50 text-orange-600 border border-orange-100' }}">
+                                        {{ strtoupper($message->status) }}
+                                    </span>
+                                </div>
+                                <p class="text-sm text-gray-500 truncate leading-relaxed font-medium">{{ $message->message }}</p>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0 flex items-center gap-6">
+                            <div class="space-y-1">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">{{ $message->created_at->format('M d, Y') }}</p>
+                                <p class="text-[9px] font-black text-emerald-400/60 uppercase tracking-widest">{{ $message->created_at->diffForHumans() }}</p>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-300 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm">
+                                <i class="bi bi-chevron-right text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @empty
+                <div class="p-24 text-center">
+                    <div class="w-24 h-24 bg-gray-50 rounded-[40px] flex items-center justify-center mx-auto mb-8 text-gray-200 shadow-inner">
+                        <i class="bi bi-chat-square-dots text-5xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-black text-gray-900 uppercase tracking-tight">No messages yet</h3>
+                    <p class="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] mt-4">Your conversation history will appear here</p>
+                </div>
+                @endforelse
+            </div>
+            
+            <div class="mt-6">
+                {{ $messages->links() }}
+            </div>
         </div>
     </div>
 </div>
 
 {{-- MESSAGE DETAIL MODAL --}}
-<div id="messageDetailModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-zoom-in">
-        <div class="p-6 border-b border-slate-50 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div id="modalStatusIcon" class="w-8 h-8 rounded-lg flex items-center justify-center"></div>
-                <h4 id="modalCategory" class="font-bold text-slate-900"></h4>
+<div id="messageDetailModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#081412]/80 backdrop-blur-md">
+    <div class="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-zoom-in relative">
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl"></div>
+
+        <div class="p-8 border-b border-gray-50 flex items-center justify-between relative z-10 bg-gray-50/50">
+            <div class="flex items-center gap-4">
+                <div id="modalStatusIcon" class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"></div>
+                <div>
+                    <h4 id="modalCategory" class="text-lg font-black text-gray-900 tracking-tight"></h4>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Message Thread</p>
+                </div>
             </div>
-            <button onclick="closeMessageDetail()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
-                <i class="bi bi-x-lg text-sm"></i>
+            <button onclick="closeMessageDetail()" class="w-12 h-12 rounded-2xl hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all flex items-center justify-center border border-transparent hover:border-red-100">
+                <i class="bi bi-x-lg text-lg"></i>
             </button>
         </div>
         
-        <div class="p-8 space-y-8 overflow-y-auto max-h-[70vh] custom-scrollbar">
+        <div class="p-10 space-y-10 overflow-y-auto max-h-[75vh] custom-scrollbar relative z-10">
             {{-- User Message --}}
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Your Message</span>
-                    <span id="modalDate" class="text-[10px] font-bold text-slate-400"></span>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between px-2">
+                    <span class="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">Your Message</span>
+                    <span id="modalDate" class="text-[10px] font-black text-gray-400 uppercase tracking-widest tabular-nums"></span>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-2xl text-sm text-slate-700 leading-relaxed font-medium">
-                    <p id="modalMessage"></p>
-                    <div id="modalUserAttachment" class="mt-4 hidden">
-                        <img id="modalUserImg" src="#" class="max-w-full rounded-xl border border-slate-100 shadow-sm cursor-pointer hover:brightness-95 transition-all" onclick="openLightbox(this.src)">
+                <div class="p-8 bg-gray-50 rounded-[32px] border border-gray-100 shadow-inner">
+                    <p id="modalMessage" class="text-[15px] text-gray-700 leading-relaxed font-medium"></p>
+                    <div id="modalUserAttachment" class="mt-8 hidden">
+                        <div class="relative group/modalimg inline-block rounded-[24px] overflow-hidden border-4 border-white shadow-2xl">
+                            <img id="modalUserImg" src="#" class="max-w-full h-48 object-cover cursor-pointer hover:scale-105 transition-all duration-700" onclick="openLightbox(this.src)">
+                            <div class="absolute inset-0 bg-black/20 opacity-0 group-hover/modalimg:opacity-100 transition-opacity pointer-events-none flex items-center justify-center">
+                                <i class="bi bi-zoom-in text-white text-3xl"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {{-- Admin Reply --}}
-            <div id="adminReplyContainer" class="space-y-3 hidden">
-                <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Office Response</span>
-                    <span id="modalReplyDate" class="text-[10px] font-bold text-slate-400"></span>
+            <div id="adminReplyContainer" class="space-y-4 hidden animate-fade-in">
+                <div class="flex items-center justify-between px-2">
+                    <span class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em]">Office Response</span>
+                    <span id="modalReplyDate" class="text-[10px] font-black text-gray-400 uppercase tracking-widest tabular-nums"></span>
                 </div>
-                <div class="p-4 bg-blue-50/50 border border-blue-100 rounded-2xl text-sm text-slate-700 leading-relaxed font-medium">
-                    <p id="modalAdminReply"></p>
-                    <div id="modalAdminAttachment" class="mt-4 hidden">
-                        <img id="modalAdminImg" src="#" class="max-w-full rounded-xl border border-blue-100 shadow-sm cursor-pointer hover:brightness-95 transition-all" onclick="openLightbox(this.src)">
+                <div class="p-8 bg-blue-50/50 border border-blue-100 rounded-[32px] shadow-lg shadow-blue-500/5">
+                    <p id="modalAdminReply" class="text-[15px] text-gray-700 leading-relaxed font-medium"></p>
+                    <div id="modalAdminAttachment" class="mt-8 hidden">
+                        <div class="relative group/modalimg inline-block rounded-[24px] overflow-hidden border-4 border-white shadow-2xl">
+                            <img id="modalAdminImg" src="#" class="max-w-full h-48 object-cover cursor-pointer hover:scale-105 transition-all duration-700" onclick="openLightbox(this.src)">
+                            <div class="absolute inset-0 bg-black/20 opacity-0 group-hover/modalimg:opacity-100 transition-opacity pointer-events-none flex items-center justify-center">
+                                <i class="bi bi-zoom-in text-white text-3xl"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {{-- Pending State --}}
-            <div id="pendingReplyState" class="p-6 text-center border-2 border-dashed border-slate-100 rounded-2xl hidden">
-                <i class="bi bi-hourglass-split text-slate-300 text-2xl mb-2"></i>
-                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Waiting for Response</p>
+            <div id="pendingReplyState" class="p-10 text-center border-2 border-dashed border-gray-100 rounded-[32px] bg-gray-50/30 hidden">
+                <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-gray-100">
+                    <i class="bi bi-hourglass-split text-orange-400 text-3xl animate-spin-slow"></i>
+                </div>
+                <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.3em]">Waiting for Response</p>
             </div>
         </div>
     </div>
 </div>
 
 {{-- LIGHTBOX MODAL --}}
-<div id="lightboxModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/95 backdrop-blur-md" onclick="closeLightbox()">
-    <button class="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-all">
-        <i class="bi bi-x-lg"></i>
+<div id="lightboxModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-[#081412]/95 backdrop-blur-xl" onclick="closeLightbox()">
+    <button class="absolute top-8 right-8 w-14 h-14 bg-white/10 hover:bg-white/20 text-white rounded-2xl flex items-center justify-center transition-all border border-white/10">
+        <i class="bi bi-x-lg text-xl"></i>
     </button>
-    <img id="lightboxImg" src="#" class="max-w-[90vw] max-h-[85vh] rounded-xl shadow-2xl animate-zoom-in object-contain">
-    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4">
-        <a id="lightboxDownload" href="#" download class="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-full flex items-center gap-2 transition-all">
-            <i class="bi bi-download"></i>
-            <span>Download</span>
+    <img id="lightboxImg" src="#" class="max-w-[90vw] max-h-[80vh] rounded-[32px] shadow-2xl animate-zoom-in object-contain border-4 border-white/10">
+    <div class="absolute bottom-10 left-1/2 -translate-x-1/2">
+        <a id="lightboxDownload" href="#" download class="px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-black text-[11px] font-black rounded-2xl flex items-center gap-3 transition-all shadow-2xl shadow-emerald-500/20 uppercase tracking-widest">
+            <i class="bi bi-download text-lg"></i>
+            <span>Download Image</span>
         </a>
     </div>
 </div>
+
+<style>
+    @keyframes zoomIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-zoom-in { animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+    .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+    .animate-spin-slow { animation: spin 3s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    
+    .badge-standard {
+        @apply inline-flex items-center px-4 py-1.5 text-[10px] font-black rounded-xl uppercase tracking-widest shadow-sm;
+    }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
+</style>
 
 <script>
     function previewFile(input) {
@@ -246,8 +336,8 @@
 
                 const statusIcon = document.getElementById('modalStatusIcon');
                 if (data.status === 'replied') {
-                    statusIcon.className = 'w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center';
-                    statusIcon.innerHTML = '<i class="bi bi-check-circle-fill"></i>';
+                    statusIcon.className = 'w-10 h-10 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center border border-emerald-100 shadow-sm';
+                    statusIcon.innerHTML = '<i class="bi bi-check-circle-fill text-xl"></i>';
                     
                     document.getElementById('adminReplyContainer').classList.remove('hidden');
                     document.getElementById('modalAdminReply').textContent = data.admin_reply;
@@ -263,8 +353,8 @@
                         adminAttach.classList.add('hidden');
                     }
                 } else {
-                    statusIcon.className = 'w-8 h-8 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center';
-                    statusIcon.innerHTML = '<i class="bi bi-clock-fill"></i>';
+                    statusIcon.className = 'w-10 h-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center border border-orange-100 shadow-sm';
+                    statusIcon.innerHTML = '<i class="bi bi-clock-fill text-xl"></i>';
                     
                     document.getElementById('adminReplyContainer').classList.add('hidden');
                     document.getElementById('pendingReplyState').classList.remove('hidden');
@@ -280,22 +370,14 @@
         document.body.style.overflow = 'auto';
     }
 
-    // Close on escape key
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeMessageDetail();
+        if (e.key === 'Escape') {
+            if (!document.getElementById('lightboxModal').classList.contains('hidden')) {
+                closeLightbox();
+            } else {
+                closeMessageDetail();
+            }
+        }
     });
 </script>
-
-<style>
-    @keyframes zoomIn {
-        from { opacity: 0; transform: scale(0.95); }
-        to { opacity: 1; transform: scale(1); }
-    }
-    .animate-zoom-in {
-        animation: zoomIn 0.2s ease-out forwards;
-    }
-    .animate-fade-in {
-        animation: fadeIn 0.4s ease-out forwards;
-    }
-</style>
 @endsection

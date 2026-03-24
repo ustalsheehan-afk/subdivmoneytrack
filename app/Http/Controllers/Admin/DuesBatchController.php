@@ -12,8 +12,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+use App\Traits\LogsActivity;
+
 class DuesBatchController extends Controller
 {
+    use LogsActivity;
     public function dashboard(Request $request)
     {
         $range = $request->get('range', 'month');
@@ -51,20 +54,78 @@ class DuesBatchController extends Controller
         ));
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $batches = DuesBatch::with('residentDues')
-            ->whereNotNull('billing_period_start')
-            ->where('billing_period_start', '>', '1970-01-01') // Filter out corrupted dates
-            ->orderBy('billing_period_start', 'desc')
-            ->paginate(50);
+        $year = $request->input('year', now()->year);
+        $sortOption = $request->input('sort', 'newest');
 
-        // Efficient grouping by month/year
-        $groupedBatches = $batches->getCollection()->groupBy(function($batch) {
+        $query = DuesBatch::query();
+
+        // 1. FILTER BY YEAR
+        if ($year) {
+            $query->whereYear('billing_period_start', $year);
+        }
+
+        // 2. SEARCH
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('type', 'like', "%{$search}%");
+            });
+        }
+
+        // 3. SORTING
+        switch ($sortOption) {
+            case 'amount_desc': $query->orderBy('total_expected', 'desc'); break;
+            case 'amount_asc': $query->orderBy('total_expected', 'asc'); break;
+            case 'oldest': $query->orderBy('billing_period_start', 'asc'); break;
+            case 'newest':
+            default: $query->orderBy('billing_period_start', 'desc'); break;
+        }
+
+        $batches = $query->get();
+
+        // 4. GROUPING BY MONTH
+        $groupedDues = $batches->groupBy(function($batch) {
             return $batch->billing_period_start ? $batch->billing_period_start->format('F Y') : 'Unknown Period';
         });
 
-        return view('admin.dues.index', compact('batches', 'groupedBatches'));
+        // 5. YEAR STATS
+        $yearStats = [
+            'total_expected' => DuesBatch::whereYear('billing_period_start', $year)->sum('total_expected'),
+            'total_collected' => Due::where('status', 'paid')
+                ->whereHas('batch', function($q) use ($year) {
+                    $q->whereYear('billing_period_start', $year);
+                })->sum('amount'),
+            'collection_rate' => 0
+        ];
+
+        if ($yearStats['total_expected'] > 0) {
+            $yearStats['collection_rate'] = round(($yearStats['total_collected'] / $yearStats['total_expected']) * 100, 1);
+        }
+
+        // 6. MONTH-OVER-MONTH GROWTH
+        $currentDate = now();
+        $lastMonthDate = now()->subMonth();
+        
+        $currentMonthTotal = Due::where('status', 'paid')->whereMonth('created_at', $currentDate->month)->whereYear('created_at', $currentDate->year)->sum('amount');
+        $lastMonthTotal = Due::where('status', 'paid')->whereMonth('created_at', $lastMonthDate->month)->whereYear('created_at', $lastMonthDate->year)->sum('amount');
+        
+        $monthComparison = [
+            'current_month' => $currentDate->format('F'),
+            'last_month' => $lastMonthDate->format('F'),
+            'direction' => $currentMonthTotal >= $lastMonthTotal ? 'up' : 'down',
+            'diff' => $lastMonthTotal > 0 ? round((abs($currentMonthTotal - $lastMonthTotal) / $lastMonthTotal) * 100, 1) : 0
+        ];
+
+        return view('admin.dues.index', compact(
+            'groupedDues', 
+            'yearStats', 
+            'monthComparison', 
+            'year', 
+            'sortOption'
+        ));
     }
 
     public function create()
@@ -113,6 +174,8 @@ class DuesBatchController extends Controller
                 'created_by' => auth('admin')->id() ?? Admin::first()?->id,
             ]);
 
+            $this->logActivity('created', 'dues', 'Created billing statement: ' . $batch->title, ['batch_id' => $batch->id]);
+
             foreach ($residentIds as $residentId) {
                 Due::create([
                     'resident_id' => $residentId,
@@ -150,29 +213,44 @@ class DuesBatchController extends Controller
             'method' => 'required|string|in:cash,bank_transfer,check,gcash',
         ]);
 
-        // Prevent overpayment
-        if ($validated['amount'] > $due->balance) {
-            return back()->with('error', 'Payment amount exceeds the remaining balance.');
+        // Standardize payment method for internal constants
+        $paymentMethod = $validated['method'] === 'bank_transfer' ? 'bank transfer' : $validated['method'];
+
+        // Prevent overpayment (using a small delta for floating point comparison)
+        if ($validated['amount'] > ($due->balance + 0.01)) {
+            return response()->json(['success' => false, 'message' => 'Payment amount (₱' . number_format($validated['amount'], 2) . ') exceeds the remaining balance (₱' . number_format($due->balance, 2) . ').'], 422);
         }
 
-        DB::transaction(function () use ($due, $validated) {
+        $payment = DB::transaction(function () use ($due, $validated, $paymentMethod) {
             // Record Payment (Admin cash is auto-approved)
             $payment = Payment::create([
                 'resident_id' => $due->resident_id,
                 'due_id' => $due->id,
                 'amount' => $validated['amount'],
                 'date_paid' => now(),
-                'payment_method' => $validated['method'],
+                'payment_method' => $paymentMethod,
                 'source' => Payment::SOURCE_ADMIN,
                 'status' => Payment::STATUS_APPROVED,
                 'reference_no' => 'ADMIN-' . strtoupper(uniqid()),
             ]);
 
-            // Trigger notifications and penalties via PaymentController helper
+            $this->logActivity('recorded_payment', 'dues', 'Recorded payment of ₱' . number_format($payment->amount, 2) . ' for ' . $due->resident->full_name, [
+                'payment_id' => $payment->id,
+                'due_id' => $due->id,
+                'resident_id' => $due->resident_id
+            ]);
+
+            // Trigger notifications and penalties via PaymentController helper (which also syncs due->paid_amount)
             app(PaymentController::class)->handlePenaltyAndMarkDue($payment);
+
+            return $payment;
         });
 
-        return back()->with('success', 'Payment recorded successfully.');
+        return response()->json([
+            'success' => true, 
+            'message' => 'Payment recorded successfully.',
+            'payment_id' => $payment->id
+        ]);
     }
 
     public function bulkMarkAsPaid(Request $request)
@@ -200,7 +278,7 @@ class DuesBatchController extends Controller
                         'reference_no' => 'BULK-' . strtoupper(uniqid()),
                     ]);
                     
-                    // Trigger notifications and penalties via PaymentController helper
+                    // Trigger notifications and penalties via PaymentController helper (which also syncs due->paid_amount)
                     app(PaymentController::class)->handlePenaltyAndMarkDue($payment);
                     
                     $count++;

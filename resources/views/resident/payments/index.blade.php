@@ -7,7 +7,19 @@
 <div class="min-h-screen bg-gray-50/50" x-data="{ activeTab: 'history', filter: 'all' }">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-    
+        <x-resident-hero-header 
+            label="Finance & Billing" 
+            icon="bi-wallet2"
+            title="Payments & Dues" 
+            description="Manage your monthly dues, track payment history, and view any outstanding penalties."
+            :tabs="[
+                ['id' => 'all', 'label' => 'All', 'icon' => 'bi-grid-fill', 'click' => 'activeTab = \'history\'; filter = \'all\'', 'active_condition' => 'activeTab === \'history\' && filter === \'all\''],
+                ['id' => 'unpaid', 'label' => 'Unpaid', 'icon' => 'bi-clock-history', 'click' => 'activeTab = \'history\'; filter = \'unpaid\'', 'active_condition' => 'activeTab === \'history\' && filter === \'unpaid\''],
+                ['id' => 'paid', 'label' => 'Paid', 'icon' => 'bi-check-circle-fill', 'click' => 'activeTab = \'history\'; filter = \'paid\'', 'active_condition' => 'activeTab === \'history\' && filter === \'paid\''],
+                ['id' => 'overdue', 'label' => 'Overdue', 'icon' => 'bi-exclamation-triangle-fill', 'click' => 'activeTab = \'history\'; filter = \'overdue\'', 'active_condition' => 'activeTab === \'history\' && filter === \'overdue\''],
+                ['id' => 'penalties', 'label' => 'Penalties', 'icon' => 'bi-shield-exclamation', 'click' => 'activeTab = \'penalties\'', 'active_condition' => 'activeTab === \'penalties\''],
+            ]"
+        />
 
         {{-- SUMMARY CARDS --}}
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -94,20 +106,6 @@
 
 </div>  
 
-        {{-- TABS --}}
-        <div class="flex items-center gap-6 border-b border-gray-200 mb-8">
-            <button @click="activeTab = 'history'; filter = 'all'" 
-                    :class="activeTab === 'history' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600'"
-                    class="pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors flex items-center gap-2">
-                Payment History
-            </button>
-            <button @click="activeTab = 'penalties'" 
-                    :class="activeTab === 'penalties' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600'"
-                    class="pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors flex items-center gap-2">
-                Penalties
-            </button>
-        </div>
-
         {{-- TAB CONTENT: HISTORY --}}
         <div x-show="activeTab === 'history'" x-transition.opacity>
             
@@ -177,11 +175,13 @@
                                         
                                     // Year for filtering
                                     $dueYear = \Carbon\Carbon::parse($due->due_date)->year;
+                                    $isOverdue = $displayStatus === 'unpaid' && \Carbon\Carbon::parse($due->due_date)->isPast();
                                 @endphp
                                 <tr class="group even:bg-gray-50 hover:bg-gray-100 transition-colors" 
                                     data-status="{{ $displayStatus }}"
                                     data-year="{{ $dueYear }}"
-                                    x-show="filter === 'all' || (filter === 'unpaid' && $el.dataset.status === 'unpaid') || (filter === 'paid-current' && $el.dataset.status === 'paid' && $el.dataset.year == '{{ date('Y') }}')">
+                                    data-overdue="{{ $isOverdue ? 'true' : 'false' }}"
+                                    x-show="filter === 'all' || (filter === 'unpaid' && $el.dataset.status === 'unpaid') || (filter === 'paid' && $el.dataset.status === 'paid') || (filter === 'overdue' && $el.dataset.overdue === 'true')">
                                     
                                     <td class="px-6 py-4 text-xs font-bold text-gray-900">
                                         {{ \Carbon\Carbon::parse($due->due_date)->format('M d, Y') }}
@@ -250,11 +250,13 @@
                             };
                             $dueType = $due->type ? ucwords(str_replace('_', ' ', $due->type)) : '-';
                             $dueYear = \Carbon\Carbon::parse($due->due_date)->year;
+                            $isOverdue = $displayStatus === 'unpaid' && \Carbon\Carbon::parse($due->due_date)->isPast();
                         @endphp
                         <div class="p-5 bg-white active:bg-gray-50 transition-colors"
                              data-status="{{ $displayStatus }}"
                              data-year="{{ $dueYear }}"
-                             x-show="filter === 'all' || (filter === 'unpaid' && $el.dataset.status === 'unpaid') || (filter === 'paid-current' && $el.dataset.status === 'paid' && $el.dataset.year == '{{ date('Y') }}')">
+                             data-overdue="{{ $isOverdue ? 'true' : 'false' }}"
+                             x-show="filter === 'all' || (filter === 'unpaid' && $el.dataset.status === 'unpaid') || (filter === 'paid' && $el.dataset.status === 'paid') || (filter === 'overdue' && $el.dataset.overdue === 'true')">
                             <div class="flex justify-between items-start mb-3">
                                 <div>
                                     <div class="flex items-center gap-2 mb-1">

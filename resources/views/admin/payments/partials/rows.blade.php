@@ -12,12 +12,12 @@
     <td class="p-4">
         <div class="flex items-center gap-3">
             <img 
-                src="{{ $payment->resident->photo && Storage::disk('public')->exists($payment->resident->photo) ? Storage::disk('public')->url($payment->resident->photo) : asset('CDlogo.jpg') }}"
+                src="{{ $payment->resident?->photo && Storage::disk('public')->exists($payment->resident->photo) ? Storage::disk('public')->url($payment->resident->photo) : asset('CDlogo.jpg') }}"
                 class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100 group-hover:ring-blue-200 transition-all duration-300"
-                alt="{{ $payment->resident->first_name ?? 'Resident' }}">
+                alt="{{ $payment->resident?->first_name ?? 'Resident' }}">
             <div>
-                <p class="font-bold text-gray-900 group-hover:text-blue-700 transition">{{ $payment->resident->first_name ?? 'Unknown' }} {{ $payment->resident->last_name ?? 'Resident' }}</p>
-                <p class="text-xs text-gray-500">Blk {{ $payment->resident->block ?? '-' }} - Lot {{ $payment->resident->lot ?? '-' }}</p>
+                <p class="font-bold text-gray-900 group-hover:text-blue-700 transition">{{ $payment->resident?->first_name ?? 'Unknown' }} {{ $payment->resident?->last_name ?? 'Resident' }}</p>
+                <p class="text-xs text-gray-500">Blk {{ $payment->resident?->block ?? '-' }} - Lot {{ $payment->resident?->lot ?? '-' }}</p>
             </div>
         </div>
     </td>

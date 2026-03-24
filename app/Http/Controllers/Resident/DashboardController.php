@@ -9,21 +9,40 @@ use App\Models\Announcement;
 use App\Models\ServiceRequest;
 use App\Models\Due;
 use App\Models\Penalty;
+use App\Models\Notification;
 use App\Models\BoardMember;
 
 class DashboardController extends Controller
 {
+    /**
+     * Mark all notifications as read for the authenticated resident.
+     */
+    public function markAllNotificationsAsRead()
+    {
+        $resident = auth()->user()?->resident;
+
+        if (!$resident) {
+            return back()->with('error', 'Resident profile not found.');
+        }
+
+        Notification::where('resident_id', $resident->id)
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+
+        return back()->with('success', 'All notifications marked as read.');
+    }
+
     public function index()
     {
-        // Use the resident guard to get the User model
-        $user = Auth::guard('resident')->user();
+        // Use the unified web guard
+        $user = Auth::user();
         
         // Get the associated Resident profile
-        $resident = $user->resident;
+        $resident = $user?->resident;
 
-        // Abort if resident profile is missing
+        // Redirect to profile setup if resident profile is missing
         if (!$resident) {
-            abort(403, 'Resident profile not found for this user account.');
+            return redirect()->route('resident.profile.edit')->with('info', 'Please complete your resident profile to access the dashboard.');
         }
 
         // Summary of dues and payments

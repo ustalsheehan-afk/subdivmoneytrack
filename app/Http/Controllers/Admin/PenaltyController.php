@@ -10,8 +10,11 @@ use App\Models\Payment;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
+use App\Traits\LogsActivity;
+
 class PenaltyController extends Controller
 {
+    use LogsActivity;
     /**
      * Display a listing of all penalties (index page).
      */
@@ -147,7 +150,7 @@ class PenaltyController extends Controller
             'type'        => 'nullable|in:general,late_payment,overdue,violation,damage',
         ]);
 
-        Penalty::create([
+        $penalty = Penalty::create([
             'resident_id' => $request->resident_id,
             'payment_id'  => $request->payment_id,
             'amount'      => $request->amount,
@@ -155,6 +158,11 @@ class PenaltyController extends Controller
             'reason'      => $request->reason,
             'status'      => $request->status,
             'type'        => $request->type ?? 'general',
+        ]);
+
+        $this->logActivity('created', 'penalties', 'Issued penalty of ₱' . number_format($penalty->amount, 2) . ' to ' . $penalty->resident->first_name . ' ' . $penalty->resident->last_name, [
+            'penalty_id' => $penalty->id,
+            'resident_id' => $penalty->resident_id
         ]);
 
         return redirect()->route('admin.penalties.index')
@@ -194,6 +202,11 @@ class PenaltyController extends Controller
             'reason'      => $request->reason,
             'status'      => $request->status,
             'type'        => $request->type ?? 'general',
+        ]);
+
+        $this->logActivity('updated', 'penalties', 'Updated penalty for ' . $penalty->resident->first_name . ' ' . $penalty->resident->last_name, [
+            'penalty_id' => $penalty->id,
+            'new_status' => $penalty->status
         ]);
 
         return redirect()->route('admin.penalties.index')

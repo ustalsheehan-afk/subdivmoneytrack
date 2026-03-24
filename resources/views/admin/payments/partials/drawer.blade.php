@@ -8,20 +8,20 @@
                 {{ $payment->reference_no ?? '#' . str_pad($payment->id, 6, '0', STR_PAD_LEFT) }}
             </p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex items-center gap-2">
             @if($payment->status === 'approved')
                 <a href="{{ route('admin.payments.receipt', $payment->id) }}" target="_blank"
-                   class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition text-gray-500" title="Download Receipt">
-                    <i class="bi bi-printer"></i>
+                   class="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100 transition-all active:scale-95 shadow-sm" title="Print Receipt">
+                    <i class="bi bi-printer-fill"></i>
                 </a>
             @endif
              <a href="{{ route('admin.payments.edit', $payment->id) }}" 
-               class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition text-gray-500" title="Edit">
-                <i class="bi bi-pencil"></i>
+               class="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 text-gray-500 border border-gray-100 hover:bg-gray-100 transition-all active:scale-95 shadow-sm" title="Edit Payment">
+                <i class="bi bi-pencil-fill"></i>
             </a>
             <button onclick="closePaymentDrawer()" 
-                    class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition text-gray-500" title="Close">
-                <i class="bi bi-x-lg text-lg"></i>
+                    class="w-10 h-10 rounded-xl flex items-center justify-center bg-white text-gray-400 border border-gray-100 hover:text-red-500 hover:border-red-100 hover:bg-red-50 transition-all active:scale-95 shadow-sm" title="Close">
+                <i class="bi bi-x-lg"></i>
             </button>
         </div>
     </div>
@@ -33,23 +33,25 @@
             <div class="flex flex-col items-center text-center">
                 <div class="relative p-1 rounded-full bg-gradient-to-tr from-[#800020]/30 to-transparent">
                     <img 
-                        src="{{ $payment->resident->photo && Storage::disk('public')->exists($payment->resident->photo) ? Storage::disk('public')->url($payment->resident->photo) : asset('CDlogo.jpg') }}"
+                        src="{{ $payment->resident?->photo && Storage::disk('public')->exists($payment->resident->photo) ? Storage::disk('public')->url($payment->resident->photo) : asset('CDlogo.jpg') }}"
                         class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
-                        alt="{{ $payment->resident->first_name ?? 'Resident' }}">
+                        alt="{{ $payment->resident?->first_name ?? 'Resident' }}">
                 </div>
 
                 <h3 class="mt-3 text-xl font-bold text-gray-900 leading-tight">
-                    {{ $payment->resident->first_name ?? 'Unknown' }} {{ $payment->resident->last_name ?? 'Resident' }}
+                    {{ $payment->resident?->first_name ?? 'Unknown' }} {{ $payment->resident?->last_name ?? 'Resident' }}
                 </h3>
                 <p class="text-sm text-gray-500 mt-1">
-                    Block {{ $payment->resident->block ?? '-' }} • Lot {{ $payment->resident->lot ?? '-' }}
+                    Block {{ $payment->resident?->block ?? '-' }} • Lot {{ $payment->resident?->lot ?? '-' }}
                 </p>
                 
                 <div class="flex gap-3 mt-4">
+                    @if($payment->resident)
                     <a href="{{ route('admin.residents.show', $payment->resident->id) }}"
                        class="text-sm font-semibold text-[#800020] hover:underline flex items-center gap-1">
                         View Profile <i class="bi bi-arrow-right"></i>
                     </a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -104,16 +106,16 @@
 
     {{-- FOOTER ACTIONS --}}
     @if($payment->status === 'pending')
-    <div class="p-6 border-t border-gray-100 bg-white z-10 grid grid-cols-2 gap-3">
-        <form action="{{ route('admin.payments.reject', $payment->id) }}" method="POST">
+    <div class="p-6 border-t border-gray-100 bg-white z-10 flex items-center gap-3">
+        <form action="{{ route('admin.payments.reject', $payment->id) }}" method="POST" class="flex-1">
             @csrf
-            <button class="w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 font-bold py-3 rounded-xl transition-colors shadow-sm">
+            <button class="w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 font-black py-3.5 rounded-xl transition-all shadow-sm active:scale-95 text-[10px] uppercase tracking-widest">
                 Reject
             </button>
         </form>
-        <form action="{{ route('admin.payments.approve', $payment->id) }}" method="POST">
+        <form action="{{ route('admin.payments.approve', $payment->id) }}" method="POST" class="flex-1">
             @csrf
-            <button class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-colors shadow-lg hover:shadow-xl">
+            <button class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-xl transition-all shadow-lg hover:shadow-xl active:scale-95 text-[10px] uppercase tracking-widest">
                 Approve
             </button>
         </form>

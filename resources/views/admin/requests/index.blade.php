@@ -4,64 +4,80 @@
 @section('page-title', 'Service Requests')
 
 @section('content')
-<div class="h-full bg-[#F8F9FB] overflow-y-auto">
-    <div class="max-w-full mx-auto px-4 py-4 flex flex-col gap-4">
+<div class="h-full bg-[#F8F9FB] overflow-y-auto custom-scrollbar">
+    <div class="max-w-7xl mx-auto px-6 py-8 flex flex-col gap-8">
 
         {{-- STATS SECTION --}}
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {{-- Total Requests --}}
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
-                <div class="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <i class="bi bi-collection text-4xl text-blue-600"></i>
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div class="relative z-10">
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Total Requests</p>
+                    <h3 class="text-2xl font-black text-gray-900 tracking-tight">{{ $summaryTotal }}</h3>
+                    <div class="mt-4 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                        <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Service Tickets</p>
+                    </div>
                 </div>
-                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Total</p>
-                <h3 class="text-xl font-black text-gray-900 leading-none">{{ $summaryTotal }}</h3>
             </div>
 
             {{-- Pending --}}
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
-                <div class="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <i class="bi bi-hourglass-split text-4xl text-orange-500"></i>
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div class="relative z-10">
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Pending Action</p>
+                    <h3 class="text-2xl font-black text-gray-900 tracking-tight">{{ $summaryPending }}</h3>
+                    <div class="mt-4 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                        <p class="text-[10px] font-black text-orange-600 uppercase tracking-widest">Awaiting Review</p>
+                    </div>
                 </div>
-                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Pending</p>
-                <h3 class="text-xl font-black text-gray-900 leading-none">{{ $summaryPending }}</h3>
             </div>
 
             {{-- Completed --}}
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
-                <div class="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <i class="bi bi-check-circle text-4xl text-emerald-500"></i>
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div class="relative z-10">
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Total Completed</p>
+                    <h3 class="text-2xl font-black text-gray-900 tracking-tight">{{ $summaryCompleted }}</h3>
+                    <div class="mt-4 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Resolved Tasks</p>
+                    </div>
                 </div>
-                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Completed</p>
-                <h3 class="text-xl font-black text-gray-900 leading-none">{{ $summaryCompleted }}</h3>
             </div>
 
             {{-- Rejected --}}
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
-                <div class="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <i class="bi bi-x-circle text-4xl text-red-500"></i>
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-red-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div class="relative z-10">
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Total Rejected</p>
+                    <h3 class="text-2xl font-black text-gray-900 tracking-tight">{{ $summaryRejected }}</h3>
+                    <div class="mt-4 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                        <p class="text-[10px] font-black text-red-600 uppercase tracking-widest">Denied Requests</p>
+                    </div>
                 </div>
-                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Rejected</p>
-                <h3 class="text-xl font-black text-gray-900 leading-none">{{ $summaryRejected }}</h3>
             </div>
         </div>
 
-        <div class="flex flex-col bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden relative min-h-[600px]">
+        <div class="flex flex-col bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden relative min-h-[600px]">
 
             {{-- ========================================= --}}
             {{-- TOOLBAR (Sticky, Filters, Actions)        --}}
             {{-- ========================================= --}}
-            <div class="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3 bg-white z-30 relative shadow-sm">
+            <div class="px-8 py-6 border-b border-gray-50 flex flex-wrap items-center justify-between gap-6 bg-white z-30 relative">
                 
                 {{-- LEFT: Search --}}
                 <div class="flex items-center gap-4 flex-1">
                     
                     {{-- Search --}}
-                    <form method="GET" action="{{ route('admin.requests.index') }}" class="relative w-full max-w-xs group">
-                        <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors"></i>
+                    <form method="GET" action="{{ route('admin.requests.index') }}" class="relative w-full max-w-sm group">
+                        <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-accent transition-colors"></i>
                         <input type="text" name="search" value="{{ request('search') }}" 
                             placeholder="Search requests..." 
-                            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-gray-400">
+                            class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-brand-accent/10 focus:border-brand-accent focus:bg-white transition-all placeholder-gray-400">
                         
                         {{-- Preserve other filters --}}
                         @foreach(request()->except(['search', 'page']) as $key => $value)
@@ -72,75 +88,63 @@
                 </div>
 
                 {{-- RIGHT: Icon Filters & View Toggle --}}
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-3">
 
                     {{-- Filter Group --}}
-                    <div class="flex items-center gap-2 mr-4 border-r border-gray-100 pr-4">
+                    <div class="flex items-center gap-3 mr-3 border-r border-gray-100 pr-6">
                         
                         {{-- Status Filter --}}
                         <div class="relative group">
-                            <button onclick="toggleDropdown('statusDropdown')" class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all relative">
-                                <i class="bi bi-funnel-fill"></i>
+                            <button onclick="toggleDropdown('statusDropdown')" class="w-11 h-11 flex items-center justify-center rounded-xl border border-gray-100 text-gray-400 hover:text-brand-accent hover:border-brand-accent/30 hover:bg-emerald-50/30 transition-all relative">
+                                <i class="bi bi-funnel-fill text-lg"></i>
                                 @if(request('status'))
-                                    <span class="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full border border-white"></span>
+                                    <span class="absolute top-2.5 right-2.5 w-2 h-2 bg-brand-accent rounded-full border-2 border-white shadow-[0_0_10px_rgba(182,255,92,0.5)]"></span>
                                 @endif
                             </button>
                             
-                            <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
-                                Filter by Status
-                            </div>
-
-                            <div id="statusDropdown" class="hidden absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 py-2 transform origin-top-right transition-all">
-                                <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</div>
-                                <a href="{{ request()->fullUrlWithQuery(['status' => null, 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">All Statuses</a>
-                                <a href="{{ request()->fullUrlWithQuery(['status' => 'pending', 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Pending</a>
-                                <a href="{{ request()->fullUrlWithQuery(['status' => 'in progress', 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">In Progress</a>
-                                <a href="{{ request()->fullUrlWithQuery(['status' => 'completed', 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Completed</a>
-                                <a href="{{ request()->fullUrlWithQuery(['status' => 'rejected', 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Rejected</a>
+                            <div id="statusDropdown" class="hidden absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 py-2 transform origin-top-right transition-all">
+                                <div class="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-wider">Status</div>
+                                <a href="{{ request()->fullUrlWithQuery(['status' => null, 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">ALL STATUSES</a>
+                                <a href="{{ request()->fullUrlWithQuery(['status' => 'pending', 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">PENDING</a>
+                                <a href="{{ request()->fullUrlWithQuery(['status' => 'in progress', 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">IN PROGRESS</a>
+                                <a href="{{ request()->fullUrlWithQuery(['status' => 'completed', 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">COMPLETED</a>
+                                <a href="{{ request()->fullUrlWithQuery(['status' => 'rejected', 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">REJECTED</a>
                             </div>
                         </div>
 
                         {{-- Priority Filter --}}
                         <div class="relative group">
-                            <button onclick="toggleDropdown('priorityDropdown')" class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all relative">
-                                <i class="bi bi-exclamation-circle"></i>
+                            <button onclick="toggleDropdown('priorityDropdown')" class="w-11 h-11 flex items-center justify-center rounded-xl border border-gray-100 text-gray-400 hover:text-brand-accent hover:border-brand-accent/30 hover:bg-emerald-50/30 transition-all relative">
+                                <i class="bi bi-exclamation-circle text-lg"></i>
                                 @if(request('priority'))
-                                    <span class="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full border border-white"></span>
+                                    <span class="absolute top-2.5 right-2.5 w-2 h-2 bg-brand-accent rounded-full border-2 border-white shadow-[0_0_10px_rgba(182,255,92,0.5)]"></span>
                                 @endif
                             </button>
                             
-                            <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
-                                Filter by Priority
-                            </div>
-
-                            <div id="priorityDropdown" class="hidden absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 py-2 transform origin-top-right transition-all">
-                                <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Priority</div>
-                                <a href="{{ request()->fullUrlWithQuery(['priority' => null, 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">All Priorities</a>
-                                <a href="{{ request()->fullUrlWithQuery(['priority' => 'high', 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">High</a>
-                                <a href="{{ request()->fullUrlWithQuery(['priority' => 'medium', 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Medium</a>
-                                <a href="{{ request()->fullUrlWithQuery(['priority' => 'low', 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Low</a>
+                            <div id="priorityDropdown" class="hidden absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 py-2 transform origin-top-right transition-all">
+                                <div class="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-wider">Priority</div>
+                                <a href="{{ request()->fullUrlWithQuery(['priority' => null, 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">ALL PRIORITIES</a>
+                                <a href="{{ request()->fullUrlWithQuery(['priority' => 'high', 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">HIGH</a>
+                                <a href="{{ request()->fullUrlWithQuery(['priority' => 'medium', 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">MEDIUM</a>
+                                <a href="{{ request()->fullUrlWithQuery(['priority' => 'low', 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">LOW</a>
                             </div>
                         </div>
 
                         {{-- Block Filter --}}
                         <div class="relative group hidden md:block">
-                            <button onclick="toggleDropdown('blockDropdown')" class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all relative">
-                                <i class="bi bi-building"></i>
+                            <button onclick="toggleDropdown('blockDropdown')" class="w-11 h-11 flex items-center justify-center rounded-xl border border-gray-100 text-gray-400 hover:text-brand-accent hover:border-brand-accent/30 hover:bg-emerald-50/30 transition-all relative">
+                                <i class="bi bi-building text-lg"></i>
                                 @if(request('block'))
-                                    <span class="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full border border-white"></span>
+                                    <span class="absolute top-2.5 right-2.5 w-2 h-2 bg-brand-accent rounded-full border-2 border-white shadow-[0_0_10px_rgba(182,255,92,0.5)]"></span>
                                 @endif
                             </button>
                             
-                            <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
-                                Filter by Block
-                            </div>
-
-                            <div id="blockDropdown" class="hidden absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-50 py-2 transform origin-top-right transition-all max-h-72 overflow-y-auto custom-scrollbar">
-                                <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Block</div>
-                                <a href="{{ request()->fullUrlWithQuery(['block' => null, 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">All Blocks</a>
+                            <div id="blockDropdown" class="hidden absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 py-2 transform origin-top-right transition-all max-h-72 overflow-y-auto custom-scrollbar">
+                                <div class="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-wider">Block</div>
+                                <a href="{{ request()->fullUrlWithQuery(['block' => null, 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">ALL BLOCKS</a>
                                 @foreach($blocks as $block)
-                                    <a href="{{ request()->fullUrlWithQuery(['block' => $block, 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">
-                                        Block {{ $block }}
+                                    <a href="{{ request()->fullUrlWithQuery(['block' => $block, 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">
+                                        BLOCK {{ $block }}
                                     </a>
                                 @endforeach
                             </div>
@@ -148,63 +152,52 @@
 
                         {{-- Date Filter --}}
                         <div class="relative group hidden lg:block">
-                            <button onclick="toggleDropdown('dateDropdown')" class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all relative">
-                                <i class="bi bi-calendar3"></i>
+                            <button onclick="toggleDropdown('dateDropdown')" class="w-11 h-11 flex items-center justify-center rounded-xl border border-gray-100 text-gray-400 hover:text-brand-accent hover:border-brand-accent/30 hover:bg-emerald-50/30 transition-all relative">
+                                <i class="bi bi-calendar3 text-lg"></i>
                                 @if(request('date_filter'))
-                                    <span class="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full border border-white"></span>
+                                    <span class="absolute top-2.5 right-2.5 w-2 h-2 bg-brand-accent rounded-full border-2 border-white shadow-[0_0_10px_rgba(182,255,92,0.5)]"></span>
                                 @endif
                             </button>
                             
-                            <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
-                                Filter by Date
-                            </div>
-
-                            <div id="dateDropdown" class="hidden absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-50 py-2 transform origin-top-right transition-all">
-                                <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Date Period</div>
-                                <a href="{{ request()->fullUrlWithQuery(['date_filter' => null, 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">All Dates</a>
-                                <a href="{{ request()->fullUrlWithQuery(['date_filter' => 'today', 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Today</a>
-                                <a href="{{ request()->fullUrlWithQuery(['date_filter' => 'week', 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">This Week</a>
-                                <a href="{{ request()->fullUrlWithQuery(['date_filter' => 'month', 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">This Month</a>
+                            <div id="dateDropdown" class="hidden absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 py-2 transform origin-top-right transition-all">
+                                <div class="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-wider">Date Period</div>
+                                <a href="{{ request()->fullUrlWithQuery(['date_filter' => null, 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">ALL DATES</a>
+                                <a href="{{ request()->fullUrlWithQuery(['date_filter' => 'today', 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">TODAY</a>
+                                <a href="{{ request()->fullUrlWithQuery(['date_filter' => 'week', 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">THIS WEEK</a>
+                                <a href="{{ request()->fullUrlWithQuery(['date_filter' => 'month', 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">THIS MONTH</a>
                             </div>
                         </div>
 
                         {{-- Sort --}}
                         <div class="relative group">
-                            <button onclick="toggleDropdown('sortDropdown')" class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all">
-                                <i class="bi bi-sort-down"></i>
+                            <button onclick="toggleDropdown('sortDropdown')" class="w-11 h-11 flex items-center justify-center rounded-xl border border-gray-100 text-gray-400 hover:text-brand-accent hover:border-brand-accent/30 hover:bg-emerald-50/30 transition-all">
+                                <i class="bi bi-sort-down text-lg"></i>
                             </button>
                             
-                            <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
-                                Sort List
-                            </div>
-
-                            <div id="sortDropdown" class="hidden absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 z-50 py-2 transform origin-top-right transition-all">
-                                <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Sort By</div>
-                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'newest', 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Newest First</a>
-                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'oldest', 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Oldest First</a>
-                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'priority_high', 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">High Priority First</a>
-                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'priority_low', 'page' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Low Priority First</a>
+                            <div id="sortDropdown" class="hidden absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 py-2 transform origin-top-right transition-all">
+                                <div class="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-wider">Sort By</div>
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'newest', 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">NEWEST FIRST</a>
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'oldest', 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">OLDEST FIRST</a>
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'priority_high', 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">HIGH PRIORITY</a>
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'priority_low', 'page' => null]) }}" class="block px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-accent">LOW PRIORITY</a>
                             </div>
                         </div>
 
                         {{-- Clear Filters (Icon) --}}
                         @if(request()->anyFilled(['search', 'status', 'priority', 'block', 'date_filter', 'sort']))
-                            <a href="{{ route('admin.requests.index') }}" class="w-10 h-10 flex items-center justify-center rounded-xl border border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200 transition-all group relative">
+                            <a href="{{ route('admin.requests.index') }}" class="w-11 h-11 flex items-center justify-center rounded-xl border border-red-50 text-red-500 hover:bg-red-50 hover:border-red-200 transition-all group relative">
                                 <i class="bi bi-x-lg"></i>
-                                <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
-                                    Clear Filters
-                                </div>
                             </a>
                         @endif
 
                     </div>
 
                     {{-- VIEW TOGGLE --}}
-                    <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
-                        <button onclick="toggleView('list')" id="listViewBtn" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-white hover:shadow-sm transition-all">
-                            <i class="bi bi-list-ul text-lg"></i>
+                    <div class="flex items-center gap-1.5 bg-gray-50/80 p-1.5 rounded-2xl border border-gray-100">
+                        <button onclick="toggleView('list')" id="listViewBtn" class="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-brand-accent hover:bg-white transition-all">
+                            <i class="bi bi-list-ul text-xl"></i>
                         </button>
-                        <button onclick="toggleView('grid')" id="gridViewBtn" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-white hover:shadow-sm transition-all">
+                        <button onclick="toggleView('grid')" id="gridViewBtn" class="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-brand-accent hover:bg-white transition-all">
                             <i class="bi bi-grid-fill text-lg"></i>
                         </button>
                     </div>
@@ -215,20 +208,21 @@
             {{-- ========================================= --}}
             {{-- CONTENT AREA (List & Grid)        --}}
             {{-- ========================================= --}}
-            <div class="flex-1 overflow-y-auto bg-white custom-scrollbar relative" id="scrollContainer">
+            <div class="flex-1 overflow-y-auto bg-white relative min-h-[500px]" id="scrollContainer">
                 
                 @if($requests->isNotEmpty())
                     
                     {{-- LIST VIEW --}}
                     <div id="listView" class="block w-full pb-20">
                         <table class="w-full text-left border-collapse">
-                            <thead class="bg-gray-50/90 backdrop-blur-sm sticky top-0 z-20 border-b border-gray-100">
+                            <thead class="bg-gray-50/50 sticky top-0 z-20 border-b border-gray-50">
                                 <tr>
-                                    <th class="p-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Resident</th>
-                                    <th class="p-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Type</th>
-                                    <th class="p-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
-                                    <th class="p-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Priority</th>
-                                    <th class="p-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="p-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-left">Resident</th>
+                                    <th class="p-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center">Type</th>
+                                    <th class="p-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center">Date</th>
+                                    <th class="p-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center">Priority</th>
+                                    <th class="p-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center">Status</th>
+                                    <th class="p-6 w-16"></th>
                                 </tr>
                             </thead>
                             <tbody id="requestsTableBody" class="divide-y divide-gray-50">
@@ -238,7 +232,7 @@
                     </div>
 
                     {{-- GRID VIEW --}}
-                    <div id="gridView" class="hidden p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20">
+                    <div id="gridView" class="hidden p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 pb-20">
                         @foreach($requests as $req)
                             @include('admin.requests.partials.card', ['req' => $req])
                         @endforeach
@@ -253,23 +247,23 @@
                             <i class="bi bi-arrow-down-short text-lg"></i>
                         </button>
                         <div id="loadingSpinner" class="hidden">
-                             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent mx-auto"></div>
                         </div>
                     </div>
                     @else
                         <div class="mt-8 text-center pb-6">
-                            <p class="text-xs font-bold text-gray-300 uppercase tracking-widest">End of List</p>
+                            <p class="text-[10px] font-black text-gray-300 uppercase tracking-widest">End of List</p>
                         </div>
                     @endif
 
                 @else
                     <div class="flex flex-col items-center justify-center h-full text-center pb-20 pt-20">
-                        <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                            <i class="bi bi-inbox text-2xl text-gray-400"></i>
+                        <div class="w-24 h-24 bg-gray-50 rounded-[32px] flex items-center justify-center mb-6 text-gray-200">
+                            <i class="bi bi-inbox text-5xl"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900">No requests found</h3>
-                        <p class="text-gray-500 max-w-xs mx-auto mt-2">Try adjusting your filters to find what you're looking for.</p>
-                        <a href="{{ route('admin.requests.index') }}" class="mt-6 px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-black transition text-sm font-medium">Clear Filters</a>
+                        <h3 class="text-2xl font-black text-gray-900 mb-2">No requests found</h3>
+                        <p class="text-gray-500 text-sm max-w-xs mx-auto mb-8 leading-relaxed font-medium">Try adjusting your filters or search criteria to find what you're looking for.</p>
+                        <a href="{{ route('admin.requests.index') }}" class="px-10 py-4 bg-[#081412] text-[#B6FF5C] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:shadow-[0_0_20px_rgba(182,255,92,0.3)] transition-all border border-white/10 active:scale-95">Clear All Filters</a>
                     </div>
                 @endif
             </div>

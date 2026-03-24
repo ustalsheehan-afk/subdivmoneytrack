@@ -4,177 +4,223 @@
 @section('page-title', 'Resident Details')
 
 @section('content')
-<div class="max-w-7xl mx-auto space-y-5">
+<div class="space-y-8 animate-fade-in pb-20">
 
-    {{-- ========================= --}}
-    {{-- PROFILE SECTION --}}
-    {{-- ========================= --}}
-    <div class="bg-white rounded-3xl border border-gray-200 shadow-lg">
-
-        {{-- Header --}}
-        <div class="px-5 py-3 border-b flex justify-between items-center">
-            <h2 class="text-base font-bold text-gray-900">Profile</h2>
-            
-            <div class="flex gap-2">
-                {{-- INVITE BUTTON --}}
-                @if(!$resident->hasAccount())
-                    <button onclick="generateInvite({{ $resident->id }}, '{{ $resident->email }}')"
-                       class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-1.5 rounded-xl shadow-sm transition flex items-center gap-2">
-                       <i class="bi bi-envelope-plus-fill"></i> Invite Resident
-                    </button>
-                @else
-                    <span class="bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs px-3 py-1.5 rounded-xl font-bold flex items-center gap-2">
-                        <i class="bi bi-check-circle-fill"></i> Account Active
-                    </span>
-                @endif
-
-                {{-- EDIT BUTTON --}}
-                <a href="{{ route('admin.residents.edit', $resident->id) }}"
-                   class="bg-[#800020] hover:bg-[#9a002e] text-white text-sm px-4 py-1.5 rounded-xl shadow-sm transition">
-                   <i class="bi bi-pencil-fill mr-1"></i> Edit
+    {{-- ===================== --}}
+    {{-- HEADER SECTION --}}
+    {{-- ===================== --}}
+    <div class="glass-card p-8 relative overflow-hidden group">
+        {{-- Subtle gradient glow in background --}}
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-brand-accent/5 rounded-full blur-3xl group-hover:bg-brand-accent/10 transition-all duration-700"></div>
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-6">
+                <a href="{{ route('admin.residents.index') }}" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-emerald-600 hover:border-emerald-100 hover:shadow-sm transition-all shadow-sm">
+                    <i class="bi bi-arrow-left text-xl"></i>
                 </a>
-            </div>
-        </div>
-
-        {{-- Body --}}
-        <div class="p-5 flex flex-col md:flex-row gap-6 items-center">
-
-            {{-- PHOTO & STATUS --}}
-            <div class="flex flex-col items-center flex-shrink-0">
-                <img
-                    src="{{ $resident->photo ? asset('storage/' . $resident->photo) : asset('CDlogo.jpg') }}"
-                    onerror="this.onerror=null; this.src='{{ asset('CDlogo.jpg') }}';"
-                    class="w-32 h-32 rounded-2xl object-cover border border-gray-300 shadow-sm"
-                >
-
-                <span class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border capitalize tracking-wide
-                    {{ $resident->status === 'active' 
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
-                        : 'bg-red-50 text-red-700 border-red-100' }}">
-                    <span class="w-1.5 h-1.5 rounded-full {{ $resident->status === 'active' ? 'bg-emerald-500' : 'bg-red-500' }}"></span>
-                    {{ $resident->status }}
-                </span>
-            </div>
-
-            {{-- INFO CARDS --}}
-            <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                @php
-                    $infoCards = [
-                        ['icon' => 'bi-person-fill', 'label' => 'Full Name', 'value' => $resident->first_name . ' ' . $resident->last_name],
-                      ['icon' => 'bi-telephone-fill', 'label' => 'Contact', 'value' => $resident->contact_number],
-                        ['icon' => 'bi-envelope-fill', 'label' => 'Email', 'value' => $resident->email],
-                        ['icon' => 'bi-house-fill', 'label' => 'Block / Lot', 'value' => ($resident->block ?? '-') . ' / ' . ($resident->lot ?? '-')],
-                        ['icon' => 'bi-calendar-check-fill', 'label' => 'Move-in', 'value' => $resident->move_in_date ? $resident->move_in_date->format('M d, Y') : '-'],
-                    ];
-                @endphp
-
-                @foreach($infoCards as $card)
-                <div
-                    class="bg-white/70 border border-gray-200/70 rounded-2xl p-4 flex items-center gap-3
-                           shadow-[0_1px_2px_rgba(0,0,0,0.04)]
-                           hover:shadow-[0_3px_8px_rgba(0,0,0,0.06)]
-                           transition-all">
-
-                    <i class="bi {{ $card['icon'] }} text-2xl text-[#777777]"></i>
-
-                    <div class="space-y-0.5">
-                        {{-- LABEL --}}
-                        <p class="text-[12px] font-medium text-[#800020]/80">
-                            {{ $card['label'] }}
-                        </p>
-
-                        {{-- VALUE --}}
-                        <p class="text-[14px] font-bold text-[#1C2833]">
-                            {{ $card['value'] }}
+                <div class="flex items-center gap-5">
+                    <div class="relative shrink-0">
+                        <img src="{{ $resident->photo ? asset('storage/' . $resident->photo) : asset('CDlogo.jpg') }}" 
+                             onerror="this.onerror=null; this.src='{{ asset('CDlogo.jpg') }}';"
+                             class="w-20 h-20 rounded-[24px] object-cover border-4 border-white shadow-2xl group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center shadow-lg
+                            {{ $resident->status === 'active' ? 'bg-emerald-500' : 'bg-red-500' }}">
+                            <i class="bi {{ $resident->status === 'active' ? 'bi-check-lg' : 'bi-x-lg' }} text-[10px] text-white"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
+                            {{ $resident->full_name }}
+                        </h1>
+                        <p class="mt-2 text-gray-600 text-lg flex items-center gap-2">
+                            <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest border border-emerald-100">
+                                Resident
+                            </span>
+                            <span class="text-gray-400">•</span>
+                            <span class="font-bold text-gray-500 uppercase tracking-widest text-xs">Blk {{ $resident->block }} / Lot {{ $resident->lot }}</span>
                         </p>
                     </div>
                 </div>
-                @endforeach
             </div>
 
-        </div>
-    </div>
+            <div class="flex items-center gap-3">
+                @if(!$resident->hasAccount())
+                    <button onclick="generateInvite({{ $resident->id }}, '{{ $resident->email }}')"
+                       class="btn-premium">
+                       <i class="bi bi-envelope-plus-fill"></i> Invite Resident
+                    </button>
+                @else
+                    <div class="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-xl border border-emerald-100">
+                        <i class="bi bi-shield-check"></i> Account Active
+                    </div>
+                @endif
 
-    {{-- ========================= --}}
-    {{-- FINANCIAL OVERVIEW --}}
-    {{-- ========================= --}}
-    <div class="bg-white rounded-3xl border border-gray-200 shadow-lg">
-
-        {{-- Header --}}
-        <div class="px-5 py-3 border-b">
-            <h2 class="text-base font-bold text-gray-900">Financial Overview</h2>
-        </div>
-
-        {{-- Body --}}
-        <div class="p-4 flex flex-col sm:flex-row justify-around items-center gap-4">
-
-            {{-- TOTAL DUES --}}
-            <div class="flex flex-col items-center px-4 py-2">
-                <i class="bi bi-cash-stack text-xl text-[#777777] mb-1"></i>
-                <p class="text-[12px] font-medium text-[#800020]/80">Total Dues</p>
-                <p class="text-[14px] font-bold text-[#1C2833]">
-                    ₱ {{ number_format($financials['outstandingDues'] ?? 0, 2) }}
-                </p>
-            </div>
-
-            {{-- PAYMENTS --}}
-            <div class="flex flex-col items-center px-4 py-2">
-                <i class="bi bi-credit-card-fill text-xl text-[#777777] mb-1"></i>
-                <p class="text-[12px] font-medium text-[#800020]/80">Payments</p>
-                <p class="text-[14px] font-bold text-[#1C2833]">
-                    ₱ {{ number_format($financials['totalPayments'] ?? 0, 2) }}
-                </p>
-            </div>
-
-            {{-- PENALTIES --}}
-            <div class="flex flex-col items-center px-4 py-2">
-                <i class="bi bi-exclamation-circle-fill text-xl text-[#777777] mb-1"></i>
-                <p class="text-[12px] font-medium text-[#800020]/80">Penalties</p>
-                <p class="text-[14px] font-bold text-[#1C2833]">
-                    ₱ {{ number_format($financials['totalPenalties'] ?? 0, 2) }}
-                </p>
-            </div>
-
-        </div>
-    </div>
-
-    {{-- ========================= --}}
-    {{-- TABS --}}
-    {{-- ========================= --}}
-    <div class="bg-white rounded-3xl border shadow-lg">
-
-        <div class="border-b flex">
-            @foreach(['dues','payments','penalties','notes'] as $tab)
-                <button
-                    onclick="showTab('{{ $tab }}')"
-                    class="tab-btn px-5 py-3 capitalize {{ $loop->first ? 'active' : '' }}"
-                    data-tab="{{ $tab }}">
-                    {{ ucfirst($tab) }}
-                </button>
-            @endforeach
-        </div>
-
-        <div class="p-5">
-            <div id="tab-dues" class="tab-content">
-                @include('admin.residents.partials.dues-table', ['dues' => $resident->dues ?? []])
-            </div>
-
-            <div id="tab-payments" class="tab-content hidden">
-                @include('admin.residents.partials.payments-table', ['payments' => $resident->payments ?? []])
-            </div>
-
-            <div id="tab-penalties" class="tab-content hidden">
-                @include('admin.residents.partials.penalties-table', ['penalties' => $resident->penalties ?? []])
-            </div>
-
-            <div id="tab-notes" class="tab-content hidden">
-                <textarea
-                    class="w-full border border-gray-300 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-gray-500 resize-none"
-                    rows="4"
-                    placeholder="Admin remarks about this resident...">{{ $resident->notes ?? '' }}</textarea>
+                <a href="{{ route('admin.residents.edit', $resident->id) }}" class="btn-secondary">
+                    <i class="bi bi-pencil"></i> Edit Profile
+                </a>
             </div>
         </div>
     </div>
+
+    {{-- ===================== --}}
+    {{-- STATS & INFO CARDS --}}
+    {{-- ===================== --}}
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        
+        {{-- PROFILE DETAILS (Left Column) --}}
+        <div class="lg:col-span-1 space-y-8">
+            <div class="glass-card p-8 space-y-8">
+                <div class="flex items-center gap-3 pb-4 border-b border-gray-50">
+                    <i class="bi bi-person-badge text-emerald-500"></i>
+                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Profile Details</h3>
+                </div>
+
+                <div class="space-y-6">
+                    {{-- Contact --}}
+                    <div class="space-y-1.5">
+                        <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Contact Number</p>
+                        <p class="text-sm font-bold text-gray-900">{{ $resident->contact_number ?? 'Not provided' }}</p>
+                    </div>
+
+                    {{-- Email --}}
+                    <div class="space-y-1.5">
+                        <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Email Address</p>
+                        <p class="text-sm font-bold text-gray-900">{{ $resident->email ?? 'Not provided' }}</p>
+                    </div>
+
+                    {{-- Move In --}}
+                    <div class="space-y-1.5">
+                        <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Move-in Date</p>
+                        <p class="text-sm font-bold text-gray-900">{{ $resident->move_in_date ? $resident->move_in_date->format('M d, Y') : '-' }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ACCOUNT STATUS --}}
+            <div class="glass-card bg-gray-900 p-8 relative overflow-hidden group border-none">
+                <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl"></div>
+                <div class="relative z-10 space-y-4">
+                    <p class="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Account Health</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-white text-lg font-black tracking-tight uppercase">{{ $resident->status }}</span>
+                        <div class="w-3 h-3 rounded-full {{ $resident->status === 'active' ? 'bg-emerald-500' : 'bg-red-500' }} animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]"></div>
+                    </div>
+                    <p class="text-[10px] font-medium text-gray-400 leading-relaxed">
+                        Resident is currently in good standing with the subdivision association.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        {{-- FINANCIAL OVERVIEW (Right Column) --}}
+        <div class="lg:col-span-3 space-y-8">
+            {{-- FINANCIAL STATS ROW --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {{-- Outstanding Dues --}}
+                <div class="glass-card p-8 flex items-center gap-6 group hover:shadow-xl transition-all duration-300">
+                    <div class="w-16 h-16 rounded-[24px] bg-red-50 flex items-center justify-center text-red-500 group-hover:scale-110 transition-all duration-500 border border-red-100/50 shadow-sm">
+                        <i class="bi bi-cash-stack text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Outstanding Dues</p>
+                        <h3 class="text-3xl font-black text-gray-900 tracking-tight tabular-nums">₱{{ number_format($financials['outstandingDues'] ?? 0, 0) }}</h3>
+                    </div>
+                </div>
+                
+                {{-- Total Payments --}}
+                <div class="glass-card p-8 flex items-center gap-6 group hover:shadow-xl transition-all duration-300">
+                    <div class="w-16 h-16 rounded-[24px] bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-all duration-500 border border-emerald-100/50 shadow-sm">
+                        <i class="bi bi-credit-card-fill text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] mb-1">Total Paid</p>
+                        <h3 class="text-3xl font-black text-gray-900 tracking-tight tabular-nums">₱{{ number_format($financials['totalPayments'] ?? 0, 0) }}</h3>
+                    </div>
+                </div>
+
+                {{-- Penalties --}}
+                <div class="glass-card p-8 flex items-center gap-6 group hover:shadow-xl transition-all duration-300">
+                    <div class="w-16 h-16 rounded-[24px] bg-amber-50 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-all duration-500 border border-amber-100/50 shadow-sm">
+                        <i class="bi bi-exclamation-circle-fill text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Total Penalties</p>
+                        <h3 class="text-3xl font-black text-gray-900 tracking-tight tabular-nums">₱{{ number_format($financials['totalPenalties'] ?? 0, 0) }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            {{-- TABS SECTION --}}
+            <div class="glass-card overflow-hidden flex flex-col min-h-[500px]">
+                <div class="flex border-b border-gray-100 bg-gray-50/30">
+                    @foreach(['dues','payments','penalties','notes'] as $tab)
+                        <button
+                            onclick="showTab('{{ $tab }}')"
+                            class="tab-btn px-10 py-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative group {{ $loop->first ? 'active' : 'text-gray-400 hover:text-gray-600' }}"
+                            data-tab="{{ $tab }}">
+                            {{ $tab }}
+                            <div class="absolute bottom-0 left-0 right-0 h-1 bg-emerald-500 scale-x-0 group-hover:scale-x-50 transition-transform duration-300 {{ $loop->first ? 'active-indicator' : '' }}"></div>
+                        </button>
+                    @endforeach
+                </div>
+
+                <div class="p-8 flex-1">
+                    <div id="tab-dues" class="tab-content">
+                        @include('admin.residents.partials.dues-table', ['dues' => $resident->dues ?? []])
+                    </div>
+
+                    <div id="tab-payments" class="tab-content hidden">
+                        @include('admin.residents.partials.payments-table', ['payments' => $resident->payments ?? []])
+                    </div>
+
+                    <div id="tab-penalties" class="tab-content hidden">
+                        @include('admin.residents.partials.penalties-table', ['penalties' => $resident->penalties ?? []])
+                    </div>
+
+                    <div id="tab-notes" class="tab-content hidden">
+                        <div class="space-y-4">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Administrative Notes</label>
+                            <textarea
+                                class="w-full border border-gray-200 bg-gray-50 rounded-[32px] p-8 text-sm font-medium focus:bg-white focus:ring-8 focus:ring-emerald-500/5 focus:border-emerald-500 transition-all outline-none resize-none shadow-inner"
+                                rows="6"
+                                placeholder="Admin remarks about this resident...">{{ $resident->notes ?? '' }}</textarea>
+                            <div class="flex justify-end">
+                                <button class="btn-premium">
+                                    <i class="bi bi-check2-circle"></i>
+                                    Save Notes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- TAB SCRIPT --}}
+<script>
+function showTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('active', 'text-gray-900');
+        el.classList.add('text-gray-400');
+        const indicator = el.querySelector('.active-indicator');
+        if(indicator) indicator.classList.remove('active-indicator');
+    });
+    
+    document.getElementById('tab-' + tab).classList.remove('hidden');
+    const activeBtn = document.querySelector(`[data-tab="${tab}"]`);
+    activeBtn.classList.add('active', 'text-gray-900');
+    activeBtn.classList.remove('text-gray-400');
+}
+</script>
+
+<style>
+.tab-btn.active { color: #111827; }
+.tab-btn.active .active-indicator { transform: scaleX(1); }
+.active-indicator { transform: scaleX(1); background-color: #10B981; }
+</style>
 
 </div>
 

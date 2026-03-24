@@ -76,7 +76,7 @@
         </div>
 
         <button type="submit" class="admin-btn-primary mt-2">
-            {{ isset($payment) ? 'Update Payment' : 'Add Payment' }}
+            {{ isset($payment) ? 'Update Payment' : 'Review Payment' }}
         </button>
     </form>
 </div>

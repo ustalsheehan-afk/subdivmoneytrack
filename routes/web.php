@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 | AUTH CONTROLLERS
 |--------------------------------------------------------------------------
 */
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\AdminLoginController;
 use App\Http\Controllers\ResidentAuthController; // Custom Resident Auth
 use App\Http\Controllers\ResidentPasswordResetController; // Custom Resident Password Reset
@@ -88,47 +89,44 @@ Route::get('/test-invite/{token}', function($token) {
     return 'VALID';
 });
 
-Route::post('/logout', [ResidentAuthController::class, 'logout'])->name('logout');
-
 /*
 |--------------------------------------------------------------------------
-| ADMIN AUTH
+| SMART UNIFIED AUTH (Login & Password Reset)
 |--------------------------------------------------------------------------
 */
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::get('login', [AdminLoginController::class, 'showLoginForm'])->name('login');
-    Route::post('login', [AdminLoginController::class, 'login'])->name('login.submit');
-});
+Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('login', [LoginController::class, 'login'])->name('login.submit');
+Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 
-/*
-|--------------------------------------------------------------------------
-| RESIDENT AUTH (Custom Flow)
-|--------------------------------------------------------------------------
-*/
-Route::prefix('resident')->name('resident.')->group(function () {
-    // Login
-    Route::get('login', [ResidentAuthController::class, 'showLoginForm'])->name('login');
-    Route::post('login', [ResidentAuthController::class, 'login'])->name('login.submit');
+// Forgot Password
+Route::get('forgot-password', [ResidentPasswordResetController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('forgot-password', [ResidentPasswordResetController::class, 'sendResetLinkEmail'])->name('password.email');
 
-    // Forgot Password
-    Route::get('forgot-password', [ResidentPasswordResetController::class, 'showLinkRequestForm'])->name('password.request');
-    Route::post('forgot-password', [ResidentPasswordResetController::class, 'sendResetLinkEmail'])->name('password.email');
-    
-    // Reset Password
-    Route::get('reset-password/{token}', [ResidentPasswordResetController::class, 'showResetForm'])->name('password.reset');
-    Route::post('reset-password', [ResidentPasswordResetController::class, 'reset'])->name('password.update');
-});
+// Reset Password
+Route::get('reset-password/{token}', [ResidentPasswordResetController::class, 'showResetForm'])->name('password.reset');
+Route::post('reset-password', [ResidentPasswordResetController::class, 'reset'])->name('password.update');
+
+// Legacy redirects
+Route::get('admin/login', function() { return redirect()->route('login'); });
+Route::get('resident/login', function() { return redirect()->route('login'); });
+Route::get('resident/forgot-password', function() { return redirect()->route('password.request'); });
 
 /*
 |--------------------------------------------------------------------------
 | ADMIN PROTECTED ROUTES
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth:admin', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
 
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('dashboard/data', [DashboardController::class, 'getDashboardData'])->name('dashboard.data');
+    Route::post('notifications/mark-all-read', [DashboardController::class, 'markAllNotificationsAsRead'])->name('notifications.mark-all-read');
+    Route::get('home', [DashboardController::class, 'index'])->name('home');
+    Route::get('about-board', [DashboardController::class, 'board'])->name('about.board');
+
+    // System Notifications API
+    Route::get('system-notifications', [App\Http\Controllers\Admin\NotificationController::class, 'getSystemNotifications'])->name('system-notifications');
 
     // Board Members
     Route::resource('board', BoardMemberController::class);
@@ -137,6 +135,7 @@ Route::middleware(['auth:admin', 'admin'])->prefix('admin')->name('admin.')->gro
     // Announcements
     Route::get('announcements/trashed', [AnnouncementController::class, 'trashed'])->name('announcements.trashed');
     Route::get('announcements/archive', [AnnouncementController::class, 'archive'])->name('announcements.archive');
+    Route::get('announcements/drafts', [AnnouncementController::class, 'drafts'])->name('announcements.drafts');
     Route::patch('announcements/bulk-restore', [AnnouncementController::class, 'bulkRestore'])->name('announcements.bulkRestore');
     Route::post('announcements/bulk-archive', [AnnouncementController::class, 'bulkArchive'])->name('announcements.bulkArchive');
     Route::delete('announcements/bulk-trash', [AnnouncementController::class, 'bulkTrash'])->name('announcements.bulkTrash');
@@ -160,6 +159,24 @@ Route::middleware(['auth:admin', 'admin'])->prefix('admin')->name('admin.')->gro
         'destroy' => 'dues.destroy',
     ]);
 
+    // Messages Center (Refactored SaaS Structure)
+    Route::group(['prefix' => 'messages', 'as' => 'messages.'], function() {
+        Route::get('support', [App\Http\Controllers\Admin\MessageController::class, 'index'])->name('index');
+        Route::get('support/{thread}', [App\Http\Controllers\Admin\MessageController::class, 'show'])->name('show');
+        Route::post('support/{thread}/reply', [App\Http\Controllers\Admin\MessageController::class, 'reply'])->name('reply');
+        Route::post('support/{thread}/status', [App\Http\Controllers\Admin\MessageController::class, 'updateStatus'])->name('updateStatus');
+        
+        Route::get('notifications', [App\Http\Controllers\Admin\NotificationModuleController::class, 'index'])->name('notifications.index');
+        Route::post('notifications/{notification}/read', [App\Http\Controllers\Admin\NotificationModuleController::class, 'markAsRead'])->name('notifications.read');
+        Route::post('notifications/mark-all-read', [App\Http\Controllers\Admin\NotificationModuleController::class, 'markAllAsRead'])->name('notifications.markAllRead');
+    });
+
+    // System (Reports & Logs)
+    Route::group(['prefix' => 'system', 'as' => 'system.'], function() {
+        Route::get('reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
+        Route::get('activity-logs', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
+    });
+
     // Resource routes
     Route::resources([
         'residents'     => ResidentController::class,
@@ -169,9 +186,11 @@ Route::middleware(['auth:admin', 'admin'])->prefix('admin')->name('admin.')->gro
         'amenities'     => AmenityController::class,
     ]);
 
-    Route::post('payments/review', [PaymentController::class, 'review'])->name('payments.review');
+    Route::get('payments/{id}/review', [PaymentController::class, 'review'])->name('payments.review');
+    Route::post('payments/review', [PaymentController::class, 'store'])->name('payments.review-post');
+    Route::resource('payments', PaymentController::class)->names('payments');
     Route::post('payments/confirm', [PaymentController::class, 'confirm'])->name('payments.confirm');
-    Route::resource('payments', PaymentController::class);
+    Route::get('payments/{id}/receipt', [PaymentController::class, 'receipt'])->name('payments.receipt');
 
     // Amenity Reservations
     Route::get('dummy-reservation', [DummyReservationController::class, 'index'])->name('dummy-reservation');
@@ -244,7 +263,7 @@ Route::middleware(['auth:admin', 'admin'])->prefix('admin')->name('admin.')->gro
 | RESIDENT PROTECTED ROUTES
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth:resident', 'resident'])->prefix('resident')->name('resident.')->group(function () {
+Route::middleware(['auth', 'resident'])->prefix('resident')->name('resident.')->group(function () {
 
     // Force Password Change Routes (Kept for manual access if needed, or we can remove if unused)
     Route::get('change-password', [ResidentAuthController::class, 'showChangePasswordForm'])->name('change-password');
@@ -275,6 +294,13 @@ Route::middleware(['auth:resident', 'resident'])->prefix('resident')->name('resi
     Route::get('profile', [ResidentProfileController::class, 'index'])->name('profile.index');
     Route::get('profile/edit', [ResidentProfileController::class, 'edit'])->name('profile.edit');
     Route::put('profile', [ResidentProfileController::class, 'update'])->name('profile.update');
+    // Messages Center (Replaces Support)
+    Route::get('messages', [App\Http\Controllers\Resident\MessageController::class, 'index'])->name('messages.index');
+    Route::get('messages/create', [App\Http\Controllers\Resident\MessageController::class, 'create'])->name('messages.create');
+    Route::post('messages', [App\Http\Controllers\Resident\MessageController::class, 'store'])->name('messages.store');
+    Route::get('messages/{thread}', [App\Http\Controllers\Resident\MessageController::class, 'show'])->name('messages.show');
+    Route::post('messages/{thread}/reply', [App\Http\Controllers\Resident\MessageController::class, 'reply'])->name('messages.reply');
+
     Route::get('profile/settings', [ResidentProfileController::class, 'settings'])->name('profile.settings');
 
 
@@ -301,6 +327,9 @@ Route::middleware(['auth:resident', 'resident'])->prefix('resident')->name('resi
     Route::get('contact', function () {
         return view('resident.contact');
     })->name('contact');
+
+    // System Notifications API
+    Route::get('system-notifications', [App\Http\Controllers\Admin\NotificationController::class, 'getSystemNotifications'])->name('system-notifications');
 
     // Announcements
     Route::get('announcements', [ResidentAnnouncementController::class, 'index'])->name('announcements.index');

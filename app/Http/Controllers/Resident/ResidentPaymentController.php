@@ -18,11 +18,11 @@ class ResidentPaymentController extends Controller
      */
     public function index(Request $request)
     {
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
 
         if (!$resident) {
-            abort(403, 'Resident profile not found.');
+            return redirect()->route('resident.dashboard')->with('error', 'Resident profile not found.');
         }
 
         // Get all dues with payments, newest first
@@ -84,8 +84,8 @@ class ResidentPaymentController extends Controller
      */
     public function pay(Request $request, $id)
     {
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
 
         if (!$resident) {
             abort(403, 'Resident profile not found.');
@@ -130,11 +130,11 @@ class ResidentPaymentController extends Controller
      */
     public function processPayment(Request $request, $id)
     {
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
 
         if (!$resident) {
-            abort(403, 'Resident profile not found.');
+            return redirect()->route('resident.dashboard')->with('error', 'Resident profile not found.');
         }
 
         $type = $request->query('type', 'due');

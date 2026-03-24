@@ -17,8 +17,8 @@ class ProfileController extends Controller
      */
     public function index()
     {
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
 
         if (!$resident) {
             return redirect()->route('resident.dashboard')->with('error', 'Resident profile not found.');
@@ -34,8 +34,8 @@ class ProfileController extends Controller
      */
     public function edit()
     {
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
 
         if (!$resident) {
             return redirect()->route('resident.dashboard')->with('error', 'Resident profile not found.');
@@ -51,8 +51,8 @@ class ProfileController extends Controller
      */
     public function settings()
     {
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
 
         if (!$resident) {
             return redirect()->route('resident.dashboard')->with('error', 'Resident profile not found.');
@@ -69,8 +69,8 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         /** @var \App\Models\User $user */
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
 
         if (!$resident) {
              abort(403, 'Resident profile not found.');

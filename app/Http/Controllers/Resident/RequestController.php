@@ -17,8 +17,8 @@ class RequestController extends Controller
     {
       
         // Get the logged-in user's resident record
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
 
         // Make sure they have a resident record
         if (!$resident) {
@@ -57,8 +57,8 @@ class RequestController extends Controller
         ]);
 
         // Find resident record for logged-in user
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
 
         if (!$resident) {
             return redirect()->back()->with('error', 'Resident record not found.');
@@ -148,8 +148,8 @@ class RequestController extends Controller
      */
     public function show($id)
     {
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
 
         if (!$resident) {
             abort(403, 'Resident record not found.');
@@ -165,8 +165,13 @@ class RequestController extends Controller
      */
     public function edit($id)
     {
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
+
+        if (!$resident) {
+            abort(403, 'Resident record not found.');
+        }
+
         $requestItem = ServiceRequest::where('resident_id', $resident->id)->findOrFail($id);
 
         if ($requestItem->status === 'completed') {
@@ -189,8 +194,13 @@ class RequestController extends Controller
             'priority' => 'required|string',
         ]);
 
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
+
+        if (!$resident) {
+            abort(403, 'Resident record not found.');
+        }
+
         $requestItem = ServiceRequest::where('resident_id', $resident->id)->findOrFail($id);
 
         if ($requestItem->status === 'completed') {

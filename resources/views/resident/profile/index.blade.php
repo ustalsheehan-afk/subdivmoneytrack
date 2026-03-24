@@ -4,127 +4,168 @@
 @section('page-title', 'My Profile')
 
 @section('content')
-<div class="max-w-5xl mx-auto space-y-8 mt-6">
+<div class="h-full bg-[#F8F9FB] overflow-y-auto custom-scrollbar">
+    <div class="max-w-5xl mx-auto px-6 py-8 flex flex-col gap-10 pb-24 animate-fade-in">
 
-    {{-- ========================= --}}
-    {{-- PROFILE SECTION --}}
-    {{-- ========================= --}}
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 relative overflow-hidden">
-        
-        {{-- Background Decoration --}}
-        <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-blue-600 to-blue-800 opacity-90"></div>
+        {{-- ========================= --}}
+        {{-- PROFILE HERO SECTION --}}
+        {{-- ========================= --}}
+        <div class="relative overflow-hidden bg-[#081412] rounded-[40px] p-10 shadow-2xl group">
+            {{-- Subtle gradient glow --}}
+            <div class="absolute -right-20 -top-20 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all duration-1000"></div>
+            <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl"></div>
 
-        <div class="relative pt-12 flex flex-col md:flex-row gap-8 items-start">
-            
-            {{-- PHOTO & STATUS --}}
-            <div class="flex flex-col items-center">
-                <div class="relative">
-                    <img
-                        src="{{ ($resident && $resident->photo) ? asset('storage/' . $resident->photo) : asset('CDlogo.jpg') }}"
-                        onerror="this.onerror=null; this.src='{{ asset('CDlogo.jpg') }}';"
-                        alt="Profile Photo"
-                        class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md bg-white"
-                    >
-                    <a href="{{ route('resident.profile.edit') }}" class="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center shadow hover:bg-blue-700 transition" title="Edit Profile">
-                        <i class="bi bi-pencil-fill text-xs"></i>
-                    </a>
-                </div>
+            <div class="relative z-10 flex flex-col md:flex-row gap-10 items-center md:items-start">
                 
-                <h2 class="mt-4 text-xl font-bold text-gray-900">{{ $resident->first_name ?? 'Resident' }} {{ $resident->last_name ?? '' }}</h2>
-                <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide mt-2
-                    {{ ($resident && $resident->status === 'active') ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100' }}">
-                    {{ ucfirst($resident->status ?? 'unknown') }}
-                </span>
-            </div>
+                {{-- PHOTO & STATUS --}}
+                <div class="flex flex-col items-center shrink-0">
+                    <div class="relative group/photo">
+                        <div class="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl group-hover/photo:bg-emerald-500/40 transition-all duration-500"></div>
+                        <img
+                            src="{{ ($resident && $resident->photo) ? asset('storage/' . $resident->photo) : asset('CDlogo.jpg') }}"
+                            onerror="this.onerror=null; this.src='{{ asset('CDlogo.jpg') }}';"
+                            alt="Profile Photo"
+                            class="w-40 h-40 rounded-full object-cover border-4 border-white/10 shadow-2xl relative z-10 bg-[#0D1F1C]"
+                        >
+                        <a href="{{ route('resident.profile.edit') }}" 
+                           class="absolute bottom-2 right-2 w-10 h-10 bg-emerald-500 text-black rounded-2xl flex items-center justify-center shadow-2xl hover:bg-emerald-400 hover:scale-110 transition-all z-20 border-4 border-[#081412]" 
+                           title="Edit Profile">
+                            <i class="bi bi-pencil-fill text-sm"></i>
+                        </a>
+                    </div>
+                    
+                    <div class="mt-6 text-center">
+                        <h2 class="text-3xl font-black text-white tracking-tight leading-none">{{ $resident->first_name ?? 'Resident' }} {{ $resident->last_name ?? '' }}</h2>
+                        <div class="mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-xl border {{ ($resident && $resident->status === 'active') ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'bg-red-500/10 text-red-400 border-red-500/20' }}">
+                            <span class="w-1.5 h-1.5 rounded-full {{ ($resident && $resident->status === 'active') ? 'bg-emerald-400 animate-pulse' : 'bg-red-400' }}"></span>
+                            <span class="text-[10px] font-black uppercase tracking-widest">{{ ucfirst($resident->status ?? 'unknown') }}</span>
+                        </div>
+                    </div>
+                </div>
 
-            {{-- INFO GRID --}}
-            <div class="flex-1 w-full">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {{-- INFO GRID --}}
+                <div class="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-6">
                     @php
                         $infoCards = [
-                            ['icon'=>'bi-telephone-fill', 'label'=>'Contact Number', 'value'=>$resident->contact_number, 'color'=>'blue'],
-                            ['icon'=>'bi-envelope-fill', 'label'=>'Email Address', 'value'=>$resident->email, 'color'=>'purple'],
-                            ['icon'=>'bi-geo-alt-fill', 'label'=>'Block / Lot', 'value'=>'Block ' . ($resident->block ?? '-') . ' / Lot ' . ($resident->lot ?? '-'), 'color'=>'orange'],
-                            ['icon'=>'bi-calendar-check-fill', 'label'=>'Move-in Date', 'value'=>$resident->move_in_date ? $resident->move_in_date->format('M d, Y') : '-', 'color'=>'emerald'],
-                            ['icon'=>'bi-house-fill', 'label'=>'Member Type', 'value'=>$resident->membership_type ?? 'Homeowner', 'color'=>'cyan'],
+                            ['icon'=>'bi-telephone-fill', 'label'=>'Contact Number', 'value'=>$resident->contact_number],
+                            ['icon'=>'bi-envelope-fill', 'label'=>'Email Address', 'value'=>$resident->email],
+                            ['icon'=>'bi-geo-alt-fill', 'label'=>'Address', 'value'=>'Block ' . ($resident->block ?? '-') . ' / Lot ' . ($resident->lot ?? '-')],
+                            ['icon'=>'bi-calendar-check-fill', 'label'=>'Resident Since', 'value'=>$resident->move_in_date ? $resident->move_in_date->format('M d, Y') : '-'],
                         ];
                     @endphp
 
                     @foreach($infoCards as $card)
-                    <div class="flex items-start gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors">
-                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-{{ $card['color'] }}-600 shadow-sm border border-gray-100 shrink-0">
-                            <i class="bi {{ $card['icon'] }}"></i>
+                    <div class="flex items-start gap-5 p-6 rounded-[28px] bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-300 group/card">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 border border-emerald-400 group-hover/card:scale-110 transition-transform shrink-0">
+                            <i class="bi {{ $card['icon'] }} text-lg"></i>
                         </div>
-                        <div>
-                            <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">{{ $card['label'] }}</p>
-                            <p class="text-sm font-semibold text-gray-900 break-all">{{ $card['value'] }}</p>
+                        <div class="min-w-0">
+                            <p class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-1.5">{{ $card['label'] }}</p>
+                            <p class="text-sm font-black text-white tracking-tight truncate">{{ $card['value'] }}</p>
                         </div>
                     </div>
                     @endforeach
                 </div>
             </div>
         </div>
-    </div>
 
-    {{-- ========================= --}}
-    {{-- PROPERTY & ACCOUNT --}}
-    {{-- ========================= --}}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {{-- ========================= --}}
+        {{-- PROPERTY & ACCOUNT CARDS --}}
+        {{-- ========================= --}}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-        {{-- ACCOUNT STATUS --}}
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 class="font-bold text-gray-900 text-lg flex items-center gap-2 mb-6">
-                <i class="bi bi-shield-check text-emerald-600"></i> Account Status
-            </h3>
-
-            <div class="space-y-4">
-                <div class="flex justify-between items-center p-4 rounded-xl bg-gray-50 border border-gray-100">
-                    <span class="text-sm font-medium text-gray-600">Payment Status</span>
-                    @php
-                        $isGoodStanding = $resident->payment_status === 'Good Standing';
-                    @endphp
-                    <span class="text-sm font-bold {{ $isGoodStanding ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-amber-600 bg-amber-50 border-amber-100' }} px-3 py-1 rounded-full border">
-                        {{ $resident->payment_status }}
-                    </span>
+            {{-- ACCOUNT STATUS --}}
+            <div class="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10 relative overflow-hidden group/account">
+                <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl group-hover/account:bg-emerald-500/10 transition-all duration-700"></div>
+                
+                <div class="flex items-center gap-4 mb-10 relative z-10">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center border border-emerald-100 shadow-sm">
+                        <i class="bi bi-shield-check text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-gray-900 text-xl tracking-tight">Account Integrity</h3>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Financial & Membership Standing</p>
+                    </div>
                 </div>
 
-                <div class="flex justify-between items-center p-4 rounded-xl bg-gray-50 border border-gray-100">
-                    <span class="text-sm font-medium text-gray-600">Membership Type</span>
-                    <span class="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-                        {{ $resident->membership_type ?? 'Regular Member' }}
-                    </span>
-                </div>
+                <div class="space-y-5 relative z-10">
+                    <div class="flex justify-between items-center p-6 rounded-[24px] bg-gray-50 border border-gray-100 hover:bg-white hover:shadow-xl transition-all duration-500 group">
+                        <span class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Payment Status</span>
+                        @php
+                            $isGoodStanding = $resident->payment_status === 'Good Standing';
+                        @endphp
+                        <span class="inline-flex items-center px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm
+                            {{ $isGoodStanding ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100' }}">
+                            <i class="bi {{ $isGoodStanding ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill' }} mr-2"></i>
+                            {{ $resident->payment_status }}
+                        </span>
+                    </div>
 
-                <div class="flex justify-between items-center p-4 rounded-xl bg-gray-50 border border-gray-100">
-                    <span class="text-sm font-medium text-gray-600">Member Since</span>
-                    <span class="text-sm font-bold text-gray-900">{{ $resident->move_in_date ? $resident->move_in_date->year : '-' }}</span>
+                    <div class="flex justify-between items-center p-6 rounded-[24px] bg-gray-50 border border-gray-100 hover:bg-white hover:shadow-xl transition-all duration-500">
+                        <span class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Membership Type</span>
+                        <span class="text-sm font-black text-gray-900 tracking-tight">
+                            {{ $resident->membership_type ?? 'Regular Member' }}
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between items-center p-6 rounded-[24px] bg-gray-50 border border-gray-100 hover:bg-white hover:shadow-xl transition-all duration-500">
+                        <span class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Member Since</span>
+                        <span class="text-sm font-black text-gray-900 tracking-tight">{{ $resident->move_in_date ? $resident->move_in_date->year : '-' }}</span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        {{-- PROPERTY DETAILS --}}
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 class="font-bold text-gray-900 text-lg flex items-center gap-2 mb-6">
-                <i class="bi bi-houses-fill text-orange-500"></i> Property Details
-            </h3>
+            {{-- PROPERTY DETAILS --}}
+            <div class="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10 relative overflow-hidden group/property">
+                <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl group-hover/property:bg-emerald-500/10 transition-all duration-700"></div>
 
-            <div class="space-y-4">
-                <div class="flex justify-between items-center p-4 rounded-xl bg-gray-50 border border-gray-100">
-                    <span class="text-sm font-medium text-gray-600">Property Type</span>
-                    <span class="text-sm font-bold text-gray-900">{{ $resident->property_type ?? 'Residential House & Lot' }}</span>
+                <div class="flex items-center gap-4 mb-10 relative z-10">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center border border-emerald-100 shadow-sm">
+                        <i class="bi bi-houses-fill text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-gray-900 text-xl tracking-tight">Property Asset</h3>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Home & Lot Information</p>
+                    </div>
                 </div>
 
-                <div class="flex justify-between items-center p-4 rounded-xl bg-gray-50 border border-gray-100">
-                    <span class="text-sm font-medium text-gray-600">Lot Area</span>
-                    <span class="text-sm font-bold text-gray-900">{{ $resident->lot_area ? number_format($resident->lot_area, 0) . ' sq.m' : 'Not Available' }}</span>
-                </div>
+                <div class="space-y-5 relative z-10">
+                    <div class="flex justify-between items-center p-6 rounded-[24px] bg-gray-50 border border-gray-100 hover:bg-white hover:shadow-xl transition-all duration-500">
+                        <span class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Property Type</span>
+                        <span class="text-sm font-black text-gray-900 tracking-tight">{{ $resident->property_type ?? 'Residential House & Lot' }}</span>
+                    </div>
 
-                <div class="flex justify-between items-center p-4 rounded-xl bg-gray-50 border border-gray-100">
-                    <span class="text-sm font-medium text-gray-600">Floor Area</span>
-                    <span class="text-sm font-bold text-gray-900">{{ $resident->floor_area ? number_format($resident->floor_area, 0) . ' sq.m' : 'Not Available' }}</span>
+                    <div class="flex justify-between items-center p-6 rounded-[24px] bg-gray-50 border border-gray-100 hover:bg-white hover:shadow-xl transition-all duration-500">
+                        <span class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Lot Area</span>
+                        <div class="text-right">
+                            <span class="text-lg font-black text-gray-900 tracking-tight tabular-nums">{{ $resident->lot_area ? number_format($resident->lot_area, 0) : '0' }}</span>
+                            <span class="text-[9px] font-black text-gray-400 uppercase ml-1">SQ.M</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center p-6 rounded-[24px] bg-gray-50 border border-gray-100 hover:bg-white hover:shadow-xl transition-all duration-500">
+                        <span class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Floor Area</span>
+                        <div class="text-right">
+                            <span class="text-lg font-black text-gray-900 tracking-tight tabular-nums">{{ $resident->floor_area ? number_format($resident->floor_area, 0) : '0' }}</span>
+                            <span class="text-[9px] font-black text-gray-400 uppercase ml-1">SQ.M</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+    }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
+</style>
 @endsection

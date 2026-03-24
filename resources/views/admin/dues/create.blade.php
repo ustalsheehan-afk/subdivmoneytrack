@@ -4,19 +4,35 @@
 @section('page-title', 'Create Billing')
 
 @section('content')
-<div class="max-w-6xl mx-auto space-y-8 pb-20">
-    {{-- TOP BAR --}}
-    <div class="flex items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-        <div class="flex items-center gap-4">
-            <a href="{{ route('admin.dues.dashboard') }}" class="w-12 h-12 flex items-center justify-center rounded-2xl border border-gray-100 text-gray-400 hover:text-blue-600 hover:border-blue-100 hover:bg-blue-50 transition-all">
-                <i class="bi bi-arrow-left text-lg"></i>
-            </a>
-            <div>
-                <h3 class="text-2xl font-black text-gray-900 tracking-tight">Create Billing Statement</h3>
-                <p class="text-xs font-medium text-gray-500 flex items-center gap-2">
-                    <i class="bi bi-info-circle text-blue-500"></i>
-                    Fields marked with <span class="text-red-500 font-bold">*</span> are required
-                </p>
+<div class="space-y-8 animate-fade-in pb-20">
+
+    {{-- ===================== --}}
+    {{-- HEADER SECTION --}}
+    {{-- ===================== --}}
+    <div class="glass-card p-8 relative overflow-hidden group">
+        {{-- Subtle gradient glow in background --}}
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-brand-accent/5 rounded-full blur-3xl group-hover:bg-brand-accent/10 transition-all duration-700"></div>
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-6">
+                <a href="{{ route('admin.dues.index') }}" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-emerald-600 hover:border-emerald-100 hover:shadow-sm transition-all shadow-sm">
+                    <i class="bi bi-arrow-left text-xl"></i>
+                </a>
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
+                        Create Billing Statement
+                    </h1>
+                    <p class="mt-2 text-gray-600 text-lg max-w-xl">
+                        Generate new monthly dues or special assessment batches for residents.
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="document.getElementById('billing-form').submit()" class="btn-premium" id="header-submit-btn" disabled>
+                    <i class="bi bi-check2-circle"></i>
+                    Generate Batch
+                </button>
             </div>
         </div>
     </div>
@@ -28,141 +44,133 @@
             <div class="lg:col-span-2 space-y-8">
                 
                 {{-- 1. Billing Details --}}
-                <section class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm space-y-8 relative overflow-hidden">
+                <section class="glass-card p-8 space-y-8 relative overflow-hidden group">
                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg">1</div>
-                        <h4 class="text-lg font-black text-gray-900">Billing Details</h4>
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xl border border-emerald-100 shadow-sm">1</div>
+                        <div>
+                            <h4 class="text-xl font-black text-gray-900 tracking-tight">Billing Details</h4>
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Basic information and timing</p>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 gap-8">
-                        <div class="space-y-2">
-                            <label class="text-[11px] font-bold text-gray-400 uppercase tracking-[0.15em]">Billing Title <span class="text-red-500">*</span></label>
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Billing Title <span class="text-red-500">*</span></label>
                             <input type="text" name="title" id="title" oninput="updatePreview()" 
-                                class="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/50 text-sm font-medium focus:bg-white focus:border-blue-500 focus:ring-8 focus:ring-blue-500/5 transition-all outline-none" 
+                                class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none" 
                                 placeholder="e.g. March 2026 Monthly HOA" required>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="space-y-2">
-                                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-[0.15em]">Billing Type <span class="text-red-500">*</span></label>
-                                <div class="relative">
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Billing Type <span class="text-red-500">*</span></label>
+                                <div class="relative group/select">
                                     <select name="type" id="type" onchange="updatePreview()" 
-                                        class="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/50 text-sm font-medium appearance-none focus:bg-white focus:border-blue-500 transition-all outline-none" required>
+                                        class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium appearance-none focus:bg-white focus:border-emerald-500 transition-all outline-none cursor-pointer" required>
                                         <option value="" disabled selected>Select Type</option>
                                         <option value="monthly_hoa">Monthly HOA Fees</option>
                                         <option value="special_assessment">Special Assessment</option>
                                         <option value="regular_fees">Regular Service Fees</option>
                                         <option value="amenity_dues">Amenity Dues</option>
                                     </select>
-                                    <i class="bi bi-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                    <i class="bi bi-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-hover/select:text-emerald-600 transition-colors"></i>
                                 </div>
                             </div>
-                            <div class="space-y-2">
-                                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-[0.15em]">Frequency <span class="text-red-500">*</span></label>
-                                <div class="relative">
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Frequency <span class="text-red-500">*</span></label>
+                                <div class="relative group/select">
                                     <select name="frequency" id="frequency" 
-                                        class="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/50 text-sm font-medium appearance-none focus:bg-white focus:border-blue-500 transition-all outline-none" required>
+                                        class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium appearance-none focus:bg-white focus:border-emerald-500 transition-all outline-none cursor-pointer" required>
                                         <option value="one_time">One-time</option>
                                         <option value="monthly">Monthly</option>
                                         <option value="quarterly">Quarterly</option>
                                     </select>
-                                    <i class="bi bi-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                    <i class="bi bi-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-hover/select:text-emerald-600 transition-colors"></i>
                                 </div>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="space-y-2">
-                                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-[0.15em]">Billing Start Date <span class="text-red-500">*</span></label>
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Billing Start Date <span class="text-red-500">*</span></label>
                                 <input type="date" name="billing_period_start" id="billing_period_start" onchange="updatePreview()" 
-                                    class="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/50 text-sm font-medium focus:bg-white focus:border-blue-500 transition-all outline-none" required>
+                                    class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium focus:bg-white focus:border-emerald-500 transition-all outline-none" required>
                             </div>
-                            <div class="space-y-2">
-                                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-[0.15em]">Due Date <span class="text-red-500">*</span></label>
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Due Date <span class="text-red-500">*</span></label>
                                 <input type="date" name="due_date" id="due_date" onchange="updatePreview()" 
-                                    class="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/50 text-sm font-medium focus:bg-white focus:border-blue-500 transition-all outline-none" required>
+                                    class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium focus:bg-white focus:border-emerald-500 transition-all outline-none" required>
                             </div>
                         </div>
                     </div>
                 </section>
 
                 {{-- 2. Billing Amount --}}
-                <section class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm space-y-8">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg">2</div>
-                            <h4 class="text-lg font-black text-gray-900">Billing Amount <span class="text-red-500">*</span></h4>
-                        </div>
-                        <div class="flex bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
-                            <button type="button" onclick="toggleAmountType('standard')" id="btn-standard" class="px-6 py-2 rounded-xl text-xs font-bold transition-all bg-white shadow-sm text-blue-600">Standard Rates</button>
-                            <button type="button" onclick="toggleAmountType('custom')" id="btn-custom" class="px-6 py-2 rounded-xl text-xs font-bold transition-all text-gray-400 hover:text-gray-600">Custom Amount</button>
-                            <input type="hidden" name="amount_type" id="amount_type" value="standard">
-                            <input type="hidden" name="apply_to" value="selected">
+                <section class="glass-card p-8 space-y-8 relative overflow-hidden group" x-data="billingAmount()">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xl border border-emerald-100 shadow-sm">2</div>
+                        <div>
+                            <h4 class="text-xl font-black text-gray-900 tracking-tight">Billing Amount</h4>
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Financial configuration</p>
                         </div>
                     </div>
 
-                    <div id="standard-rates-section" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <label class="relative cursor-pointer group">
-                            <input type="radio" name="rate_choice" value="500" class="hidden peer" onchange="setAmount(500)">
-                            <div class="p-5 rounded-2xl border-2 border-gray-50 bg-gray-50/50 peer-checked:border-blue-500 peer-checked:bg-blue-50/30 transition-all">
-                                <div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Regular</div>
-                                <div class="text-xl font-black text-gray-900">₱500.00</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Amount Type <span class="text-red-500">*</span></label>
+                            <div class="relative group/select">
+                                <select x-model="amountType" name="amount_type" id="amount_type" class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium appearance-none focus:bg-white focus:border-emerald-500 transition-all outline-none cursor-pointer" required>
+                                    <option value="standard">Standard HOA Fee</option>
+                                    <option value="assessment">Special Assessment</option>
+                                    <option value="amenity">Amenity Charge</option>
+                                    <option value="custom">Custom Amount</option>
+                                </select>
+                                <i class="bi bi-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-hover/select:text-emerald-600 transition-colors"></i>
                             </div>
-                        </label>
-                        <label class="relative cursor-pointer group">
-                            <input type="radio" name="rate_choice" value="750" class="hidden peer" onchange="setAmount(750)">
-                            <div class="p-5 rounded-2xl border-2 border-gray-50 bg-gray-50/50 peer-checked:border-blue-500 peer-checked:bg-blue-50/30 transition-all">
-                                <div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Premium</div>
-                                <div class="text-xl font-black text-gray-900">₱750.00</div>
+                        </div>
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Amount <span class="text-red-500">*</span></label>
+                            <div class="relative group/input">
+                                <span class="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 font-black text-lg transition-colors group-focus-within/input:text-emerald-600">₱</span>
+                                <input type="number" name="amount" id="amount_input" x-model="amount" :readonly="amountType !== 'custom'" oninput="updatePreview()" 
+                                    class="w-full pl-12 pr-6 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-lg font-black focus:bg-white focus:border-emerald-500 transition-all outline-none disabled:bg-gray-100/80 disabled:text-gray-400" 
+                                    placeholder="0.00" step="0.01" min="0.01" required>
                             </div>
-                        </label>
-                        <label class="relative cursor-pointer group">
-                            <input type="radio" name="rate_choice" value="1000" class="hidden peer" onchange="setAmount(1000)">
-                            <div class="p-5 rounded-2xl border-2 border-gray-50 bg-gray-50/50 peer-checked:border-blue-500 peer-checked:bg-blue-50/30 transition-all">
-                                <div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Commercial</div>
-                                <div class="text-xl font-black text-gray-900">₱1,000.00</div>
-                            </div>
-                        </label>
-                    </div>
-
-                    <div id="custom-amount-section" class="hidden animate__animated animate__fadeIn">
-                        <div class="relative">
-                            <span class="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 font-black text-lg">₱</span>
-                            <input type="number" name="amount" id="amount_input" oninput="updatePreview()" 
-                                class="w-full pl-12 pr-6 py-5 rounded-2xl border border-gray-100 bg-gray-50/50 text-xl font-black focus:bg-white focus:border-blue-500 transition-all outline-none" 
-                                placeholder="0.00" step="0.01" min="0.01">
                         </div>
                     </div>
                 </section>
 
                 {{-- 3. Residents Selection --}}
-                <section class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm space-y-8">
+                <section class="glass-card p-8 space-y-8 relative overflow-hidden group">
                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg">3</div>
-                        <h4 class="text-lg font-black text-gray-900">Residents <span class="text-red-500">*</span></h4>
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xl border border-emerald-100 shadow-sm">3</div>
+                        <div>
+                            <h4 class="text-xl font-black text-gray-900 tracking-tight">Residents Selection</h4>
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Target community members</p>
+                        </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 h-[500px]">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 h-[550px]">
                         {{-- Left: Available --}}
                         <div class="flex flex-col border border-gray-100 rounded-3xl overflow-hidden bg-gray-50/30">
-                            <div class="p-4 bg-white border-b border-gray-100 space-y-3">
+                            <div class="p-5 bg-white border-b border-gray-100 space-y-4">
                                 <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Available Residents</div>
-                                <div class="relative">
-                                    <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                                <div class="relative group/search">
+                                    <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs group-focus-within/search:text-emerald-600 transition-colors"></i>
                                     <input type="text" id="residentSearch" onkeyup="filterResidents()" 
-                                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-100 bg-gray-50 text-xs focus:bg-white transition-all outline-none" 
+                                        class="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-xs font-medium focus:bg-white focus:border-emerald-500 transition-all outline-none" 
                                         placeholder="Search by name or unit...">
                                 </div>
                             </div>
-                            <div class="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar" id="available-list">
+                            <div class="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar" id="available-list">
                                 @foreach($residents as $resident)
-                                <div class="resident-item p-3 rounded-2xl bg-white border border-gray-50 flex items-center justify-between group hover:border-blue-200 hover:shadow-sm transition-all" 
+                                <div class="resident-item p-4 rounded-2xl bg-white border border-gray-50 flex items-center justify-between group hover:border-emerald-500/30 hover:bg-emerald-50/30 hover:shadow-sm transition-all duration-300" 
                                     data-id="{{ $resident->id }}" data-name="{{ strtolower($resident->first_name . ' ' . $resident->last_name) }}" data-unit="{{ strtolower('B'.$resident->block.'/L'.$resident->lot) }}">
                                     <div>
-                                        <div class="text-sm font-bold text-gray-900">{{ $resident->first_name }} {{ $resident->last_name }}</div>
-                                        <div class="text-[10px] font-medium text-gray-400 uppercase">B{{ $resident->block }} / L{{ $resident->lot }}</div>
+                                        <div class="text-sm font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">{{ $resident->first_name }} {{ $resident->last_name }}</div>
+                                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5">B{{ $resident->block }} / L{{ $resident->lot }}</div>
                                     </div>
-                                    <button type="button" onclick="addResident({{ $resident->id }})" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-blue-600 hover:text-white transition-all">
+                                    <button type="button" onclick="addResident({{ $resident->id }})" class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
                                         <i class="bi bi-plus-lg"></i>
                                     </button>
                                 </div>
@@ -173,46 +181,48 @@
                         {{-- Right: Selected --}}
                         <div class="flex flex-col border border-gray-100 rounded-3xl overflow-hidden bg-gray-50/30">
                             {{-- Standard Header --}}
-                            <div id="selected-header-default" class="p-4 bg-white border-b border-gray-100 flex items-center justify-between">
-                                <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Selected Residents (<span id="selected-count">0</span>)</div>
+                            <div id="selected-header-default" class="p-5 bg-white border-b border-gray-100 flex items-center justify-between">
+                                <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Selected (<span id="selected-count">0</span>)</div>
                                 <div class="flex items-center gap-3">
-                                    <button type="button" onclick="addAllResidents()" class="text-[10px] font-bold text-blue-600 hover:underline">Add All</button>
+                                    <button type="button" onclick="addAllResidents()" class="text-[10px] font-black text-emerald-600 hover:text-emerald-700 uppercase tracking-widest">Add All</button>
                                     <span class="text-gray-200">|</span>
-                                    <button type="button" onclick="removeAllResidents()" class="text-[10px] font-bold text-red-500 hover:underline">Remove All</button>
+                                    <button type="button" onclick="removeAllResidents()" class="text-[10px] font-black text-red-500 hover:text-red-600 uppercase tracking-widest">Remove All</button>
                                     <span class="text-gray-200">|</span>
-                                    <button type="button" onclick="enterSelectionMode()" class="px-2 py-1 rounded-lg bg-gray-100 text-[10px] font-bold text-gray-600 hover:bg-gray-200 transition-all">Select</button>
+                                    <button type="button" onclick="enterSelectionMode()" class="px-3 py-1.5 rounded-lg bg-gray-100 text-[10px] font-black text-gray-600 hover:bg-gray-200 transition-all uppercase tracking-widest">Select</button>
                                 </div>
                             </div>
 
                             {{-- Selection Mode Header --}}
-                            <div id="selected-header-mode" class="hidden p-4 bg-blue-600 border-b border-blue-700 flex flex-col gap-3 animate__animated animate__fadeInDown animate__faster">
+                            <div id="selected-header-mode" class="hidden p-5 bg-emerald-600 border-b border-emerald-700 flex flex-col gap-4 animate__animated animate__fadeInDown animate__faster">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-3">
-                                        <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" class="w-4 h-4 rounded border-blue-400 text-blue-600 focus:ring-blue-500 bg-blue-500/20">
-                                        <span class="text-[10px] font-bold text-white uppercase tracking-widest">Select All</span>
+                                        <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" class="w-5 h-5 rounded-lg border-emerald-400 text-emerald-700 focus:ring-emerald-500 bg-emerald-500/20">
+                                        <span class="text-[10px] font-black text-white uppercase tracking-widest">Select All</span>
                                     </div>
-                                    <span class="text-[10px] font-bold text-blue-100 uppercase tracking-widest"><span id="batch-selected-count">0</span> selected</span>
+                                    <span class="text-[10px] font-black text-emerald-100 uppercase tracking-widest"><span id="batch-selected-count">0</span> selected</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <button type="button" id="btn-remove-selected" onclick="removeBatchSelected()" disabled 
-                                        class="flex-1 py-2 rounded-xl bg-white/10 border border-white/20 text-white text-[10px] font-bold hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                                        class="flex-1 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
                                         Remove Selected
                                     </button>
                                     <button type="button" onclick="clearBatchSelection()" 
-                                        class="px-4 py-2 rounded-xl bg-white/10 border border-white/20 text-white text-[10px] font-bold hover:bg-white/20 transition-all">
+                                        class="px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/20 transition-all">
                                         Clear
                                     </button>
                                     <button type="button" onclick="exitSelectionMode()" 
-                                        class="px-4 py-2 rounded-xl bg-white text-blue-600 text-[10px] font-bold hover:bg-blue-50 transition-all shadow-sm">
+                                        class="px-4 py-2.5 rounded-xl bg-white text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-50 transition-all shadow-sm">
                                         Cancel
                                     </button>
                                 </div>
                             </div>
 
-                            <div class="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar" id="selected-list">
-                                <div id="empty-selected" class="h-full flex flex-col items-center justify-center text-center p-8 text-gray-400">
-                                    <i class="bi bi-person-plus text-3xl mb-2 opacity-20"></i>
-                                    <p class="text-[11px] font-medium">No residents selected yet</p>
+                            <div class="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar" id="selected-list">
+                                <div id="empty-selected" class="h-full flex flex-col items-center justify-center text-center p-12 text-gray-400">
+                                    <div class="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mb-4 text-gray-200">
+                                        <i class="bi bi-person-plus text-3xl"></i>
+                                    </div>
+                                    <p class="text-[11px] font-black uppercase tracking-widest">No residents selected</p>
                                 </div>
                             </div>
                         </div>
@@ -225,64 +235,69 @@
             {{-- PREVIEW SIDE --}}
             <div class="lg:col-span-1">
                 <div class="sticky top-8 space-y-6">
-                    <div class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+                    <div class="glass-card p-8 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
                         
                         <h5 class="text-sm font-black text-gray-900 mb-8 flex items-center gap-3">
-                            <div class="w-2 h-6 bg-blue-500 rounded-full"></div>
+                            <div class="w-2 h-6 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
                             Statement Preview
                         </h5>
 
                         <div id="preview-container" class="space-y-8 relative z-10">
-                            <div class="space-y-2">
-                                <div id="preview-type" class="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em]">-</div>
-                                <h4 id="preview-title" class="text-xl font-black text-gray-900 leading-tight">Billing Title</h4>
+                            <div class="space-y-3">
+                                <div id="preview-type" class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">-</div>
+                                <h4 id="preview-title" class="text-2xl font-black text-gray-900 leading-tight tracking-tight">Billing Title</h4>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-6">
-                                <div class="space-y-1">
-                                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Residents</div>
-                                    <div id="preview-residents" class="text-sm font-black text-gray-900">0 Units</div>
+                            <div class="grid grid-cols-2 gap-8">
+                                <div class="space-y-2">
+                                    <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Residents</div>
+                                    <div id="preview-residents" class="text-lg font-black text-gray-900">0 Units</div>
                                 </div>
-                                <div class="space-y-1">
-                                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Per Unit</div>
-                                    <div id="preview-per-unit" class="text-sm font-black text-gray-900">₱0.00</div>
+                                <div class="space-y-2">
+                                    <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Per Unit</div>
+                                    <div id="preview-per-unit" class="text-lg font-black text-emerald-600">₱0.00</div>
                                 </div>
                             </div>
 
-                            <div class="space-y-4 pt-6 border-t border-gray-50">
+                            <div class="space-y-5 pt-8 border-t border-gray-50">
                                 <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 rounded-2xl bg-gray-50 text-gray-400 flex items-center justify-center shrink-0">
-                                        <i class="bi bi-calendar-check"></i>
+                                    <div class="w-11 h-11 rounded-2xl bg-gray-50 text-gray-400 flex items-center justify-center shrink-0 border border-gray-100">
+                                        <i class="bi bi-calendar-check text-lg"></i>
                                     </div>
                                     <div>
-                                        <div class="text-[10px] font-bold text-gray-400 uppercase">Billing Starts</div>
-                                        <div id="preview-start" class="text-sm font-bold text-gray-700">-</div>
+                                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Billing Starts</div>
+                                        <div id="preview-start" class="text-sm font-bold text-gray-900">-</div>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 rounded-2xl bg-gray-50 text-gray-400 flex items-center justify-center shrink-0">
-                                        <i class="bi bi-calendar-x"></i>
+                                    <div class="w-11 h-11 rounded-2xl bg-gray-50 text-gray-400 flex items-center justify-center shrink-0 border border-gray-100">
+                                        <i class="bi bi-calendar-x text-lg"></i>
                                     </div>
                                     <div>
-                                        <div class="text-[10px] font-bold text-gray-400 uppercase">Due Date</div>
-                                        <div id="preview-due" class="text-sm font-bold text-gray-700">-</div>
+                                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Due Date</div>
+                                        <div id="preview-due" class="text-sm font-bold text-gray-900">-</div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="pt-8 border-t-2 border-dashed border-gray-100 flex flex-col items-center">
-                                <div class="text-xs font-bold text-gray-400 uppercase mb-2">Total Statement Value</div>
-                                <div id="preview-total" class="text-4xl font-black text-blue-600 tabular-nums">₱0.00</div>
                             </div>
                         </div>
                     </div>
 
-                    <button type="button" id="submit-btn" onclick="openConfirmModal()" disabled
-                        class="w-full py-5 bg-blue-600 text-white font-black rounded-[1.5rem] hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl shadow-blue-100 flex items-center justify-center gap-3 group">
-                        <span>Generate Statement</span>
-                        <i class="bi bi-send-fill transition-transform group-hover:translate-x-1"></i>
-                    </button>
+                    <div class="glass-card bg-gray-900 p-8 relative overflow-hidden group border-none">
+                        <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all duration-700"></div>
+                        
+                        <div class="relative z-10 space-y-6">
+                            <div class="space-y-2">
+                                <p class="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Total Projected Collection</p>
+                                <div class="text-3xl font-black tabular-nums text-white">₱<span id="preview-total">0.00</span></div>
+                            </div>
+                            
+                            <button type="submit" form="billing-form" class="btn-premium w-full py-5 text-xs group/btn" id="submit-btn" disabled>
+                                <span>Generate Statement</span>
+                                <i class="bi bi-arrow-right text-lg group-hover/btn:translate-x-1 transition-transform"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -294,16 +309,16 @@
 <div id="confirmModal" class="hidden fixed inset-0 z-[999] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
     <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate__animated animate__zoomIn animate__faster relative z-[1000]">
         <div class="p-10 text-center">
-            <div class="w-20 h-20 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-8 shadow-sm ring-1 ring-blue-100">
+            <div class="w-20 h-20 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-8 shadow-sm ring-1 ring-emerald-100">
                 <i class="bi bi-send-check-fill text-4xl"></i>
             </div>
             <h3 class="text-2xl font-black text-gray-900 mb-3 tracking-tight">Create Billing Statement?</h3>
             <p class="text-gray-500 text-sm mb-10 leading-relaxed px-4">
-                You are about to generate dues for <span id="confirm-resident-count" class="font-black text-blue-600">0</span> residents. This will be recorded in their billing history.
+                You are about to generate dues for <span id="confirm-resident-count" class="font-black text-emerald-600">0</span> residents. This will be recorded in their billing history.
             </p>
             <div class="grid grid-cols-2 gap-4">
                 <button type="button" onclick="closeModal()" class="py-4 rounded-2xl border border-gray-100 text-gray-500 font-bold hover:bg-gray-50 transition-all active:scale-95">Cancel</button>
-                <button type="button" onclick="submitForm()" class="py-4 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 active:scale-95">Create Dues</button>
+                <button type="button" onclick="submitForm()" class="py-4 rounded-2xl bg-gray-900 text-white font-bold hover:bg-emerald-600 transition-all shadow-lg active:scale-95">Create Dues</button>
             </div>
         </div>
     </div>
@@ -312,6 +327,30 @@
 
 @push('scripts')
 <script>
+    function billingAmount() {
+        return {
+            amountType: 'standard',
+            amount: 500.00,
+            init() {
+                this.$watch('amountType', (newVal) => {
+                    if (newVal === 'standard') {
+                        this.amount = 500.00;
+                    } else if (newVal === 'assessment') {
+                        this.amount = 1500.00; 
+                    } else if (newVal === 'amenity') {
+                        this.amount = 250.00; 
+                    } else {
+                        this.amount = '';
+                    }
+                    this.$nextTick(() => updatePreview());
+                });
+                this.$watch('amount', () => {
+                    updatePreview();
+                });
+            }
+        }
+    }
+
     const allResidents = @json($residents);
     let selectedResidentIds = new Set();
     let isSelectionMode = false;
@@ -377,17 +416,16 @@
         document.getElementById('btn-remove-selected').disabled = batchSelectedIds.size === 0;
         document.getElementById('selectAllCheckbox').checked = batchSelectedIds.size === selectedResidentIds.size && selectedResidentIds.size > 0;
         
-        // Update row highlighting
         document.querySelectorAll('#selected-list .resident-selected-item').forEach(item => {
             const id = parseInt(item.dataset.id);
             const checkbox = item.querySelector('.batch-checkbox');
             if (checkbox) checkbox.checked = batchSelectedIds.has(id);
             
             if (batchSelectedIds.has(id)) {
-                item.classList.add('bg-blue-50', 'border-blue-200');
+                item.classList.add('bg-emerald-50', 'border-emerald-200');
                 item.classList.remove('bg-white', 'border-gray-100');
             } else {
-                item.classList.remove('bg-blue-50', 'border-blue-200');
+                item.classList.remove('bg-emerald-50', 'border-emerald-200');
                 item.classList.add('bg-white', 'border-gray-100');
             }
         });
@@ -415,17 +453,17 @@
     function updatePreview() {
         const title = document.getElementById('title').value || 'Billing Title';
         const typeSelect = document.getElementById('type');
-        const typeText = typeSelect.options[typeSelect.selectedIndex].text.toUpperCase();
+        const typeText = typeSelect.value ? typeSelect.options[typeSelect.selectedIndex].text.toUpperCase() : '-';
         const amount = parseFloat(document.getElementById('amount_input').value) || 0;
         const startDate = document.getElementById('billing_period_start').value;
         const dueDate = document.getElementById('due_date').value;
         const residentCount = selectedResidentIds.size;
 
         document.getElementById('preview-title').textContent = title;
-        document.getElementById('preview-type').textContent = typeSelect.value ? typeText : '-';
+        document.getElementById('preview-type').textContent = typeText;
         document.getElementById('preview-residents').textContent = `${residentCount} Units`;
         document.getElementById('preview-per-unit').textContent = `₱${amount.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-        document.getElementById('preview-total').textContent = `₱${(amount * residentCount).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        document.getElementById('preview-total').textContent = `${(amount * residentCount).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
 
         const formatDate = (dateStr) => {
             if (!dateStr) return '-';
@@ -437,38 +475,6 @@
         document.getElementById('preview-due').textContent = formatDate(dueDate);
 
         validateForm();
-    }
-
-    function toggleAmountType(type) {
-        const btnStandard = document.getElementById('btn-standard');
-        const btnCustom = document.getElementById('btn-custom');
-        const standardSection = document.getElementById('standard-rates-section');
-        const customSection = document.getElementById('custom-amount-section');
-        const amountTypeInput = document.getElementById('amount_type');
-        
-        if (type === 'standard') {
-            btnStandard.classList.add('bg-white', 'shadow-sm', 'text-blue-600');
-            btnStandard.classList.remove('text-gray-400');
-            btnCustom.classList.remove('bg-white', 'shadow-sm', 'text-blue-600');
-            btnCustom.classList.add('text-gray-400');
-            standardSection.classList.remove('hidden');
-            customSection.classList.add('hidden');
-            amountTypeInput.value = 'standard';
-        } else {
-            btnCustom.classList.add('bg-white', 'shadow-sm', 'text-blue-600');
-            btnCustom.classList.remove('text-gray-400');
-            btnStandard.classList.remove('bg-white', 'shadow-sm', 'text-blue-600');
-            btnStandard.classList.add('text-gray-400');
-            standardSection.classList.add('hidden');
-            customSection.classList.remove('hidden');
-            amountTypeInput.value = 'custom';
-        }
-        updatePreview();
-    }
-
-    function setAmount(val) {
-        document.getElementById('amount_input').value = val;
-        updatePreview();
     }
 
     function filterResidents() {
@@ -494,92 +500,62 @@
 
     function removeResident(id) {
         selectedResidentIds.delete(id);
+        if (batchSelectedIds.has(id)) batchSelectedIds.delete(id);
+        if (selectedResidentIds.size === 0) exitSelectionMode();
         renderSelected();
     }
 
     function renderSelected() {
         const list = document.getElementById('selected-list');
+        const count = document.getElementById('selected-count');
         const hiddenSelect = document.getElementById('resident_ids_hidden');
-        const countSpan = document.getElementById('selected-count');
-        const emptyState = document.getElementById('empty-selected');
-
-        list.innerHTML = '';
-        hiddenSelect.innerHTML = '';
+        const emptyMsg = document.getElementById('empty-selected');
         
+        count.textContent = selectedResidentIds.size;
+        hiddenSelect.innerHTML = '';
+        list.innerHTML = '';
+
         if (selectedResidentIds.size === 0) {
-            list.appendChild(emptyState);
+            list.appendChild(emptyMsg);
+            emptyMsg.classList.remove('hidden');
         } else {
-            selectedResidentIds.forEach(id => {
-                const resident = allResidents.find(r => r.id === id);
-                if (resident) {
-                    const isBatchChecked = batchSelectedIds.has(id);
-                    const item = document.createElement('div');
-                    item.dataset.id = id;
-                    item.className = `resident-selected-item p-3 rounded-2xl border transition-all animate__animated animate__fadeIn flex items-center justify-between group ${isBatchChecked ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-100'}`;
-                    
-                    let leftContent = '';
-                    if (isSelectionMode) {
-                        leftContent = `
-                            <div class="flex items-center gap-3">
-                                <input type="checkbox" class="batch-checkbox w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
-                                    ${isBatchChecked ? 'checked' : ''} onchange="toggleBatchItem(${id}, event)">
-                                <div>
-                                    <div class="text-sm font-bold text-gray-900">${resident.first_name} ${resident.last_name}</div>
-                                    <div class="text-[10px] font-medium text-gray-400 uppercase">B${resident.block} / L${resident.lot}</div>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        leftContent = `
-                            <div>
-                                <div class="text-sm font-bold text-gray-900">${resident.first_name} ${resident.last_name}</div>
-                                <div class="text-[10px] font-medium text-gray-400 uppercase">B${resident.block} / L${resident.lot}</div>
-                            </div>
-                        `;
-                    }
+            emptyMsg.classList.add('hidden');
+            allResidents.filter(r => selectedResidentIds.has(r.id)).forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.id;
+                opt.selected = true;
+                hiddenSelect.appendChild(opt);
 
-                    item.innerHTML = `
-                        ${leftContent}
-                        ${!isSelectionMode ? `
-                        <button type="button" onclick="removeResident(${resident.id})" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                        ` : ''}
-                    `;
-                    
-                    if (isSelectionMode) {
-                        item.onclick = (e) => {
-                            if (e.target.type !== 'checkbox') {
-                                toggleBatchItem(id, e);
-                            }
-                        };
-                        item.classList.add('cursor-pointer');
-                    }
-
-                    list.appendChild(item);
-
-                    const opt = document.createElement('option');
-                    opt.value = id;
-                    opt.selected = true;
-                    hiddenSelect.appendChild(opt);
+                const div = document.createElement('div');
+                div.className = `resident-selected-item p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 group ${batchSelectedIds.has(r.id) ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-gray-100 hover:border-emerald-500/30 hover:bg-emerald-50/30'}`;
+                div.dataset.id = r.id;
+                
+                if (isSelectionMode) {
+                    div.onclick = (e) => toggleBatchItem(r.id, e);
+                    div.classList.add('cursor-pointer');
                 }
+
+                div.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        ${isSelectionMode ? `
+                            <input type="checkbox" class="batch-checkbox w-5 h-5 rounded-lg border-emerald-300 text-emerald-600 focus:ring-emerald-500 pointer-events-none" ${batchSelectedIds.has(r.id) ? 'checked' : ''}>
+                        ` : ''}
+                        <div>
+                            <div class="text-sm font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">${r.first_name} ${r.last_name}</div>
+                            <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5">B${r.block} / L${r.lot}</div>
+                        </div>
+                    </div>
+                    ${!isSelectionMode ? `
+                        <button type="button" onclick="removeResident(${r.id})" class="w-9 h-9 rounded-xl text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all flex items-center justify-center">
+                            <i class="bi bi-trash-fill"></i>
+                        </button>
+                    ` : ''}
+                `;
+                list.appendChild(div);
             });
         }
-
-        countSpan.textContent = selectedResidentIds.size;
-        updateBatchUI(); // Refresh batch count and buttons if in selection mode
-        
-        // Toggle visibility in available list
-        document.querySelectorAll('#available-list .resident-item').forEach(item => {
-            const id = parseInt(item.dataset.id);
-            if (selectedResidentIds.has(id)) {
-                item.classList.add('opacity-50', 'grayscale-[0.5]', 'pointer-events-none');
-            } else {
-                item.classList.remove('opacity-50', 'grayscale-[0.5]', 'pointer-events-none');
-            }
-        });
-
         updatePreview();
+        if (isSelectionMode) updateBatchUI();
     }
 
     function validateForm() {
@@ -588,10 +564,11 @@
         const amount = document.getElementById('amount_input').value;
         const startDate = document.getElementById('billing_period_start').value;
         const dueDate = document.getElementById('due_date').value;
-        const residentsSelected = selectedResidentIds.size > 0;
+        const hasResidents = selectedResidentIds.size > 0;
 
-        const isValid = title && type && amount && startDate && dueDate && residentsSelected;
+        const isValid = title && type && amount && startDate && dueDate && hasResidents;
         document.getElementById('submit-btn').disabled = !isValid;
+        document.getElementById('header-submit-btn').disabled = !isValid;
     }
 
     function openConfirmModal() {
@@ -606,6 +583,12 @@
     function submitForm() {
         document.getElementById('billing-form').submit();
     }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        updatePreview();
+    });
 </script>
 @endpush
+
 @endsection

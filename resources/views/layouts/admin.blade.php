@@ -8,30 +8,38 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ===== THEME COLORS (OFFICIAL) ===== */
 :root {
-    --color-pale-sky: #c0e6fd;
-    --color-soft-denim: #334155; /* Dark Grayish Blue */
-    --color-steel-blue: #1e3a8a; /* Dark Blue */
-    --color-deep-slate: #1e293b; /* Dark Slate */
-    --color-midnight: #1b3554;
-    --color-obsidian: #000f22;
+    --bg-dark: #0D1F1C;
+    --bg-darker: #081412;
+    --brand-accent: #B6FF5C;
+    --brand-accent-glow: rgba(182, 255, 92, 0.3);
+    --text-main: #FFFFFF;
+    --text-muted: #A0AEC0;
+    
+    /* Legacy mapping for compatibility if needed */
+    --color-pale-sky: var(--brand-accent);
+    --color-soft-denim: var(--text-muted);
+    --color-steel-blue: var(--bg-dark);
+    --color-deep-slate: var(--bg-darker);
 }
 
 /* Base */
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #ffffff; /* Darker than Obsidian for content contrast */
-    color: var(--color-soft-denim);
-    overflow: hidden; /* Prevent body scroll, handle in containers */
+    background-color: #FFFFFF; 
+    color: #1A202C;
+    overflow: hidden; 
 }
 
 /* Scrollbar */
-.custom-scrollbar::-webkit-scrollbar { width: 5px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(128,170,211,0.2); border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(0, 0, 0, 0.1); border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(0, 0, 0, 0.2); }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 
 /* Content Wrapper */
@@ -43,7 +51,7 @@ body {
     padding: 2rem;
     position: relative;
     width: calc(100% - 18rem);
-    background-color: #ffffff; /* Explicitly set white background */
+    background-color: #FFFFFF; /* Explicitly set white background */
 }
 
 @media (max-width: 1024px) {
@@ -53,139 +61,178 @@ body {
     }
 }
 
-/* Glass Cards */
-.card, .glass-card {
-    background-color: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 1rem;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-    padding: 1.5rem;
-    color: #000000;
+/* Premium Cards (Updated for White BG) */
+.glass-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
 }
 
-.admin-form-card {
-    background-color: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 1rem;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-    padding: 2rem;
-    max-width: 48rem;
-    margin-left: auto;
-    margin-right: auto;
+.glass-card:hover {
+    border-color: var(--brand-accent);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
 }
 
-.admin-form-label {
-    display: block;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #111827;
-    margin-bottom: 0.35rem;
+/* Buttons */
+.btn-premium {
+    background-color: #081412;
+    color: var(--brand-accent) !important;
+    font-weight: 700;
+    padding: 0.75rem 1.5rem;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid rgba(182, 255, 92, 0.2);
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.1em;
 }
 
-.admin-form-input,
-.admin-form-select,
-.admin-form-textarea {
-    width: 100%;
-    border-radius: 0.75rem;
-    border: 1px solid #d1d5db;
-    padding: 0.625rem 0.75rem;
-    font-size: 0.875rem;
-    color: #111827;
-    background-color: #f9fafb;
-    outline: none;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+.btn-premium:hover {
+    background-color: #0D1F1C;
+    box-shadow: 0 0 20px var(--brand-accent-glow);
+    transform: translateY(-1px);
+    color: var(--brand-accent) !important;
 }
 
-.admin-form-input:focus,
-.admin-form-select:focus,
-.admin-form-textarea:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.4);
-    background-color: #ffffff;
+.btn-secondary {
+    background-color: #FFFFFF;
+    color: #4A5568 !important;
+    font-weight: 700;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid #E2E8F0;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+}
+
+.btn-secondary:hover {
+    background-color: #F7FAFC;
+    border-color: #CBD5E0;
+    color: #1A202C !important;
+}
+
+.btn-danger {
+    background-color: #FFF5F5;
+    color: #C53030 !important;
+    font-weight: 700;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid #FEB2B2;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+}
+
+.btn-danger:hover {
+    background-color: #FC8181;
+    color: #FFFFFF !important;
+    border-color: #F56565;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 { 
+    color: #1A202C; 
+    font-weight: 700; 
+    letter-spacing: -0.025em; 
+}
+
+.text-brand { color: #2D3748; } /* Adjusted for white BG */
+.text-muted-custom { color: #718096; }
+
+/* Transitions */
+.smooth-transition { transition: all 0.3s ease; }
+
+/* Status Badges */
+.badge-standard {
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ===== SIDEBAR & HEADER COLORS (Keep Cinematic Dark) ===== */
+aside#sidebar {
+    background-color: #081412 !important;
+    border-right-color: rgba(182, 255, 92, 0.1) !important;
+}
+
+header {
+    background-color: #081412 !important;
+    border-bottom-color: rgba(182, 255, 92, 0.1) !important;
+}
+
+aside#sidebar .bg-gradient-to-tr {
+    background: linear-gradient(135deg, #B6FF5C, #8AC941) !important;
+}
+
+aside#sidebar h2 span {
+    color: #B6FF5C !important;
+}
+
+aside#sidebar nav p {
+    color: #B6FF5C !important;
+    opacity: 0.8;
 }
 
 .admin-btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.75rem;
-    padding: 0.625rem 1.5rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    background-color: #1d4ed8;
-    color: #ffffff;
-    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
-    transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    background-color: #B6FF5C !important;
+    color: #081412 !important;
+    box-shadow: 0 10px 25px rgba(182, 255, 92, 0.2) !important;
 }
 
 .admin-btn-primary:hover {
-    background-color: #1e40af;
-    transform: translateY(-1px);
-    box-shadow: 0 14px 30px rgba(37, 99, 235, 0.3);
+    background-color: #8AC941 !important;
+    box-shadow: 0 14px 30px rgba(182, 255, 92, 0.3) !important;
 }
 
-.admin-btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.75rem;
-    padding: 0.625rem 1.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    background-color: #e5e7eb;
-    color: #111827;
-    transition: background-color 0.15s ease, color 0.15s ease;
+/* Update sidebar link styles to use green accents */
+.sidebar-link-active {
+    background: rgba(182, 255, 92, 0.1) !important;
+    color: #B6FF5C !important;
+    border-left: 3px solid #B6FF5C !important;
 }
 
-.admin-btn-secondary:hover {
-    background-color: #d1d5db;
-    color: #020617;
+/* Sidebar profile section */
+aside#sidebar .p-4.border-t.border-gray-800 {
+    background-color: #081412 !important;
 }
 
-/* Headings */
-h1, h2, h3, h4, h5, h6 { color: var(--color-pale-sky); font-weight: 700; letter-spacing: -0.025em; }
-
-/* Buttons */
-.btn-primary { 
-    background: linear-gradient(135deg, var(--color-steel-blue), var(--color-deep-slate));
-    color: var(--color-pale-sky);
-    font-weight: 600;
-    padding: 0.6rem 1.2rem;
-    border-radius: 0.75rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 15px rgba(91, 134, 182, 0.2);
+aside#sidebar .bg-gradient-to-br.from-\[\#5b86b6\].to-\[\#3f6593\] {
+    background: linear-gradient(135deg, #B6FF5C, #8AC941) !important;
 }
-.btn-primary:hover { 
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(91, 134, 182, 0.3);
-    filter: brightness(110%);
-}
-
-/* Table Overrides */
-table thead { background-color: rgba(91,134,182,0.15); color: #c0e6fd; }
-table tbody tr { color: #80aad3; border-bottom: 1px solid rgba(128,170,211,0.15); }
-table tbody tr:hover { background-color: rgba(192,230,253,0.05); }
-
-/* Animations */
-.fade-in { animation: fadeIn 0.4s ease-out forwards; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 </style>
 </head>
-<body class="flex h-screen w-full">
+<body class="flex h-screen w-full" x-data="systemNotifications" x-init="fetchNotifications(); setInterval(() => fetchNotifications(), 30000)">
 
 {{-- SIDEBAR --}}
-<aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-[#000f22] border-r border-[#80aad3]/10 flex flex-col transition-transform duration-300 transform -translate-x-full lg:translate-x-0">
+<aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-[#081412] border-r border-[#B6FF5C]/10 flex flex-col transition-transform duration-300 transform -translate-x-full lg:translate-x-0">
     
     {{-- Brand --}}
     <div class="h-24 flex items-center px-8 border-b border-gray-800">
         <div class="flex items-center gap-4">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#5b86b6] to-[#3f6593] flex items-center justify-center shadow-lg shadow-blue-900/20 ring-1 ring-white/10">
-                <i class="bi bi-buildings-fill text-white text-lg"></i>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#B6FF5C] to-[#8AC941] flex items-center justify-center shadow-lg shadow-green-900/20 ring-1 ring-white/10">
+                <i class="bi bi-buildings-fill text-[#081412] text-lg"></i>
             </div>
             <div>
-                <h2 class="text-white font-bold text-lg tracking-tight leading-none">Subdiv<span class="text-[#5b86b6]">Management</span></h2>
+                <h2 class="text-white font-bold text-lg tracking-tight leading-none">Subdiv<span class="text-[#B6FF5C]">Management</span></h2>
                 <p class="text-gray-400 text-[10px] font-semibold tracking-widest uppercase mt-1">System</p>
             </div>
         </div>
@@ -193,9 +240,9 @@ table tbody tr:hover { background-color: rgba(192,230,253,0.05); }
 
     {{-- Navigation --}}
     <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-8 custom-scrollbar">
-        {{-- MAIN --}}
+        {{-- MAIN SECTION --}}
         <div>
-            <p class="px-4 text-[10px] font-bold text-[#80aad3] uppercase tracking-widest mb-3 opacity-60">Main</p>
+            <p class="px-4 text-[10px] font-bold text-[#B6FF5C] uppercase tracking-widest mb-3 opacity-60">Main</p>
             <div class="space-y-1">
                 @php
                     $mainLinks = [
@@ -209,9 +256,25 @@ table tbody tr:hover { background-color: rgba(192,230,253,0.05); }
             </div>
         </div>
 
-        {{-- MANAGEMENT --}}
+        {{-- MESSAGES SECTION --}}
         <div>
-            <p class="px-4 text-[10px] font-bold text-[#80aad3] uppercase tracking-widest mb-3 opacity-60">Management</p>
+            <p class="px-4 text-[10px] font-bold text-[#B6FF5C] uppercase tracking-widest mb-3 opacity-60">Messages</p>
+            <div class="space-y-1">
+                @php
+                    $msgLinks = [
+                        ['label' => 'Resident Support', 'route' => 'admin.messages.index', 'icon' => 'bi-chat-left-text-fill', 'pattern' => 'admin.messages.index*'],
+                        ['label' => 'Notifications', 'route' => 'admin.messages.notifications.index', 'icon' => 'bi-bell-fill', 'pattern' => 'admin.messages.notifications*'],
+                    ];
+                @endphp
+                @foreach ($msgLinks as $link)
+                    @include('layouts.partials.sidebar-link', ['link' => $link])
+                @endforeach
+            </div>
+        </div>
+
+        {{-- MANAGEMENT SECTION --}}
+        <div>
+            <p class="px-4 text-[10px] font-bold text-[#B6FF5C] uppercase tracking-widest mb-3 opacity-60">Management</p>
             <div class="space-y-1">
                 @php
                     $mgmtLinks = [
@@ -221,7 +284,6 @@ table tbody tr:hover { background-color: rgba(192,230,253,0.05); }
                         ['label' => 'Payments', 'route' => 'admin.payments.index', 'icon' => 'bi-credit-card-fill', 'pattern' => 'admin.payments*'],
                         ['label' => 'Penalties', 'route' => 'admin.penalties.index', 'icon' => 'bi-exclamation-octagon-fill', 'pattern' => 'admin.penalties*'],
                         ['label' => 'Requests', 'route' => 'admin.requests.index', 'icon' => 'bi-inbox-fill', 'pattern' => 'admin.requests*'],
-                        ['label' => 'Support', 'route' => 'admin.support.index', 'icon' => 'bi-chat-left-text-fill', 'pattern' => 'admin.support*'],
                         ['label' => 'Amenities', 'route' => 'admin.amenities.index', 'icon' => 'bi-building-fill', 'pattern' => 'admin.amenities*'],
                         ['label' => 'Reservations', 'route' => 'admin.amenity-reservations.index', 'icon' => 'bi-calendar-check-fill', 'pattern' => 'admin.amenity-reservations*'],
                         ['label' => 'Board Members', 'route' => 'admin.board.index', 'icon' => 'bi-people-fill', 'pattern' => 'admin.board*'],
@@ -233,13 +295,14 @@ table tbody tr:hover { background-color: rgba(192,230,253,0.05); }
             </div>
         </div>
 
-        {{-- SYSTEM --}}
+        {{-- SYSTEM SECTION --}}
         <div>
-            <p class="px-4 text-[10px] font-bold text-[#80aad3] uppercase tracking-widest mb-3 opacity-60">System</p>
+            <p class="px-4 text-[10px] font-bold text-[#B6FF5C] uppercase tracking-widest mb-3 opacity-60">System</p>
             <div class="space-y-1">
                 @php
                     $sysLinks = [
-                        ['label' => 'Reports', 'route' => 'admin.reports.index', 'icon' => 'bi-bar-chart-fill', 'pattern' => 'admin.reports*'],
+                        ['label' => 'Reports', 'route' => 'admin.system.reports.index', 'icon' => 'bi-bar-chart-fill', 'pattern' => 'admin.system.reports*'],
+                        ['label' => 'Activity Logs', 'route' => 'admin.system.activity-logs.index', 'icon' => 'bi-journal-text', 'pattern' => 'admin.system.activity-logs*'],
                         ['label' => 'Accounts', 'route' => 'admin.accounts.index', 'icon' => 'bi-shield-lock-fill', 'pattern' => 'admin.accounts*'],
                     ];
                 @endphp
@@ -248,26 +311,37 @@ table tbody tr:hover { background-color: rgba(192,230,253,0.05); }
                 @endforeach
             </div>
         </div>
+
+        {{-- LOGOUT --}}
+        <div class="pt-4 mt-4 border-t border-gray-800">
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="w-full group flex items-center gap-3.5 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-500 transition-all duration-200">
+                    <i class="bi bi-box-arrow-right text-[1.2rem]"></i>
+                    <span class="text-[14px] font-bold tracking-wide uppercase">Logout</span>
+                </button>
+            </form>
+        </div>
     </nav>
 
     {{-- User Profile --}}
     @auth('admin')
-    <div class="p-4 border-t border-gray-800 bg-[#000f22]">
-        <div class="flex items-center gap-3 p-3 rounded-2xl hover:bg-[#c0e6fd]/5 transition-all cursor-pointer group border border-transparent hover:border-gray-800">
+    <div class="p-4 border-t border-gray-800 bg-[#081412]">
+        <div class="flex items-center gap-3 p-3 rounded-2xl hover:bg-[#B6FF5C]/5 transition-all cursor-pointer group border border-transparent hover:border-gray-800">
             <div class="relative">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#5b86b6] to-[#3f6593] flex items-center justify-center text-sm font-bold text-white shadow-md">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#B6FF5C] to-[#8AC941] flex items-center justify-center text-sm font-bold text-[#081412] shadow-md">
                     AD
                 </div>
-                <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#000f22] rounded-full"></div>
+                <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#081412] rounded-full"></div>
             </div>
             <div class="flex-1 min-w-0">
-                <p class="text-sm font-bold text-white truncate group-hover:text-[#c0e6fd] transition-colors">Administrator</p>
-                <p class="text-[11px] text-[#80aad3] truncate">System Admin</p>
+                <p class="text-sm font-bold text-white truncate group-hover:text-[#B6FF5C] transition-colors">Administrator</p>
+                <p class="text-[11px] text-[#A0AEC0] truncate">System Admin</p>
             </div>
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
                 <button type="submit" 
-                    class="w-8 h-8 flex items-center justify-center rounded-lg text-[#80aad3] hover:text-white hover:bg-red-500/20 transition-all" 
+                    class="w-8 h-8 flex items-center justify-center rounded-lg text-[#A0AEC0] hover:text-white hover:bg-red-500/20 transition-all" 
                     title="Logout">
                     <i class="bi bi-box-arrow-right"></i>
                 </button>
@@ -281,7 +355,7 @@ table tbody tr:hover { background-color: rgba(192,230,253,0.05); }
 <div class="flex-1 flex flex-col min-w-0 bg-[#ffffff] relative">
     
     {{-- COORDINATED HEADER --}}
-    <header class="h-24 fixed top-0 right-0 left-0 lg:left-72 z-30 flex items-center justify-between px-8 lg:px-10 bg-[#000f22] border-b border-gray-800 transition-all duration-300">
+    <header class="h-24 fixed top-0 right-0 left-0 lg:left-72 z-30 flex items-center justify-between px-8 lg:px-10 bg-[#081412] border-b border-gray-800 transition-all duration-300">
         
         {{-- Page Title (Big & Bold) --}}
         <div class="flex flex-col justify-center animate-fade-in">
@@ -325,36 +399,38 @@ table tbody tr:hover { background-color: rgba(192,230,253,0.05); }
                             @if($unreadCount > 0)
                                 <form action="{{ route('admin.notifications.mark-all-read') }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="text-[10px] font-bold text-blue-600 hover:text-blue-700 uppercase tracking-widest">Mark all as read</button>
+                                    <button type="submit" class="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-widest">Mark all as read</button>
                                 </form>
                             @endif
                         </div>
 
                         <div class="max-h-96 overflow-y-auto custom-scrollbar">
                             @forelse($notifications as $notification)
-                            <a href="{{ $notification->link ?? '#' }}" 
-                               class="block p-4 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 {{ !$notification->is_read ? 'bg-blue-50/30' : '' }}">
-                                <div class="flex gap-3">
-                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 
-                                        @if($notification->type == 'payment') bg-blue-50 text-blue-500
-                                        @elseif($notification->type == 'request') bg-emerald-50 text-emerald-500
-                                        @elseif($notification->type == 'alert') bg-orange-50 text-orange-500
-                                        @else bg-gray-50 text-gray-500 @endif">
-                                        <i class="bi 
-                                            @if($notification->type == 'payment') bi-cash-stack
-                                            @elseif($notification->type == 'request') bi-tools
-                                            @elseif($notification->type == 'alert') bi-exclamation-triangle
-                                            @else bi-bell @endif text-lg"></i>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex justify-between items-start mb-0.5">
-                                            <p class="text-sm font-bold text-gray-900 truncate">{{ $notification->title }}</p>
-                                            <span class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap ml-2">{{ $notification->created_at->diffForHumans(null, true) }}</span>
+                            <form action="{{ route('admin.messages.notifications.read', $notification->id) }}" method="POST" class="m-0">
+                                @csrf
+                                <button type="submit" class="w-full text-left block p-4 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 {{ !$notification->is_read ? 'bg-blue-50/30' : '' }}">
+                                    <div class="flex gap-3">
+                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 
+                                            @if($notification->type == 'payment') bg-blue-50 text-blue-500
+                                            @elseif($notification->type == 'request') bg-emerald-50 text-emerald-500
+                                            @elseif($notification->type == 'alert') bg-orange-50 text-orange-500
+                                            @else bg-gray-50 text-gray-500 @endif">
+                                            <i class="bi 
+                                                @if($notification->type == 'payment') bi-cash-stack
+                                                @elseif($notification->type == 'request') bi-tools
+                                                @elseif($notification->type == 'alert') bi-exclamation-triangle
+                                                @else bi-bell @endif text-lg"></i>
                                         </div>
-                                        <p class="text-xs text-gray-500 line-clamp-2 leading-relaxed">{{ $notification->message }}</p>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex justify-between items-start mb-0.5">
+                                                <p class="text-sm font-bold text-gray-900 truncate">{{ $notification->title }}</p>
+                                                <span class="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap ml-2">{{ $notification->created_at->diffForHumans(null, true) }}</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 line-clamp-2 leading-relaxed">{{ $notification->message }}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            </a>
+                                </button>
+                            </form>
                             @empty
                             <div class="p-10 text-center">
                                 <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -367,7 +443,7 @@ table tbody tr:hover { background-color: rgba(192,230,253,0.05); }
 
                         @if($notifications->isNotEmpty())
                         <div class="p-3 bg-gray-50 border-t border-gray-100 text-center">
-                            <a href="#" class="text-xs font-bold text-gray-500 hover:text-blue-600 transition-colors uppercase tracking-widest">View all notifications</a>
+                            <a href="{{ route('admin.messages.notifications.index') }}" class="text-xs font-bold text-gray-500 hover:text-emerald-600 transition-colors uppercase tracking-widest">View all notifications</a>
                         </div>
                         @endif
                     </div>
@@ -591,6 +667,32 @@ table tbody tr:hover { background-color: rgba(192,230,253,0.05); }
 </script>
 
 @stack('scripts')
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('systemNotifications', () => ({
+            counts: {
+                requests: { count: 0, priority: 'normal' },
+                payments: { count: 0, priority: 'normal' },
+                dues: { count: 0, priority: 'normal' },
+                reservations: { count: 0, priority: 'normal' },
+                support: { count: 0, priority: 'normal' }
+            },
+            async fetchNotifications() {
+                try {
+                    const response = await fetch('{{ route("admin.system-notifications") }}');
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    this.counts = await response.json();
+                } catch (error) {
+                    console.error('Failed to fetch notifications:', error);
+                }
+            },
+            formatCount(count) {
+                return count > 9 ? '9+' : count;
+            }
+        }));
+    });
+</script>
 
 </body>
 </html>

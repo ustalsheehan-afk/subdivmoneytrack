@@ -17,11 +17,11 @@ class DuesController extends Controller
      */
     public function index()
     {
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
 
         if (!$resident) {
-            abort(403, 'Resident profile not found.');
+            return redirect()->route('resident.dashboard')->with('error', 'Resident profile not found.');
         }
 
         // Get all dues and attach payment info
@@ -79,11 +79,11 @@ class DuesController extends Controller
      */
     public function statement()
     {
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
 
         if (!$resident) {
-            abort(403, 'Resident profile not found.');
+            return redirect()->route('resident.dashboard')->with('error', 'Resident profile not found.');
         }
 
         $dues = Due::where('resident_id', $resident->id)
@@ -109,11 +109,11 @@ class DuesController extends Controller
      */
     public function downloadStatement()
     {
-        $user = Auth::guard('resident')->user();
-        $resident = $user->resident;
+        $user = Auth::user();
+        $resident = $user?->resident;
 
         if (!$resident) {
-            abort(403, 'Resident profile not found.');
+            return redirect()->route('resident.dashboard')->with('error', 'Resident profile not found.');
         }
 
         $dues = Due::where('resident_id', $resident->id)

@@ -4,408 +4,306 @@
 @section('page-title', 'Residents List')
 
 @section('content')
-<div class="flex flex-col h-[calc(100vh-10rem)] bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden relative">
+@php
+    $blockLots = \App\Models\Resident::select('block', 'lot')
+        ->whereNotNull('block')
+        ->whereNotNull('lot')
+        ->distinct()
+        ->orderBy('block')
+        ->orderBy('lot')
+        ->get()
+        ->groupBy('block');
+@endphp
+<div class="space-y-8 animate-fade-in">
 
-        {{-- ========================================= --}}
-        {{-- TOOLBAR (Sticky, Filters, Actions)        --}}
-        {{-- ========================================= --}}
-        <div class="px-6 py-5 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4 bg-white z-30 relative shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]">
-            
-            {{-- LEFT: Bulk Actions & Search --}}
-            <div class="flex items-center gap-4 flex-1">
-                
-                {{-- Bulk Actions --}}
-                <div class="flex items-center gap-2">
-                    <div class="relative">
-                        <select id="bulkActionSelect" onchange="handleBulkActionChange(this)" 
-                            class="appearance-none pl-4 pr-10 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all cursor-pointer hover:bg-white hover:shadow-sm">
-                            <option value="">Select Action</option>
-                            <option value="delete">Delete Selected</option>
-                            <option value="email">Send Email</option>
-                            <option value="export">Export Selected</option>
-                        </select>
-                        <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                            <i class="bi bi-chevron-down text-xs"></i>
-                        </div>
-                    </div>
-
-                    {{-- Apply Button (Hidden by default) --}}
-                    <button id="applyBulkActionBtn" onclick="submitBulkAction()" class="hidden px-4 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-black transition-all shadow-sm flex items-center gap-2">
-                        <span>Apply</span>
-                        <i class="bi bi-arrow-right text-xs"></i>
-                    </button>
-                </div>
-
-                {{-- Hidden Form for Bulk Delete --}}
-                <form id="bulkDeleteForm" action="{{ route('admin.residents.bulkDestroy') }}" method="POST" class="hidden">
-                    @csrf
-                    <div id="bulkDeleteInputs"></div>
-                </form>
-                
-                {{-- Hidden Form for Bulk Export --}}
-                <form id="bulkExportForm" action="{{ route('admin.residents.export') }}" method="GET" class="hidden">
-                    <div id="bulkExportInputs"></div>
-                </form>
-
-                {{-- Search --}}
-                <form method="GET" action="{{ route('admin.residents.index') }}" class="relative w-full max-w-xs group">
-                    <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors"></i>
-                    <input type="text" name="search" value="{{ request('search') }}" 
-                        placeholder="Search residents..." 
-                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-gray-400">
-                    
-                    {{-- Preserve other filters --}}
-                    @foreach(request()->except(['search', 'page']) as $key => $value)
-                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-                    @endforeach
-                </form>
-
+    {{-- ===================== --}}
+    {{-- HEADER SECTION --}}
+    {{-- ===================== --}}
+    <div class="glass-card p-8 relative overflow-hidden group">
+        {{-- Subtle gradient glow in background --}}
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-brand-accent/5 rounded-full blur-3xl group-hover:bg-brand-accent/10 transition-all duration-700"></div>
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
+                    Residents
+                </h1>
+                <p class="mt-2 text-gray-600 text-lg max-w-xl">
+                    Manage community members, property details, and resident accounts.
+                </p>
             </div>
 
-            {{-- RIGHT: Icon Filters & View Toggle --}}
-            <div class="flex items-center gap-2">
-
-                {{-- Filter Group --}}
-                <div class="flex items-center gap-2 mr-4 border-r border-gray-100 pr-4">
-                    
-                    {{-- Status Filter --}}
-                    <div class="relative group">
-                        <button onclick="toggleDropdown('statusDropdown')" class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all relative">
-                            <i class="bi bi-funnel-fill"></i>
-                            @if(request('status'))
-                                <span class="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full border border-white"></span>
-                            @endif
-                        </button>
-                        
-                        {{-- Tooltip (Moved to bottom) --}}
-                        <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
-                            Filter by Status
-                        </div>
-
-                        {{-- Dropdown --}}
-                        <div id="statusDropdown" class="hidden absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 py-2 transform origin-top-right transition-all">
-                            <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</div>
-                            <a href="{{ request()->fullUrlWithQuery(['status' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">All Statuses</a>
-                            <a href="{{ request()->fullUrlWithQuery(['status' => 'active']) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Active</a>
-                            <a href="{{ request()->fullUrlWithQuery(['status' => 'inactive']) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Inactive</a>
-                        </div>
+            <div class="flex items-center gap-3">
+                {{-- Bulk Actions Dropdown --}}
+                <div class="relative group/bulk">
+                    <select id="bulkActionSelect" onchange="handleBulkActionChange(this)" 
+                        class="appearance-none pl-5 pr-12 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer hover:bg-white hover:shadow-md">
+                        <option value="">Select Action</option>
+                        <option value="delete">Delete Selected</option>
+                        <option value="email">Send Email</option>
+                        <option value="export">Export Selected</option>
+                    </select>
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-hover/bulk:text-emerald-600 transition-colors">
+                        <i class="bi bi-chevron-down text-xs"></i>
                     </div>
+                </div>
 
-                    {{-- Combined Block & Lot Filter --}}
-                    @php
-                        // View-level query to get Block/Lot structure without touching controller logic
-                        $blockLots = \App\Models\Resident::select('block', 'lot')
-                            ->whereNotNull('block')
-                            ->whereNotNull('lot')
-                            ->distinct()
-                            ->orderBy('block')
-                            ->orderBy('lot')
-                            ->get()
-                            ->groupBy('block');
-                    @endphp
-                    <div class="relative group">
-                        <button onclick="toggleDropdown('blockLotDropdown')" class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all relative">
-                            <i class="bi bi-building"></i>
-                            @if(request('block') || request('lot'))
-                                <span class="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full border border-white"></span>
-                            @endif
-                        </button>
-                        
-                        {{-- Tooltip (Moved to bottom) --}}
-                        <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
-                            Filter by Block & Lot
-                        </div>
+                {{-- Add Resident Button --}}
+                <a href="{{ route('admin.residents.create') }}" class="btn-premium">
+                    <i class="bi bi-person-plus-fill"></i>
+                    Add Resident
+                </a>
+            </div>
+        </div>
+    </div>
 
-                        {{-- Dropdown --}}
-                        <div id="blockLotDropdown" class="hidden absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 z-50 py-2 max-h-[400px] overflow-hidden flex flex-col">
-                            
-                            {{-- Search / Custom Input --}}
-                            <div class="px-3 py-2 border-b border-gray-100 bg-gray-50/50">
-                                <div class="relative">
-                                    <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                                    <input type="text" id="blockLotSearch" onkeyup="filterBlockLot(this)" 
-                                        placeholder="Search Block or Lot..." 
-                                        class="w-full pl-8 pr-3 py-2 rounded-lg border border-gray-200 text-xs focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all">
-                                </div>
-                                
-                                {{-- Custom Filter Buttons (Hidden by default, shown via JS) --}}
-                                <div id="customFilterOptions" class="hidden mt-2 grid grid-cols-2 gap-2">
-                                    <a id="customBlockBtn" href="#" class="text-center px-2 py-1.5 bg-blue-50 text-blue-600 rounded text-xs font-bold hover:bg-blue-100 transition">
-                                        Filter Block
-                                    </a>
-                                    <a id="customLotBtn" href="#" class="text-center px-2 py-1.5 bg-blue-50 text-blue-600 rounded text-xs font-bold hover:bg-blue-100 transition">
-                                        Filter Lot
-                                    </a>
-                                </div>
-                            </div>
+    {{-- ===================== --}}
+    {{-- TOOLBAR SECTION --}}
+    {{-- ===================== --}}
+    <div class="glass-card p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        
+        {{-- Search Bar --}}
+        <div class="flex-1 max-w-md">
+            <form method="GET" action="{{ route('admin.residents.index') }}" class="relative group">
+                <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-600 transition-colors"></i>
+                <input type="text" name="search" value="{{ request('search') }}" 
+                    placeholder="Search name, email, or property..." 
+                    class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all placeholder-gray-400">
+                
+                @foreach(request()->except(['search', 'page']) as $key => $value)
+                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                @endforeach
+            </form>
+        </div>
 
-                        {{-- Scrollable List --}}
-                        <div class="overflow-y-auto custom-scrollbar flex-1 p-1">
-                            <a href="{{ request()->fullUrlWithQuery(['block' => null, 'lot' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 font-medium rounded-lg mb-1">
-                                Show All
-                            </a>
-                            
-                            <div id="blockLotList">
-                                @foreach($blockLots as $block => $items)
-                                    <div class="block-group mb-1">
-                                        {{-- Block Header --}}
-                                        <a href="{{ request()->fullUrlWithQuery(['block' => $block, 'lot' => null]) }}" 
-                                           class="block-header block px-4 py-2 text-sm font-bold text-gray-800 hover:bg-gray-50 hover:text-blue-600 bg-gray-50/50 rounded-lg flex justify-between items-center group/block"
-                                           data-search="block {{ $block }}">
-                                            <span>Block {{ $block }}</span>
-                                            <i class="bi bi-chevron-right text-[10px] text-gray-400 opacity-0 group-hover/block:opacity-100 transition-opacity"></i>
-                                        </a>
-                                        
-                                        {{-- Lots --}}
-                                        <div class="pl-2 mt-1 space-y-0.5 border-l-2 border-gray-100 ml-4">
-                                            @foreach($items as $item)
-                                                <a href="{{ request()->fullUrlWithQuery(['block' => $block, 'lot' => $item->lot]) }}" 
-                                                   class="lot-item block px-4 py-1.5 text-sm text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors flex justify-between items-center {{ request('block') == $block && request('lot') == $item->lot ? 'bg-blue-50 text-blue-600 font-bold' : '' }}"
-                                                   data-search="block {{ $block }} lot {{ $item->lot }}">
-                                                    <span>Lot {{ $item->lot }}</span>
-                                                    @if(request('block') == $block && request('lot') == $item->lot)
-                                                        <i class="bi bi-check-lg text-blue-600"></i>
-                                                    @endif
-                                                </a>
-                                            @endforeach
-                                        </div>
-                                    </div>
+        {{-- Filters & Toggles --}}
+        <div class="flex flex-wrap items-center gap-3">
+            
+            {{-- Status Filter --}}
+            <div class="relative group/filter">
+                <button onclick="toggleDropdown('statusDropdown')" 
+                    class="h-11 px-4 flex items-center gap-2 rounded-xl border border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest text-gray-600 hover:border-emerald-500/30 hover:bg-gray-50 transition-all relative">
+                    <i class="bi bi-funnel text-emerald-600"></i>
+                    Status
+                    <i class="bi bi-chevron-down text-[8px] opacity-50"></i>
+                    @if(request('status'))
+                        <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white"></span>
+                    @endif
+                </button>
+                <div id="statusDropdown" class="hidden absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 py-2">
+                    <div class="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-50 mb-1">Filter Status</div>
+                    <a href="{{ request()->fullUrlWithQuery(['status' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 font-medium transition-colors">All Statuses</a>
+                    <a href="{{ request()->fullUrlWithQuery(['status' => 'active']) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 font-medium transition-colors">Active</a>
+                    <a href="{{ request()->fullUrlWithQuery(['status' => 'inactive']) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 font-medium transition-colors">Inactive</a>
+                </div>
+            </div>
+
+            {{-- Block/Lot Filter --}}
+            <div class="relative group/filter">
+                <button onclick="toggleDropdown('blockLotDropdown')" 
+                    class="h-11 px-4 flex items-center gap-2 rounded-xl border border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest text-gray-600 hover:border-emerald-500/30 hover:bg-gray-50 transition-all relative">
+                    <i class="bi bi-building text-emerald-600"></i>
+                    Property
+                    <i class="bi bi-chevron-down text-[8px] opacity-50"></i>
+                    @if(request('block') || request('lot'))
+                        <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white"></span>
+                    @endif
+                </button>
+                <div id="blockLotDropdown" class="hidden absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden flex flex-col">
+                    <div class="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                        <input type="text" id="blockLotSearch" onkeyup="filterBlockLot(this)" 
+                            placeholder="Filter block or lot..." 
+                            class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all">
+                    </div>
+                    <div class="max-h-64 overflow-y-auto custom-scrollbar p-1" id="blockLotList">
+                        <a href="{{ request()->fullUrlWithQuery(['block' => null, 'lot' => null]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 font-medium rounded-lg mb-1 transition-colors">Show All</a>
+                        @foreach($blockLots as $block => $items)
+                            <div class="block-group">
+                                <a href="{{ request()->fullUrlWithQuery(['block' => $block, 'lot' => null]) }}" 
+                                   class="block-header block px-4 py-2 text-xs font-black text-gray-900 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition-colors"
+                                   data-search="block {{ $block }}">Block {{ $block }}</a>
+                                @foreach($items as $item)
+                                    <a href="{{ request()->fullUrlWithQuery(['block' => $block, 'lot' => $item->lot]) }}" 
+                                       class="lot-item block px-8 py-1.5 text-sm text-gray-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors {{ request('block') == $block && request('lot') == $item->lot ? 'bg-emerald-50 text-emerald-700 font-bold' : '' }}"
+                                       data-search="block {{ $block }} lot {{ $item->lot }}">Lot {{ $item->lot }}</a>
                                 @endforeach
                             </div>
-                            
-                            {{-- No Results Msg --}}
-                            <div id="noBlockLotResults" class="hidden px-4 py-8 text-center">
-                                <p class="text-gray-400 text-xs">No matches found</p>
-                            </div>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
-
-                {{-- Sort --}}
-                <div class="relative group">
-                    <button onclick="toggleDropdown('sortDropdown')" class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all">
-                        <i class="bi bi-sort-alpha-down"></i>
-                    </button>
-                    
-                    {{-- Tooltip (Moved to bottom) --}}
-                    <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
-                        Sort List
-                    </div>
-
-                    {{-- Dropdown --}}
-                    <div id="sortDropdown" class="hidden absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 py-2">
-                        <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Sort By</div>
-                        <a href="{{ request()->fullUrlWithQuery(['sort_option' => 'name_asc']) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Name (A-Z)</a>
-                        <a href="{{ request()->fullUrlWithQuery(['sort_option' => 'name_desc']) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Name (Z-A)</a>
-                        <a href="{{ request()->fullUrlWithQuery(['sort_option' => 'block_asc']) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Block (Asc)</a>
-                        <a href="{{ request()->fullUrlWithQuery(['sort_option' => 'created_at_desc']) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Newest First</a>
-                        <a href="{{ request()->fullUrlWithQuery(['sort_option' => 'created_at_asc']) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Oldest First</a>
-                    </div>
-                </div>
-
-                {{-- Clear Filters (Icon) --}}
-                @if(request()->anyFilled(['search', 'status', 'block', 'lot', 'sort_option']))
-                    <a href="{{ route('admin.residents.index') }}" class="w-10 h-10 flex items-center justify-center rounded-xl border border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200 transition-all group relative">
-                        <i class="bi bi-x-lg"></i>
-                        <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
-                            Clear Filters
-                        </div>
-                    </a>
-                @endif
-
             </div>
 
-            {{-- VIEW TOGGLE --}}
-            <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
-                <button onclick="toggleView('list')" id="listViewBtn" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-white hover:shadow-sm transition-all">
+            {{-- View Toggle --}}
+            <div class="flex items-center bg-gray-50 p-1 rounded-xl border border-gray-100">
+                <button onclick="toggleView('list')" id="listViewBtn" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-400 hover:text-emerald-600 transition-all">
                     <i class="bi bi-list-ul text-lg"></i>
                 </button>
-                <button onclick="toggleView('grid')" id="gridViewBtn" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-white hover:shadow-sm transition-all">
+                <button onclick="toggleView('grid')" id="gridViewBtn" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-400 hover:text-emerald-600 transition-all">
                     <i class="bi bi-grid-fill text-lg"></i>
                 </button>
             </div>
 
-            {{-- Add Button --}}
-            <a href="{{ route('admin.residents.create') }}" class="ml-2 flex items-center justify-center w-10 h-10 bg-gray-900 text-white rounded-xl hover:bg-black transition shadow-lg hover:-translate-y-0.5 transform">
-                <i class="bi bi-plus-lg"></i>
-            </a>
+            {{-- Clear Button --}}
+            @if(request()->anyFilled(['search', 'status', 'block', 'lot']))
+                <a href="{{ route('admin.residents.index') }}" class="h-11 w-11 flex items-center justify-center rounded-xl border border-red-100 text-red-500 hover:bg-red-50 transition-all" title="Clear All Filters">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            @endif
         </div>
     </div>
 
-    {{-- ========================================= --}}
-    {{-- CONTENT AREA (List & Grid)        --}}
-    {{-- ========================================= --}}
-    <div class="flex-1 overflow-y-auto bg-white custom-scrollbar relative">
+    {{-- ===================== --}}
+    {{-- TABLE CONTAINER --}}
+    {{-- ===================== --}}
+    <div class="glass-card overflow-hidden">
         
-        @if($residents->count() > 0)
-            
-            {{-- LIST VIEW --}}
-            <div id="listView" class="block w-full pb-20">
-                <table class="w-full text-left border-collapse">
-                    <thead class="bg-gray-50 backdrop-blur-sm sticky top-0 z-20 border-b border-gray-100">
-                        <tr>
-                            <th class="p-4 w-12 text-center bulk-checkbox hidden">
-                                <input type="checkbox" onchange="toggleAllCheckboxes(this)" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            </th>
-                            <th class="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Resident</th>
-                            <th class="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Contact</th>
-                            <th class="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Block</th>
-                            <th class="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Lot</th>
-                            <th class="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Joined</th>
-                            <th class="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-50">
-                        @foreach($residents as $resident)
-                        <tr onclick="selectResident({{ $resident->id }})" 
-                            data-id="{{ $resident->id }}"
-                            class="resident-row cursor-pointer hover:bg-gray-50 transition-all duration-200 group border-l-4 border-transparent">
-                            
-                            {{-- Checkbox --}}
-                            <td onclick="event.stopPropagation()" class="p-4 text-center bulk-checkbox hidden">
-                                <input type="checkbox" name="selected_residents[]" value="{{ $resident->id }}" data-email="{{ $resident->email }}" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 resident-checkbox">
-                            </td>
+        {{-- LIST VIEW --}}
+        <div id="listView" class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-50/50 border-b border-gray-100">
+                    <tr>
+                        <th class="p-5 w-12 text-center bulk-checkbox hidden">
+                            <input type="checkbox" onchange="toggleAllCheckboxes(this)" class="rounded-lg border-gray-300 text-emerald-600 focus:ring-emerald-500/20 transition-all">
+                        </th>
+                        <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Resident</th>
+                        <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Block</th>
+                        <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Lot</th>
+                        <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Contact</th>
+                        <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Joined</th>
+                        <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Status</th>
+                        <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    @forelse($residents as $resident)
+                    <tr onclick="selectResident({{ $resident->id }})" 
+                        data-id="{{ $resident->id }}"
+                        class="resident-row cursor-pointer hover:bg-emerald-50/30 transition-all duration-300 group border-l-4 border-transparent hover:border-emerald-500">
+                        
+                        <td onclick="event.stopPropagation()" class="p-5 text-center bulk-checkbox hidden">
+                            <input type="checkbox" name="selected_residents[]" value="{{ $resident->id }}" data-email="{{ $resident->email }}" class="rounded-lg border-gray-300 text-emerald-600 focus:ring-emerald-500/20 resident-checkbox">
+                        </td>
 
-                            {{-- Name & Photo --}}
-                            <td class="p-4">
-                                <div class="flex items-center gap-4">
+                        <td class="p-5">
+                            <div class="flex items-center gap-4">
+                                <div class="relative shrink-0">
                                     <img src="{{ $resident->photo ? asset('storage/' . $resident->photo) : asset('CDlogo.jpg') }}" 
                                         onerror="this.onerror=null; this.src='{{ asset('CDlogo.jpg') }}';"
-                                        class="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm group-hover:scale-105 transition-transform">
-                                    <div>
-                                        <p class="font-bold text-gray-900 group-hover:text-blue-700 transition">{{ $resident->first_name }} {{ $resident->last_name }}</p>
-                                        <p class="text-xs text-gray-500">{{ $resident->email }}</p>
-                                    </div>
+                                        class="w-11 h-11 rounded-2xl object-cover border-2 border-white shadow-sm group-hover:scale-105 transition-transform duration-500">
+                                    <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white {{ $resident->status === 'active' ? 'bg-emerald-500' : 'bg-gray-300' }}"></span>
                                 </div>
-                            </td>
+                                <div>
+                                    <p class="font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">{{ $resident->first_name }} {{ $resident->last_name }}</p>
+                                    <p class="text-[11px] text-gray-500 font-medium tracking-wide">{{ $resident->email }}</p>
+                                </div>
+                            </div>
+                        </td>
 
-                            {{-- Contact --}}
-                            <td class="p-4 text-sm text-gray-600 font-medium align-middle">{{ $resident->contact_number }}</td>
+                        <td class="p-5 text-center">
+                            <span class="text-sm font-bold text-gray-900">B{{ $resident->block }}</span>
+                        </td>
 
-                            {{-- Block (No Pill) --}}
-                            <td class="p-4 text-sm text-gray-600 font-medium align-middle">
-                                Block {{ $resident->block }}
-                            </td>
+                        <td class="p-5 text-center">
+                            <span class="text-sm font-bold text-gray-900">L{{ $resident->lot }}</span>
+                        </td>
 
-                            {{-- Lot --}}
-                            <td class="p-4 text-sm text-gray-600 font-medium align-middle">
-                                Lot {{ $resident->lot }}
-                            </td>
+                        <td class="p-5">
+                            <span class="text-sm font-medium text-gray-600">{{ $resident->contact_number ?? 'No contact' }}</span>
+                        </td>
 
-                            {{-- Joined --}}
-                            <td class="p-4 text-right text-sm text-gray-600 font-medium align-middle">
-                                {{ $resident->move_in_date ? $resident->move_in_date->format('M d, Y') : '-' }}
-                            </td>
+                        <td class="p-5">
+                            <span class="text-sm font-medium text-gray-600">{{ $resident->move_in_date ? $resident->move_in_date->format('M d, Y') : '-' }}</span>
+                        </td>
 
-                            {{-- Status --}}
-                            <td class="p-4 text-center align-middle">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border capitalize tracking-wide
-                                    {{ $resident->status === 'active' 
-                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
-                                        : 'bg-red-50 text-red-700 border-red-100' }}">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ $resident->status === 'active' ? 'bg-emerald-500' : 'bg-red-500' }}"></span>
-                                    {{ $resident->status }}
-                                </span>
-                            </td>
+                        <td class="p-5 text-center">
+                            <span class="badge-standard 
+                                {{ $resident->status === 'active' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-gray-50 text-gray-500 border border-gray-200' }}">
+                                {{ $resident->status }}
+                            </span>
+                        </td>
 
-                            {{-- Kebab Action Menu (No Label) --}}
-                            <td class="p-4 text-center align-middle" onclick="event.stopPropagation()">
-                                <div class="relative inline-block text-left">
-                                    <button onclick="toggleActionMenu('menu-{{ $resident->id }}')" 
-                                            class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all focus:outline-none focus:ring-2 focus:ring-gray-200">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
+                        <td class="p-5 text-center" onclick="event.stopPropagation()">
+                            <div class="relative inline-block text-left">
+                                <button onclick="toggleActionMenu('menu-{{ $resident->id }}')" 
+                                        class="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 border border-transparent hover:border-emerald-100 transition-all">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
 
-                                    {{-- Dropdown Menu --}}
-                                    <div id="menu-{{ $resident->id }}" 
-                                         class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden origin-top-right transform transition-all">
-                                        
-                                        <div class="px-4 py-3 border-b border-gray-50 bg-gray-50/50">
-                                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Actions</p>
-                                        </div>
+                                {{-- Dropdown Menu --}}
+                                <div id="menu-{{ $resident->id }}" 
+                                     class="hidden absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 z-[60] overflow-hidden origin-top-right transform transition-all">
+                                    
+                                    <div class="px-4 py-3 border-b border-gray-50 bg-gray-50/50">
+                                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Resident Actions</p>
+                                    </div>
 
-                                        <div class="p-1">
-                                            {{-- Edit --}}
-                                            <a href="{{ route('admin.residents.edit', $resident->id) }}" class="w-full text-left flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 rounded-lg transition-colors">
-                                                <i class="bi bi-pencil-square text-blue-500"></i>
-                                                Edit Details
-                                            </a>
+                                    <div class="p-1.5 space-y-0.5">
+                                        <button onclick="selectResident({{ $resident->id }})" class="w-full text-left flex items-center gap-3 px-3 py-2 text-sm font-bold text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-colors">
+                                            <i class="bi bi-eye text-emerald-500"></i>
+                                            View Profile
+                                        </button>
 
-                                            {{-- View --}}
-                                            <button onclick="selectResident({{ $resident->id }})" class="w-full text-left flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-green-600 rounded-lg transition-colors">
-                                                <i class="bi bi-eye text-green-500"></i>
-                                                View Profile
+                                        <a href="{{ route('admin.residents.edit', $resident->id) }}" class="w-full text-left flex items-center gap-3 px-3 py-2 text-sm font-bold text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-colors">
+                                            <i class="bi bi-pencil-square text-emerald-500"></i>
+                                            Edit Details
+                                        </a>
+
+                                        <div class="h-px bg-gray-50 my-1"></div>
+
+                                        <form action="{{ route('admin.residents.destroy', $resident->id) }}" method="POST"
+                                              onsubmit="return confirm('Are you sure you want to delete this resident?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="w-full text-left flex items-center gap-3 px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                                                <i class="bi bi-trash"></i>
+                                                Delete Resident
                                             </button>
-
-                                            {{-- Delete --}}
-                                            <form action="{{ route('admin.residents.destroy', $resident->id) }}" method="POST"
-                                                  onsubmit="return confirm('Are you sure you want to delete this resident?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="w-full text-left flex items-center gap-3 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                                                    <i class="bi bi-trash"></i>
-                                                    Delete
-                                                </button>
-                                            </form>
-                                        </div>
+                                        </form>
                                     </div>
                                 </div>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="7" class="py-20 text-center">
+                            <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="bi bi-people text-2xl text-gray-300"></i>
+                            </div>
+                            <h3 class="text-gray-900 font-bold">No residents found</h3>
+                            <p class="text-gray-500 text-sm mt-1">Try adjusting your filters or search terms.</p>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-            {{-- GRID VIEW --}}
-            <div id="gridView" class="hidden p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20">
-                @foreach($residents as $resident)
-                <div onclick="selectResident({{ $resident->id }})"
-                    data-id="{{ $resident->id }}"
-                    class="resident-card bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer relative group">
-                    
-                    {{-- Checkbox --}}
-                    <div onclick="event.stopPropagation()" class="absolute top-4 left-4 z-10 bulk-checkbox hidden">
-                        <input type="checkbox" name="selected_residents[]" value="{{ $resident->id }}" data-email="{{ $resident->email }}" class="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 resident-checkbox">
-                    </div>
-
-                    {{-- Status Pill (Upper Right) --}}
-                    <span class="absolute top-4 right-4 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border
-                        {{ $resident->status === 'active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100' }}">
+        {{-- GRID VIEW --}}
+        <div id="gridView" class="hidden p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            @foreach($residents as $resident)
+            <div onclick="selectResident({{ $resident->id }})" class="glass-card p-6 flex flex-col items-center text-center group cursor-pointer relative">
+                <div class="absolute top-4 right-4">
+                    <span class="badge-standard {{ $resident->status === 'active' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-gray-50 text-gray-500 border border-gray-200' }}">
                         {{ $resident->status }}
                     </span>
-
-                    <div class="flex flex-col items-center text-center mt-2">
-                        <img src="{{ $resident->photo ? asset('storage/' . $resident->photo) : asset('CDlogo.jpg') }}" 
-                            onerror="this.onerror=null; this.src='{{ asset('CDlogo.jpg') }}';"
-                            class="w-16 h-16 rounded-full object-cover mb-3 ring-2 ring-gray-100 group-hover:ring-blue-50 transition">
-                        
-                        <h3 class="text-base font-bold text-gray-900 group-hover:text-blue-700 transition leading-tight">{{ $resident->first_name }} {{ $resident->last_name }}</h3>
-                        <p class="text-xs text-gray-500 mb-4">{{ $resident->email }}</p>
-
-                        {{-- Footer: Location & Contact --}}
-                        <div class="w-full border-t border-gray-50 pt-3 flex items-center justify-center gap-2 text-xs text-gray-600">
-                            <span class="font-medium bg-gray-50 px-2 py-1 rounded">Blk {{ $resident->block }} - Lot {{ $resident->lot }}</span>
-                            @if($resident->contact_number)
-                                <span class="text-gray-300">|</span>
-                                <span class="font-medium font-mono">{{ $resident->contact_number }}</span>
-                            @endif
-                        </div>
-                    </div>
                 </div>
-                @endforeach
-            </div>
-
-        @else
-            <div class="flex flex-col items-center justify-center h-full text-center pb-20">
-                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                    <i class="bi bi-people text-2xl text-gray-400"></i>
+                <img src="{{ $resident->photo ? asset('storage/' . $resident->photo) : asset('CDlogo.jpg') }}" 
+                    class="w-20 h-20 rounded-3xl object-cover border-4 border-white shadow-md group-hover:scale-110 transition-transform duration-500 mb-4">
+                <h3 class="font-bold text-gray-900 group-hover:text-emerald-700 transition-colors leading-tight">{{ $resident->first_name }} {{ $resident->last_name }}</h3>
+                <p class="text-xs text-gray-500 mb-4">{{ $resident->email }}</p>
+                <div class="w-full pt-4 border-t border-gray-50 flex items-center justify-center gap-3">
+                    <span class="px-2 py-1 bg-gray-50 rounded-lg text-[10px] font-black text-gray-600 uppercase tracking-widest">Blk {{ $resident->block }}</span>
+                    <span class="px-2 py-1 bg-gray-50 rounded-lg text-[10px] font-black text-gray-600 uppercase tracking-widest">Lot {{ $resident->lot }}</span>
                 </div>
-                <h3 class="text-lg font-bold text-gray-900">No Residents Found</h3>
-                <p class="text-gray-500 max-w-xs mx-auto mt-2">Try adjusting your filters to find who you're looking for.</p>
-                <a href="{{ route('admin.residents.index') }}" class="mt-6 px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-black transition text-sm font-medium">Clear Filters</a>
             </div>
-        @endif
+            @endforeach
+        </div>
+    </div>
+
+    {{-- Pagination --}}
+    <div class="mt-6">
+        {{ $residents->links() }}
     </div>
 
 </div>

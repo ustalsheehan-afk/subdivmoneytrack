@@ -24,7 +24,7 @@ class AnnouncementController extends Controller
 
         // Check for read status
         $user = auth()->user();
-        $announcements = $query->get();
+        $announcements = $query->paginate(10);
         
         if ($user) {
             $announcements->each(function ($announcement) use ($user) {

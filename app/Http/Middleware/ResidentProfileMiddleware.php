@@ -13,18 +13,21 @@ class ResidentProfileMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        $user = Auth::guard('resident')->user();
+        $user = Auth::user();
 
-        // If not logged in as resident, redirect to login
+        // If not logged in, redirect to login
         if (!$user) {
-            return redirect()->route('resident.login')->with('error', 'Please login first.');
+            return redirect()->route('login')->with('error', 'Please login first.');
+        }
+
+        // If not a resident, redirect to login
+        if ($user->role !== 'resident') {
+            return redirect()->route('login')->with('error', 'Access denied.');
         }
 
         // If resident profile is missing
         if (!$user->resident) {
-             // Depending on logic, maybe redirect to contact admin or allow basic access?
-             // For now, we'll assume every resident user MUST have a profile.
-            return redirect()->route('resident.login')->with('error', 'Resident profile not found. Please contact admin.');
+            return redirect()->route('resident.profile.edit')->with('error', 'Resident profile not found. Please complete your profile.');
         }
 
         return $next($request);

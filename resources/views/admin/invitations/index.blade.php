@@ -4,141 +4,175 @@
 @section('page-title', 'Manage Invitations')
 
 @section('content')
-@php
-    $btn_primary = "inline-flex items-center justify-center gap-2 px-4 h-10 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm";
-    $btn_secondary = "inline-flex items-center justify-center gap-2 px-4 h-10 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm";
-    $btn_tertiary = "inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-transparent text-gray-500 rounded-md text-xs font-medium hover:bg-gray-100 hover:text-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed";
-@endphp
-
-<div class="h-[calc(100vh-8rem)] flex flex-col space-y-6">
-    {{-- Header Section --}}
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div class="space-y-1">
-           
-            <p class="text-sm text-gray-500">Manage and track resident registration invitations.</p>
+<div class="max-w-[1600px] mx-auto space-y-8 pb-12" x-data="{ 
+    selectedId: {{ $invitations->first()->id ?? 'null' }},
+    loading: false,
+    invitation: null,
+    search: '',
+    previewTab: 'email',
+    sections: {
+        profile: true,
+        actions: true,
+        preview: true,
+        timeline: true
+    },
+    async selectInvitation(id) {
+        if (this.selectedId === id && this.invitation) return;
+        this.selectedId = id;
+        this.loading = true;
+        try {
+            const response = await fetch(`/admin/invitations/${id}`);
+            const result = await response.json();
+            if (result.success) {
+                this.invitation = result.data;
+            }
+        } catch (e) {
+            console.error('Error fetching invitation:', e);
+        } finally {
+            this.loading = false;
+        }
+    },
+    init() {
+        if (this.selectedId) {
+            this.selectInvitation(this.selectedId);
+        }
+    }
+}">
+    {{-- TOP SUMMARY CARDS --}}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        @foreach([
+            ['label' => 'All Invitations', 'value' => $stats['all'], 'icon' => 'bi-envelope-paper', 'color' => 'emerald', 'accent' => 'border-t-emerald-500'],
+            ['label' => 'Pending', 'value' => $stats['pending'], 'icon' => 'bi-clock-history', 'color' => 'amber', 'accent' => 'border-t-amber-500'],
+            ['label' => 'Accepted', 'value' => $stats['accepted'], 'icon' => 'bi-check2-all', 'color' => 'blue', 'accent' => 'border-t-blue-500'],
+            ['label' => 'Expired', 'value' => $stats['expired'], 'icon' => 'bi-exclamation-triangle', 'color' => 'red', 'accent' => 'border-t-red-500']
+        ] as $card)
+        <div class="glass-card p-6 relative overflow-hidden group hover:scale-[1.02] transition-all duration-300 border-t-2 {{ $card['accent'] }}">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-{{ $card['color'] }}-50 border border-{{ $card['color'] }}-100 flex items-center justify-center text-{{ $card['color'] }}-500 shadow-sm group-hover:bg-{{ $card['color'] === 'emerald' ? 'emerald-600' : ($card['color'] === 'amber' ? 'amber-500' : ($card['color'] === 'blue' ? 'blue-500' : 'red-500')) }} group-hover:text-white transition-all duration-500">
+                    <i class="bi {{ $card['icon'] }} text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">{{ $card['label'] }}</p>
+                    <span class="text-2xl font-black text-gray-900 tracking-tight">{{ number_format($card['value']) }}</span>
+                </div>
+            </div>
         </div>
-        <div class="flex items-center gap-2">
-            <button @class([$btn_secondary])>
-                <i class="bi bi-funnel text-sm"></i> Filter
+        @endforeach
+    </div>
+
+    {{-- HEADER ACTIONS & SEARCH --}}
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div class="relative flex-1 max-w-2xl group">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <i class="bi bi-search text-gray-400 group-focus-within:text-[#B6FF5C] transition-colors"></i>
+            </div>
+            <input type="text" x-model="search" placeholder="Search by name, email or status..." 
+                   class="w-full pl-11 pr-4 py-4 bg-white border border-gray-200 rounded-2xl text-sm font-medium focus:ring-4 focus:ring-[#B6FF5C]/10 focus:border-[#B6FF5C] focus:outline-none transition-all shadow-sm">
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button class="px-6 py-3.5 bg-white border border-gray-200 rounded-2xl text-xs font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm flex items-center gap-2">
+                <i class="bi bi-funnel"></i> Filter
             </button>
-            <button @class([$btn_secondary])>
-                <i class="bi bi-download text-sm"></i> Export
+            <button class="px-6 py-3.5 bg-white border border-gray-200 rounded-2xl text-xs font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm flex items-center gap-2">
+                <i class="bi bi-download"></i> Export
             </button>
-            <button onclick="openInviteModal()" @class([$btn_primary])>
-                <i class="bi bi-plus-lg"></i> Invite Resident
+            <button onclick="openInviteModal()" class="px-8 py-3.5 bg-[#081412] text-[#B6FF5C] rounded-2xl text-xs font-black uppercase tracking-widest hover:shadow-[0_0_20px_rgba(182,255,92,0.3)] transition-all flex items-center gap-2 border border-[#B6FF5C]/20 active:scale-95">
+                <i class="bi bi-plus-lg text-sm"></i> Invite Resident
             </button>
         </div>
     </div>
 
-    {{-- Main Content - Split Layout --}}
-    <div class="flex-1 grid grid-cols-12 gap-6 overflow-hidden min-h-0">
-        {{-- Left Column --}}
-        <div class="col-span-8 flex flex-col gap-5">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                @foreach([
-                    ['label' => 'All Invitations', 'value' => $stats['all'], 'icon' => 'bi-envelope-paper', 'color' => 'text-gray-500'],
-                    ['label' => 'Pending', 'value' => $stats['pending'], 'icon' => 'bi-clock-history', 'color' => 'text-amber-500'],
-                    ['label' => 'Accepted', 'value' => $stats['accepted'], 'icon' => 'bi-check2-all', 'color' => 'text-emerald-500']
-                ] as $card)
-                <div class="bg-white p-5 rounded-xl border border-gray-200 flex items-center gap-4 shadow-sm h-[92px]">
-                    <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center {{ $card['color'] }}">
-                        <i class="bi {{ $card['icon'] }} text-lg"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">{{ $card['label'] }}</p>
-                        <span class="text-2xl font-bold text-gray-900">{{ $card['value'] }}</span>
-                    </div>
-                </div>
-                @endforeach
-            </div>
-            {{-- Table Section (Left Side) --}}
-            <div class="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-                <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
-                    <div class="relative w-full max-w-xs">
-                        <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                        <input type="text" id="invitation-search" placeholder="Search residents..." class="w-full px-4 py-2 bg-gray-50 border-transparent rounded-lg text-sm focus:ring-2 focus:ring-gray-200 transition-all focus:outline-none">
-                    </div>
-                    <div class="text-xs text-gray-400 font-medium">Showing <span id="visible-count">{{ $invitations->count() }}</span> results</div>
-                </div>
-
-                <div class="flex-1 overflow-y-auto custom-scrollbar">
+    {{-- SPLIT LAYOUT: MASTER-DETAIL --}}
+    <div class="flex flex-col lg:flex-row gap-8 items-stretch min-h-[700px]">
+        
+        {{-- LEFT PANEL: INVITATIONS LIST (65%) --}}
+        <div class="lg:w-[65%] flex flex-col gap-6">
+            <div class="glass-card bg-white border border-gray-100 rounded-[12px] shadow-sm overflow-hidden flex flex-col flex-1">
+                <div class="overflow-x-auto custom-scrollbar">
                     <table class="w-full text-left border-collapse">
-                        <thead class="sticky top-0 bg-gray-50/80 backdrop-blur-sm z-10">
-                            <tr>
-                                <th class="px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Resident</th>
-                                <th class="px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                                <th class="px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Channels</th>
-                                <th class="px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Expires</th>
-                                <th class="px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider text-right"></th>
+                        <thead>
+                            <tr class="bg-gray-50/50 border-b border-gray-100">
+                                <th class="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Resident</th>
+                                <th class="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Status</th>
+                                <th class="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Channels</th>
+                                <th class="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Expires</th>
+                                <th class="px-8 py-5 text-right"></th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 bg-white">
+                        <tbody class="divide-y divide-gray-50">
                             @forelse($invitations as $invite)
-                            <tr class="hover:bg-gray-50 transition-colors group cursor-pointer" id="invite-row-{{$invite->id}}" onclick="selectInvitation({{ $invite->id }}, this)">
-                                <td class="px-5 py-3">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-sm">
+                            <tr class="group cursor-pointer transition-all duration-300 relative"
+                                :class="selectedId === {{ $invite->id }} ? 'bg-[#B6FF5C]/5' : 'hover:bg-gray-50/80'"
+                                @click="selectInvitation({{ $invite->id }})"
+                                x-show="'{{ strtolower($invite->first_name . ' ' . $invite->last_name . ' ' . $invite->email . ' ' . $invite->status) }}'.includes(search.toLowerCase())">
+                                
+                                {{-- Active Indicator --}}
+                                <div x-show="selectedId === {{ $invite->id }}" 
+                                     class="absolute left-0 top-0 bottom-0 w-1 bg-[#B6FF5C] transition-all duration-300"></div>
+
+                                <td class="px-8 py-5">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 rounded-2xl bg-gray-900 flex items-center justify-center text-[#B6FF5C] font-black text-sm shadow-lg shadow-gray-900/10 group-hover:scale-110 transition-transform duration-300">
                                             {{ strtoupper(substr($invite->first_name, 0, 1) . substr($invite->last_name, 0, 1)) }}
                                         </div>
                                         <div>
-                                            <p class="text-sm font-medium text-gray-800 leading-tight">{{ $invite->first_name }} {{ $invite->last_name }}</p>
-                                            <p class="text-xs text-gray-400 mt-0.5">{{ $invite->email }}</p>
+                                            <p class="text-sm font-extrabold text-gray-900 leading-none mb-1 group-hover:text-[#081412] transition-colors">{{ $invite->first_name }} {{ $invite->last_name }}</p>
+                                            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{{ $invite->email }}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-5 py-3">
+                                <td class="px-6 py-5">
                                     @php
                                         $isExpired = $invite->isExpired();
                                         $status = $isExpired && $invite->status === 'pending' ? 'expired' : $invite->status;
-                                        $badgeClasses = [
-                                            'pending'   => 'bg-amber-50 text-amber-700 border-amber-200',
-                                            'accepted'  => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                            'expired'   => 'bg-red-50 text-red-700 border-red-200',
-                                            'cancelled' => 'bg-gray-50 text-gray-700 border-gray-200',
+                                        $statusConfig = [
+                                            'pending'   => ['bg' => 'bg-amber-50', 'text' => 'text-amber-600', 'border' => 'border-amber-100'],
+                                            'accepted'  => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-600', 'border' => 'border-emerald-100'],
+                                            'expired'   => ['bg' => 'bg-red-50', 'text' => 'text-red-600', 'border' => 'border-red-100'],
+                                            'cancelled' => ['bg' => 'bg-gray-50', 'text' => 'text-gray-500', 'border' => 'border-gray-100'],
                                         ];
+                                        $conf = $statusConfig[$status] ?? $statusConfig['pending'];
                                     @endphp
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border {{ $badgeClasses[$status] ?? 'bg-gray-50 text-gray-700 border-gray-200' }}">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border {{ $conf['bg'] }} {{ $conf['text'] }} {{ $conf['border'] }}">
                                         {{ $status }}
                                     </span>
                                 </td>
-                                <td class="px-5 py-3">
+                                <td class="px-6 py-5">
                                     <div class="flex items-center gap-3">
-                                        <div class="flex items-center gap-1.5 {{ $invite->email_status === 'sent' ? 'text-blue-600' : 'text-gray-300' }}">
-                                            <i class="bi bi-envelope-fill text-xs"></i>
-                                            <span class="text-[10px] font-bold uppercase">Email</span>
-                                        </div>
-                                        <div class="flex items-center gap-1.5 {{ $invite->sms_status === 'sent' ? 'text-emerald-600' : 'text-gray-300' }}">
-                                            <i class="bi bi-chat-left-dots-fill text-xs"></i>
-                                            <span class="text-[10px] font-bold uppercase">SMS</span>
-                                        </div>
+                                        <i class="bi bi-envelope-fill text-sm {{ $invite->email_status === 'sent' ? 'text-blue-500' : 'text-gray-200' }}" title="Email"></i>
+                                        <i class="bi bi-chat-left-dots-fill text-sm {{ $invite->sms_status === 'sent' ? 'text-emerald-500' : 'text-gray-200' }}" title="SMS"></i>
                                     </div>
                                 </td>
-                                <td class="px-5 py-3">
-                                    @php
-                                        $hoursRemaining = now()->diffInHours($invite->expires_at, false);
-                                        $isExpiringSoon = $hoursRemaining > 0 && $hoursRemaining <= 48 && $status === 'pending';
-                                    @endphp
+                                <td class="px-6 py-5">
                                     <div class="flex flex-col">
-                                        <span class="text-sm font-bold {{ $isExpiringSoon ? 'text-amber-600' : 'text-gray-700' }}">
+                                        <span class="text-[11px] font-black text-gray-900 uppercase tracking-tighter">
                                             {{ $invite->expires_at->format('M d, Y') }}
                                         </span>
-                                        @if($isExpiringSoon)
-                                            <span class="text-[10px] font-bold text-amber-500 uppercase flex items-center gap-1">
-                                                <i class="bi bi-exclamation-circle-fill text-[8px]"></i> Expiring Soon
+                                        @if($status === 'pending')
+                                            <span class="text-[9px] font-bold {{ $isExpired ? 'text-red-400' : 'text-amber-500' }} uppercase tracking-widest mt-0.5">
+                                                {{ $isExpired ? 'Expired' : $invite->expires_at->diffForHumans() }}
                                             </span>
                                         @endif
                                     </div>
                                 </td>
-                                <td class="px-5 py-3 text-right">
-                                    <i class="bi bi-chevron-right text-gray-300 group-hover:text-gray-500 transition-colors"></i>
+                                <td class="px-8 py-5 text-right">
+                                    <div class="w-8 h-8 rounded-xl flex items-center justify-center text-gray-300 group-hover:text-[#081412] group-hover:bg-[#B6FF5C]/10 transition-all duration-300">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </div>
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="px-5 py-20 text-center">
-                                    <div class="flex flex-col items-center justify-center text-gray-400">
-                                        <i class="bi bi-envelope-paper text-4xl mb-3 opacity-50"></i>
-                                        <p class="text-sm font-medium">No invitations found</p>
+                                <td colspan="5" class="px-8 py-32 text-center">
+                                    <div class="flex flex-col items-center justify-center space-y-4">
+                                        <div class="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center text-gray-200">
+                                            <i class="bi bi-envelope-paper text-4xl"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-gray-900 font-extrabold">No invitations found</h3>
+                                            <p class="text-sm text-gray-400 mt-1">Start by inviting your residents to the platform.</p>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -146,170 +180,216 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="px-5 py-3 border-t border-gray-100 bg-white">
-                    {{-- Pagination removed for internal scrolling --}}
-                </div>
             </div>
         </div>
 
-        {{-- Right Column --}}
-        <div class="col-span-4 flex flex-col gap-5">
-            <div class="bg-white p-5 rounded-xl border border-gray-200 flex items-center gap-4 shadow-sm h-[92px]">
-                <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-red-500">
-                    <i class="bi bi-exclamation-triangle text-lg"></i>
-                </div>
-                <div>
-                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Expired</p>
-                    <span class="text-2xl font-bold text-gray-900">{{ $stats['expired'] }}</span>
-                </div>
-            </div>
+        {{-- RIGHT PANEL: DETAIL VIEW (35%) --}}
+        <div class="lg:w-[35%] space-y-4 lg:sticky lg:top-32 h-fit">
             
-            @if($invitations->isNotEmpty())
-            {{-- Details Panel Section (Right Side) --}}
-            <div class="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-1">
-                {{-- Resident Profile Card --}}
-                <div class="collapsible-section open bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-300">
-                    <button class="collapsible-header w-full px-5 py-4 flex items-center justify-between bg-gray-50/50 border-b border-gray-100 hover:bg-gray-100/50 transition-colors rounded-t-xl">
-                        <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
-                            <i class="bi bi-person-circle text-gray-400"></i> Resident Profile
-                        </h3>
-                        <i class="bi bi-chevron-down text-gray-400 transition-transform duration-300"></i>
-                    </button>
-                    <div class="collapsible-content p-6 text-center">
-                        <div id="panel-avatar" class="w-20 h-20 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-2xl mx-auto mb-4 border-2 border-white shadow-sm">
-                            {{ strtoupper(substr($invitations->first()->first_name ?? 'R', 0, 1) . substr($invitations->first()->last_name ?? '', 0, 1)) }}
+            {{-- PROFILE SECTION --}}
+            <div class="glass-card bg-white border border-gray-100 rounded-[12px] shadow-sm overflow-hidden">
+                <button @click="sections.profile = !sections.profile" 
+                        class="w-full px-6 py-4 flex items-center justify-between bg-gray-50/50 border-b border-gray-100 hover:bg-gray-100/50 transition-colors">
+                    <div class="flex items-center gap-2">
+                        <i class="bi bi-person-circle text-gray-400"></i>
+                        <span class="text-xs font-black text-gray-900 uppercase tracking-widest">Resident Profile</span>
+                    </div>
+                    <i class="bi bi-chevron-down text-gray-400 transition-transform duration-300" :class="sections.profile ? 'rotate-180' : ''"></i>
+                </button>
+                
+                <div x-show="sections.profile" x-collapse>
+                    <div x-show="loading" class="p-8 flex justify-center">
+                        <div class="w-8 h-8 border-3 border-gray-100 border-t-[#B6FF5C] rounded-full animate-spin"></div>
+                    </div>
+
+                    <div class="p-8 text-center" x-show="invitation && !loading">
+                        <div class="relative inline-block mb-6">
+                            <div class="w-20 h-20 rounded-3xl bg-gray-900 flex items-center justify-center text-[#B6FF5C] text-2xl font-black shadow-xl shadow-gray-900/10" 
+                                 x-text="invitation.first_name[0] + invitation.last_name[0]">
+                            </div>
+                            <div class="absolute -bottom-2 -right-2 w-7 h-7 rounded-xl bg-white border-4 border-white shadow-lg flex items-center justify-center">
+                                <i class="bi bi-patch-check-fill text-emerald-500 text-sm" x-show="invitation.status === 'accepted'"></i>
+                                <i class="bi bi-clock-fill text-amber-500 text-sm" x-show="invitation.status === 'pending' && !invitation.is_expired"></i>
+                                <i class="bi bi-exclamation-triangle-fill text-red-500 text-sm" x-show="invitation.is_expired"></i>
+                            </div>
                         </div>
-                        <h2 id="panel-name" class="text-xl font-bold text-gray-900 mb-1">{{ ($invitations->first()->first_name ?? 'Resident') . ' ' . ($invitations->first()->last_name ?? 'Name') }}</h2>
-                        <p id="panel-email" class="text-sm text-gray-400">{{ $invitations->first()->email ?? '' }}</p>
+                        <h2 class="text-xl font-black text-gray-900 tracking-tight leading-none mb-2" x-text="invitation.first_name + ' ' + invitation.last_name"></h2>
+                        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest" x-text="invitation.email"></p>
+                    </div>
+
+                    <div class="p-8 text-center" x-show="!invitation && !loading">
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select an invitation</p>
                     </div>
                 </div>
+            </div>
 
-                {{-- Actions Panel --}}
-                <div class="collapsible-section open bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-300">
-                    <button class="collapsible-header w-full px-5 py-4 flex items-center justify-between bg-gray-50/50 border-b border-gray-100 hover:bg-gray-100/50 transition-colors rounded-t-xl">
-                        <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
-                            <i class="bi bi-lightning-charge text-gray-400"></i> Actions
-                        </h3>
-                        <i class="bi bi-chevron-down text-gray-400 transition-transform duration-300"></i>
+            {{-- ACTIONS SECTION --}}
+            <div class="glass-card bg-white border border-gray-100 rounded-[12px] shadow-sm overflow-hidden" x-show="invitation">
+                <button @click="sections.actions = !sections.actions" 
+                        class="w-full px-6 py-4 flex items-center justify-between bg-gray-50/50 border-b border-gray-100 hover:bg-gray-100/50 transition-colors">
+                    <div class="flex items-center gap-2">
+                        <i class="bi bi-lightning-charge-fill text-gray-400"></i>
+                        <span class="text-xs font-black text-gray-900 uppercase tracking-widest">Quick Actions</span>
+                    </div>
+                    <i class="bi bi-chevron-down text-gray-400 transition-transform duration-300" :class="sections.actions ? 'rotate-180' : ''"></i>
+                </button>
+
+                <div x-show="sections.actions" x-collapse class="p-6 space-y-3">
+                    <button @click="copyInviteLink(invitation.registration_link)" 
+                            class="w-full py-3.5 bg-[#081412] text-[#B6FF5C] rounded-xl text-[10px] font-black uppercase tracking-widest hover:shadow-[0_0_15px_rgba(182,255,92,0.2)] transition-all flex items-center justify-center gap-2 border border-[#B6FF5C]/20 active:scale-95">
+                        <i class="bi bi-link-45deg text-base"></i>
+                        Copy Link
                     </button>
-                    <div class="collapsible-content p-5 space-y-3">
-                        <button id="btn-copy" onclick="copyInviteLink('{{ route('register.invitation', ['token' => $invitations->first()->token ?? 'token']) }}')" @class([$btn_primary, 'w-full'])>
-                            <i class="bi bi-link-45deg text-lg"></i> Copy Invitation Link
+                    <div class="grid grid-cols-2 gap-3">
+                        <button @click="resendInvite(invitation.id)" :disabled="invitation.status === 'accepted' || invitation.is_expired"
+                                class="py-3.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+                            <i class="bi bi-send"></i> Resend
                         </button>
-                        <div class="grid grid-cols-2 gap-3">
-                            <button id="btn-resend" onclick="resendInvite({{ $invitations->first()->id ?? 0 }})" @class([$btn_secondary])>
-                                <i class="bi bi-send"></i> Resend
-                            </button>
-                            <button id="btn-renew" onclick="renewInvite({{ $invitations->first()->id ?? 0 }})" @class([$btn_secondary])>
-                                <i class="bi bi-arrow-clockwise"></i> Renew
-                            </button>
-                        </div>
-                        <div class="grid gap-3 pt-3 border-t border-gray-100">
-                            <button id="btn-cancel" onclick="cancelInvite({{ $invitations->first()->id ?? 0 }})" @class([$btn_secondary, 'text-red-600 border-red-100 hover:bg-red-50 w-full'])>
-                                <i class="bi bi-trash"></i> Cancel Invitation
-                            </button>
-                        </div>
+                        <button @click="renewInvite(invitation.id)" :disabled="invitation.status === 'accepted'"
+                                class="py-3.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+                            <i class="bi bi-arrow-clockwise"></i> Renew
+                        </button>
                     </div>
-                </div>
-
-                {{-- Message Preview Panel --}}
-                <div class="collapsible-section open bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-300">
-                    <button class="collapsible-header w-full px-5 py-4 flex items-center justify-between bg-gray-50/50 border-b border-gray-100 hover:bg-gray-100/50 transition-colors rounded-t-xl">
-                        <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
-                            <i class="bi bi-eye text-gray-400"></i> Message Preview
-                        </h3>
-                        <i class="bi bi-chevron-down text-gray-400 transition-transform duration-300"></i>
+                    <button @click="cancelInvite(invitation.id)" :disabled="invitation.status === 'accepted' || invitation.status === 'cancelled'"
+                            class="w-full py-3.5 bg-red-50 border border-red-100 text-red-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="bi bi-x-circle"></i> Cancel
                     </button>
-                    <div class="collapsible-content p-5">
-                        <div class="flex p-1 bg-gray-100 rounded-lg mb-4">
-                            <button onclick="switchTab('email')" id="tab-btn-email" class="flex-1 px-3 py-1 bg-white text-gray-900 rounded-md text-[10px] font-bold shadow-sm transition-all">EMAIL</button>
-                            <button onclick="switchTab('sms')" id="tab-btn-sms" class="flex-1 px-3 py-1 text-gray-500 rounded-md text-[10px] font-bold transition-all">SMS</button>
-                        </div>
-                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                            <div id="preview-email" class="text-xs text-gray-600 space-y-3">
-                                <p>Hello <span class="font-bold text-gray-900 preview-name">{{ ($invitations->first()->first_name ?? 'Resident') . ' ' . ($invitations->first()->last_name ?? '') }}</span>,</p>
-                                <p>You're invited to register for {{ config('app.name') }}.</p>
-                                <p class="font-mono text-blue-600 underline break-all preview-link">{{ route('register.invitation', ['token' => $invitations->first()->token ?? 'token']) }}</p>
-                            </div>
-                            <div id="preview-sms" class="hidden text-xs text-gray-600">
-                                <p class="leading-relaxed">Hello <span class="font-bold text-gray-900 preview-name">{{ ($invitations->first()->first_name ?? 'Resident') . ' ' . ($invitations->first()->last_name ?? '') }}</span>, register for {{ config('app.name') }} here: <span class="font-mono text-blue-600 underline break-all preview-link">{{ route('register.invitation', ['token' => $invitations->first()->token ?? 'token']) }}</span></p>
-                            </div>
-                        </div>
+                </div>
+            </div>
+
+            {{-- MESSAGE PREVIEW SECTION --}}
+            <div class="glass-card bg-white border border-gray-100 rounded-[12px] shadow-sm overflow-hidden" x-show="invitation">
+                <button @click="sections.preview = !sections.preview" 
+                        class="w-full px-6 py-4 flex items-center justify-between bg-gray-50/50 border-b border-gray-100 hover:bg-gray-100/50 transition-colors">
+                    <div class="flex items-center gap-2">
+                        <i class="bi bi-eye-fill text-gray-400"></i>
+                        <span class="text-xs font-black text-gray-900 uppercase tracking-widest">Message Preview</span>
                     </div>
-                </div>
+                    <i class="bi bi-chevron-down text-gray-400 transition-transform duration-300" :class="sections.preview ? 'rotate-180' : ''"></i>
+                </button>
 
-                {{-- Activity Timeline Panel --}}
-                <div class="collapsible-section open bg-white border border-gray-200 rounded-xl shadow-sm mb-2 transition-all duration-300">
-                    <button class="collapsible-header w-full px-5 py-4 flex items-center justify-between bg-gray-50/50 border-b border-gray-100 hover:bg-gray-100/50 transition-colors rounded-t-xl">
-                        <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
-                            <i class="bi bi-clock-history text-gray-400"></i> Activity Timeline
-                        </h3>
-                        <i class="bi bi-chevron-down text-gray-400 transition-transform duration-300"></i>
-                    </button>
-                    <div class="collapsible-content p-6">
-                        <div id="timeline-content" class="space-y-6 relative before:absolute before:inset-y-0 before:left-2 before:w-0.5 before:bg-gray-100">
-                            {{-- Timeline items will be injected by JS --}}
+                <div x-show="sections.preview" x-collapse class="p-6">
+                    <div class="flex bg-gray-100 p-1 rounded-xl mb-4 border border-gray-200 shadow-inner">
+                        <button @click="previewTab = 'email'" 
+                                :class="previewTab === 'email' ? 'bg-white text-gray-900 shadow-sm border border-gray-100' : 'text-gray-500'"
+                                class="flex-1 px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all">
+                            EMAIL
+                        </button>
+                        <button @click="previewTab = 'sms'" 
+                                :class="previewTab === 'sms' ? 'bg-white text-gray-900 shadow-sm border border-gray-100' : 'text-gray-500'"
+                                class="flex-1 px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all">
+                            SMS
+                        </button>
+                    </div>
+
+                    <div class="bg-gray-50/80 rounded-2xl p-6 border border-gray-100 shadow-sm min-h-[140px] flex flex-col justify-center">
+                        {{-- Email Content --}}
+                        <div x-show="previewTab === 'email'" class="space-y-4 animate-fade-in">
+                            <p class="text-xs text-gray-600 leading-relaxed">
+                                Hello <span class="font-extrabold text-gray-900" x-text="invitation.first_name + ' ' + invitation.last_name"></span>,
+                            </p>
+                            <p class="text-xs text-gray-600 leading-relaxed">
+                                You're invited to register for <span class="font-bold text-gray-800" x-text="invitation.platform_name"></span>.
+                            </p>
+                            <p class="text-[11px] font-mono text-blue-500 underline break-all opacity-80" x-text="invitation.registration_link"></p>
+                        </div>
+                        
+                        {{-- SMS Content --}}
+                        <div x-show="previewTab === 'sms'" class="animate-fade-in">
+                            <p class="text-xs text-gray-600 leading-relaxed italic">
+                                "Hello <span class="font-extrabold text-gray-900" x-text="invitation.first_name"></span>, register for <span class="font-bold text-gray-800" x-text="invitation.platform_name"></span> here: <span class="text-blue-500 underline break-all" x-text="invitation.registration_link"></span>"
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
-            @else
-            <div class="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm flex items-center justify-center p-8 text-center">
-                <div class="space-y-3">
-                    <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-gray-300">
-                        <i class="bi bi-person-plus text-3xl"></i>
+
+            {{-- TIMELINE SECTION --}}
+            <div class="glass-card bg-white border border-gray-100 rounded-[12px] shadow-sm overflow-hidden" x-show="invitation">
+                <button @click="sections.timeline = !sections.timeline" 
+                        class="w-full px-6 py-4 flex items-center justify-between bg-gray-50/50 border-b border-gray-100 hover:bg-gray-100/50 transition-colors">
+                    <div class="flex items-center gap-2">
+                        <i class="bi bi-clock-history text-gray-400"></i>
+                        <span class="text-xs font-black text-gray-900 uppercase tracking-widest">Status Timeline</span>
                     </div>
-                    <div>
-                        <p class="text-sm font-bold text-gray-900">No invitation selected</p>
-                        <p class="text-xs text-gray-400 mt-1">Select an invitation from the list or create a new one to see details.</p>
+                    <i class="bi bi-chevron-down text-gray-400 transition-transform duration-300" :class="sections.timeline ? 'rotate-180' : ''"></i>
+                </button>
+
+                <div x-show="sections.timeline" x-collapse class="p-8">
+                    <div class="space-y-8 relative before:absolute before:inset-y-0 before:left-[7px] before:w-[2px] before:bg-gray-50">
+                        <template x-for="(item, index) in invitation.activity" :key="index">
+                            <div class="flex items-start gap-4 relative">
+                                <div class="w-4 h-4 rounded-full border-4 border-white shadow-sm z-10" :class="item.icon_bg"></div>
+                                <div class="flex-1">
+                                    <p class="text-xs font-black text-gray-900 leading-none mb-1" x-text="item.title"></p>
+                                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" x-text="item.time"></p>
+                                </div>
+                            </div>
+                        </template>
                     </div>
-                    <button onclick="openInviteModal()" @class([$btn_primary, 'mt-4'])>
-                        Invite Resident
-                    </button>
                 </div>
             </div>
-            @endif
         </div>
     </div>
 </div>
+    </div>
+</div>
 
-{{-- MODALS --}}
+{{-- INVITE MODAL --}}
 @push('modals')
-<div id="invite-modal" class="fixed inset-0 z-[60] invisible opacity-0 transition-all duration-300 ease-in-out bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform scale-95 opacity-0 transition-all duration-300 ease-out" id="invite-modal-panel">
-        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h2 class="text-lg font-bold text-gray-900">Invite New Resident</h2>
-            <button onclick="closeInviteModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+<div id="invite-modal" class="fixed inset-0 z-[100] invisible opacity-0 transition-all duration-300 ease-in-out bg-gray-900/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden transform scale-95 opacity-0 transition-all duration-300 ease-out" id="invite-modal-panel">
+        <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/30">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center text-[#B6FF5C]">
+                    <i class="bi bi-person-plus-fill"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-black text-gray-900 tracking-tight">Invite Resident</h2>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Register a new community member</p>
+                </div>
+            </div>
+            <button onclick="closeInviteModal()" class="w-8 h-8 rounded-xl bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-100 transition-all shadow-sm">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
         
-        <form id="create-invite-form" class="p-6 space-y-4">
+        <form id="create-invite-form" class="p-8 space-y-6">
             @csrf
-            <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-1">
-                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">First Name</label>
-                    <input type="text" name="first_name" required class="w-full px-4 py-2.5 bg-gray-50 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 transition-all focus:outline-none">
+            <div class="grid grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">First Name</label>
+                    <input type="text" name="first_name" required 
+                           class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-[#B6FF5C]/10 focus:border-[#B6FF5C] focus:bg-white focus:outline-none transition-all">
                 </div>
-                <div class="space-y-1">
-                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Last Name</label>
-                    <input type="text" name="last_name" required class="w-full px-4 py-2.5 bg-gray-50 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 transition-all focus:outline-none">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Last Name</label>
+                    <input type="text" name="last_name" required 
+                           class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-[#B6FF5C]/10 focus:border-[#B6FF5C] focus:bg-white focus:outline-none transition-all">
                 </div>
             </div>
             
-            <div class="space-y-1">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Email Address</label>
-                <input type="email" name="email" required class="w-full px-4 py-2.5 bg-gray-50 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 transition-all focus:outline-none">
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
+                <input type="email" name="email" required 
+                       class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-[#B6FF5C]/10 focus:border-[#B6FF5C] focus:bg-white focus:outline-none transition-all">
             </div>
             
-            <div class="space-y-1">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Phone Number (Optional)</label>
-                <input type="text" name="phone" class="w-full px-4 py-2.5 bg-gray-50 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 transition-all focus:outline-none">
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Phone Number (Optional)</label>
+                <input type="text" name="phone" 
+                       class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-[#B6FF5C]/10 focus:border-[#B6FF5C] focus:bg-white focus:outline-none transition-all">
             </div>
 
-            <div class="pt-4 flex items-center gap-3">
-                <button type="button" onclick="closeInviteModal()" class="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 transition-all">Cancel</button>
-                <button type="submit" class="flex-1 px-4 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-md active:scale-95">Send Invitation</button>
+            <div class="pt-4 flex items-center gap-4">
+                <button type="button" onclick="closeInviteModal()" 
+                        class="flex-1 px-6 py-4 bg-white border border-gray-200 text-gray-500 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-gray-50 transition-all">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="flex-1 px-6 py-4 bg-[#081412] text-[#B6FF5C] rounded-2xl text-xs font-black uppercase tracking-widest hover:shadow-[0_0_20px_rgba(182,255,92,0.3)] transition-all border border-[#B6FF5C]/20 shadow-xl active:scale-95">
+                    Send Invitation
+                </button>
             </div>
         </form>
     </div>
@@ -317,75 +397,13 @@
 @endpush
 
 <style>
-.custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background-color: #e5e7eb; border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background-color: #E2E8F0; border-radius: 20px; }
 .custom-scrollbar::-webkit-scrollbar-track { background-color: transparent; }
-tr.selected { background-color: #f8fafc !important; border-left: 3px solid #111827 !important; }
-.collapsible-section:not(.open) .collapsible-content { display: none; }
-.collapsible-section.open .collapsible-content { display: block !important; visibility: visible !important; height: auto !important; }
-.collapsible-section.open .bi-chevron-down { transform: rotate(180deg); }
+[x-cloak] { display: none !important; }
 </style>
 
 <script>
-let currentInvitationId = {{ $invitations->first()->id ?? 'null' }};
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Collapsible Logic
-    document.querySelectorAll('.collapsible-header').forEach(header => {
-        header.addEventListener('click', () => {
-            const section = header.parentElement;
-            section.classList.toggle('open');
-        });
-    });
-
-    // Search function
-    document.getElementById('invitation-search').addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        const rows = document.querySelectorAll('tbody tr');
-        let visibleCount = 0;
-        rows.forEach(row => {
-            const name = row.querySelector('td:first-child').textContent.toLowerCase();
-            if (name.includes(searchTerm)) {
-                row.style.display = '';
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
-            }
-        });
-        document.getElementById('visible-count').textContent = visibleCount;
-    });
-
-    // Auto-select first item if exists
-    const firstRow = document.querySelector('tbody tr:not(.empty-row)');
-    if (firstRow && currentInvitationId) {
-        selectInvitation(currentInvitationId, firstRow);
-    }
-
-    // CREATE INVITATION FORM HANDLER
-    document.getElementById('create-invite-form')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        try {
-            const response = await fetch("{{ route('admin.invitations.store') }}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: formData
-            });
-            const data = await response.json();
-            if (data.success) {
-                location.reload();
-            } else {
-                alert(data.message || 'Error creating invitation');
-            }
-        } catch (e) {
-            alert('An error occurred');
-        }
-    });
-});
-
 function openInviteModal() {
     const modal = document.getElementById('invite-modal');
     const panel = document.getElementById('invite-modal-panel');
@@ -393,6 +411,7 @@ function openInviteModal() {
     setTimeout(() => {
         panel.classList.remove('scale-95', 'opacity-0');
     }, 10);
+    document.body.style.overflow = 'hidden';
 }
 
 function closeInviteModal() {
@@ -401,102 +420,41 @@ function closeInviteModal() {
     panel.classList.add('scale-95', 'opacity-0');
     setTimeout(() => {
         modal.classList.add('invisible', 'opacity-0');
+        document.body.style.overflow = 'auto';
     }, 300);
 }
 
-function switchTab(type) {
-    const emailBtn = document.getElementById('tab-btn-email');
-    const smsBtn = document.getElementById('tab-btn-sms');
-    const emailPreview = document.getElementById('preview-email');
-    const smsPreview = document.getElementById('preview-sms');
-
-    if (type === 'email') {
-        emailBtn.classList.add('bg-white', 'shadow-sm', 'text-gray-900');
-        emailBtn.classList.remove('text-gray-500');
-        smsBtn.classList.remove('bg-white', 'shadow-sm', 'text-gray-900');
-        smsBtn.classList.add('text-gray-500');
-        emailPreview.classList.remove('hidden');
-        smsPreview.classList.add('hidden');
-    } else {
-        smsBtn.classList.add('bg-white', 'shadow-sm', 'text-gray-900');
-        smsBtn.classList.remove('text-gray-500');
-        emailBtn.classList.remove('bg-white', 'shadow-sm', 'text-gray-900');
-        emailBtn.classList.add('text-gray-500');
-        smsPreview.classList.remove('hidden');
-        emailPreview.classList.add('hidden');
-    }
-}
-
-async function selectInvitation(id, rowElement) {
-    currentInvitationId = id;
-    document.querySelectorAll('tbody tr').forEach(tr => tr.classList.remove('selected'));
-    rowElement.classList.add('selected');
-
-    try {
-        const response = await fetch(`/admin/invitations/${id}`);
-        const result = await response.json();
-
-        if (result.success) {
-            const data = result.data;
-            const fullName = `${data.first_name} ${data.last_name}`;
-            
-            // Update basic info
-            document.getElementById('panel-name').textContent = fullName;
-            document.getElementById('panel-email').textContent = data.email;
-            document.getElementById('panel-avatar').textContent = (data.first_name[0] + data.last_name[0]).toUpperCase();
-            
-            // Update buttons
-            const resendBtn = document.getElementById('btn-resend');
-            resendBtn.disabled = data.is_expired;
-            
-            resendBtn.setAttribute('onclick', `resendInvite(${data.id})`);
-            document.getElementById('btn-renew').setAttribute('onclick', `renewInvite(${data.id})`);
-            document.getElementById('btn-copy').setAttribute('onclick', `copyInviteLink('${data.registration_link}')`);
-            document.getElementById('btn-cancel').setAttribute('onclick', `cancelInvite(${data.id})`);
-
-            // Update message previews
-            document.querySelectorAll('.preview-name').forEach(el => el.textContent = fullName);
-            document.querySelectorAll('.preview-link').forEach(el => el.textContent = data.registration_link);
-
-            // Update activity timeline
-            const timeline = document.getElementById('timeline-content');
-            timeline.innerHTML = '';
-            data.activity.forEach(item => {
-                const activityEl = `
-                    <div class="flex items-start gap-4 relative">
-                        <div class="w-4 h-4 rounded-full ${item.icon_bg} mt-1 ring-4 ring-white z-10 border-2 border-white shadow-sm"></div>
-                        <div>
-                            <p class="text-sm font-bold text-gray-800">${item.title}</p>
-                            <p class="text-[11px] text-gray-400 font-medium">${item.time}</p>
-                        </div>
-                    </div>`;
-                timeline.insertAdjacentHTML('beforeend', activityEl);
-            });
-
-        }
-    } catch (e) {
-        console.error('Error fetching invitation details:', e);
-    }
-}
-
+// Global functions for Alpine to call
 async function resendInvite(id) {
     if(!confirm('Resend the current invitation link?')) return;
     try {
-        const response = await fetch(`/admin/invitations/${id}/resend`, { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } });
+        const response = await fetch(`/admin/invitations/${id}/resend`, { 
+            method: 'POST', 
+            headers: { 
+                'X-CSRF-TOKEN': '{{ csrf_token() }}', 
+                'Accept': 'application/json' 
+            } 
+        });
         const data = await response.json();
-        alert(data.message || 'An error occurred');
         if(data.success) location.reload();
+        else alert(data.message || 'Error');
     } catch (e) { alert('An error occurred'); }
 }
 
 async function renewInvite(id) {
     if(!confirm('Generate a NEW link and refresh the 7-day expiry?')) return;
     try {
-        const response = await fetch(`/admin/invitations/${id}/renew`, { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } });
+        const response = await fetch(`/admin/invitations/${id}/renew`, { 
+            method: 'POST', 
+            headers: { 
+                'X-CSRF-TOKEN': '{{ csrf_token() }}', 
+                'Accept': 'application/json' 
+            } 
+        });
         const result = await response.json();
         if(result.success) {
             navigator.clipboard.writeText(result.link).then(() => {
-                alert('Invitation renewed! The NEW link has been copied to your clipboard.');
+                alert('Invitation renewed! New link copied to clipboard.');
                 location.reload();
             });
         } else { alert(result.message || 'Failed to renew'); }
@@ -506,7 +464,13 @@ async function renewInvite(id) {
 async function cancelInvite(id) {
     if(!confirm('Are you sure you want to cancel this invitation?')) return;
     try {
-        const response = await fetch(`/admin/invitations/${id}/cancel`, { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } });
+        const response = await fetch(`/admin/invitations/${id}/cancel`, { 
+            method: 'POST', 
+            headers: { 
+                'X-CSRF-TOKEN': '{{ csrf_token() }}', 
+                'Accept': 'application/json' 
+            } 
+        });
         const data = await response.json();
         if(data.success) location.reload();
         else alert(data.message || 'Failed to cancel');
@@ -514,7 +478,25 @@ async function cancelInvite(id) {
 }
 
 function copyInviteLink(link) {
-    navigator.clipboard.writeText(link).then(() => alert('Invitation link copied to clipboard!'));
+    navigator.clipboard.writeText(link).then(() => alert('Registration link copied!'));
 }
+
+document.getElementById('create-invite-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    try {
+        const response = await fetch("{{ route('admin.invitations.store') }}", {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+        const data = await response.json();
+        if (data.success) location.reload();
+        else alert(data.message || 'Error');
+    } catch (e) { alert('An error occurred'); }
+});
 </script>
 @endsection

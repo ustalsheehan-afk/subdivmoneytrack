@@ -5,206 +5,212 @@
 
 @section('content')
 
-<div class="p-6 lg:p-10 space-y-10 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+<div class="space-y-8 animate-fade-in">
 
-{{-- Header --}}
-<div class="flex items-center justify-between">
+    {{-- ===================== --}}
+    {{-- HEADER SECTION --}}
+    {{-- ===================== --}}
+    <div class="glass-card p-8 relative overflow-hidden group">
+        {{-- Subtle gradient glow in background --}}
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-brand-accent/5 rounded-full blur-3xl group-hover:bg-brand-accent/10 transition-all duration-700"></div>
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
+                    Board Members
+                </h1>
+                <p class="mt-2 text-gray-600 text-lg max-w-xl">
+                    Manage subdivision leadership and board member profiles.
+                </p>
+            </div>
 
-<div>
-<h1 class="text-3xl font-extrabold text-gray-900">Board Members</h1>
-<p class="text-sm text-gray-500 mt-1">
-Manage subdivision leadership and board member profiles
-</p>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('admin.board.create') }}" class="btn-premium">
+                    <i class="bi bi-person-plus-fill"></i>
+                    Add Member
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===================== --}}
+    {{-- TOOLBAR SECTION --}}
+    {{-- ===================== --}}
+    <div class="glass-card p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        {{-- Search Bar --}}
+        <div class="flex-1 max-w-md">
+            <div class="relative group">
+                <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-600 transition-colors"></i>
+                <input type="text" id="memberSearch" onkeyup="filterMembers(this)" 
+                    placeholder="Search by name or position..." 
+                    class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all placeholder-gray-400">
+            </div>
+        </div>
+
+        {{-- Filters & Toggles --}}
+        <div class="flex flex-wrap items-center gap-3">
+            <div class="relative group/filter">
+                <select id="statusFilter" onchange="filterByStatus(this.value)"
+                    class="h-11 px-4 flex items-center gap-2 rounded-xl border border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest text-gray-600 hover:border-emerald-500/30 hover:bg-gray-50 transition-all outline-none appearance-none cursor-pointer pr-10">
+                    <option value="all">All Status</option>
+                    <option value="active">Active Only</option>
+                    <option value="inactive">Inactive Only</option>
+                </select>
+                <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[8px] opacity-50 pointer-events-none"></i>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===================== --}}
+    {{-- MEMBERS GRID --}}
+    {{-- ===================== --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="membersContainer">
+        @forelse($members as $member)
+            <div class="member-card glass-card p-8 flex flex-col group relative overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300" 
+                 data-name="{{ strtolower($member->name) }}" 
+                 data-position="{{ strtolower($member->position) }}"
+                 data-status="{{ $member->is_active ? 'active' : 'inactive' }}">
+                
+                {{-- Branded Glow Background --}}
+                <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all duration-500"></div>
+
+                {{-- Kebab Menu --}}
+                <div x-data="{open:false}" class="absolute top-6 right-6 z-20">
+                    <button @click="open=!open" 
+                            class="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all">
+                        <i class="bi bi-three-dots-vertical text-lg"></i>
+                    </button>
+                    <div x-show="open" @click.outside="open=false" x-transition 
+                         class="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden z-50 p-1">
+                        <a href="{{ route('admin.board.edit',$member->id) }}" 
+                           class="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 rounded-xl transition-all">
+                            <i class="bi bi-pencil"></i>
+                            Edit Member
+                        </a>
+                        <form action="{{ route('admin.board.destroy',$member->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this board member?')">
+                            @csrf
+                            @method('DELETE')
+                            <button class="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 rounded-xl transition-all text-left">
+                                <i class="bi bi-trash"></i>
+                                Delete Member
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                {{-- Status Badge --}}
+                <div class="absolute top-8 left-8">
+                    @if($member->is_active)
+                        <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Active
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-gray-50 text-gray-400 border border-gray-100">
+                            <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                            Inactive
+                        </span>
+                    @endif
+                </div>
+
+                {{-- Profile Section --}}
+                <div class="flex flex-col items-center text-center mt-8 mb-8">
+                    <div class="relative mb-6">
+                        <img src="{{ $member->photo ? asset('storage/'.$member->photo) : asset('CDlogo.jpg') }}" 
+                             onerror="this.onerror=null; this.src='{{ asset('CDlogo.jpg') }}';"
+                             class="w-32 h-32 rounded-[32px] object-cover border-4 border-white shadow-2xl group-hover:scale-105 transition-transform duration-500 relative z-10">
+                        <div class="absolute -inset-2 bg-emerald-500/5 rounded-[40px] blur-xl group-hover:bg-emerald-500/10 transition-all"></div>
+                    </div>
+
+                    <h3 class="text-xl font-black text-gray-900 tracking-tight mb-1 group-hover:text-emerald-600 transition-colors">{{ $member->name }}</h3>
+                    <p class="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">{{ $member->position }}</p>
+                </div>
+
+                {{-- Bio --}}
+                @if($member->bio)
+                    <div class="bg-gray-50/50 rounded-2xl p-5 border border-gray-50 mb-8 relative flex-1">
+                        <p class="text-xs font-bold text-gray-500 italic leading-relaxed text-center">
+                            "{{ Str::limit($member->bio, 120) }}"
+                        </p>
+                    </div>
+                @endif
+
+                {{-- Contact Footer --}}
+                <div class="mt-auto pt-6 border-t border-gray-100 space-y-3">
+                    @if($member->email)
+                        <div class="flex items-center gap-3 text-gray-500 group/item hover:text-emerald-600 transition-colors">
+                            <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center border border-gray-100 group-hover/item:border-emerald-100 group-hover/item:bg-emerald-50 transition-all">
+                                <i class="bi bi-envelope text-xs"></i>
+                            </div>
+                            <span class="text-[11px] font-bold truncate">{{ $member->email }}</span>
+                        </div>
+                    @endif
+
+                    @if($member->phone)
+                        <div class="flex items-center gap-3 text-gray-500 group/item hover:text-emerald-600 transition-colors">
+                            <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center border border-gray-100 group-hover/item:border-emerald-100 group-hover/item:bg-emerald-50 transition-all">
+                                <i class="bi bi-telephone text-xs"></i>
+                            </div>
+                            <span class="text-[11px] font-bold">{{ $member->phone }}</span>
+                        </div>
+                    @endif
+
+                    @if($member->facebook)
+                        <a href="{{ $member->facebook }}" target="_blank" 
+                           class="flex items-center gap-3 text-gray-500 hover:text-emerald-600 transition-colors group/link">
+                            <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center border border-gray-100 group-hover/link:border-emerald-100 group-hover/link:bg-emerald-50 transition-all">
+                                <i class="bi bi-facebook text-xs"></i>
+                            </div>
+                            <span class="text-[11px] font-black uppercase tracking-widest">View Profile</span>
+                        </a>
+                    @endif
+                </div>
+            </div>
+        @empty
+            <div class="col-span-full flex flex-col items-center justify-center py-24 text-center glass-card">
+                <div class="w-24 h-24 bg-gray-50 rounded-[32px] flex items-center justify-center mb-6 text-gray-200 shadow-inner">
+                    <i class="bi bi-people text-5xl"></i>
+                </div>
+                <h3 class="text-2xl font-black text-gray-900 tracking-tight uppercase">No Board Members</h3>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mt-3">Click "Add Member" to start building leadership</p>
+            </div>
+        @endforelse
+    </div>
 </div>
 
-<a href="{{ route('admin.board.create') }}"
-class="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold text-sm shadow hover:bg-blue-700 transition flex items-center gap-2">
-
-<i class="bi bi-plus-lg"></i>
-Add Member
-
-</a>
-
-</div>
-
-
-
-{{-- Members Grid --}}
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-
-@forelse($members as $member)
-
-<div class="relative bg-white/70 backdrop-blur-md border border-white/40 rounded-3xl shadow-lg hover:shadow-xl transition duration-300 p-8 group">
-
-{{-- Kebab Menu --}}
-<div x-data="{open:false}" class="absolute top-5 right-5">
-
-<button @click="open=!open"
-class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 transition">
-
-<i class="bi bi-three-dots-vertical"></i>
-
-</button>
-
-<div x-show="open"
-@click.outside="open=false"
-x-transition
-class="absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-50">
-
-<a href="{{ route('admin.board.edit',$member->id) }}"
-class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-
-<i class="bi bi-pencil"></i>
-Edit
-
-</a>
-
-<form action="{{ route('admin.board.destroy',$member->id) }}"
-method="POST"
-onsubmit="return confirm('Are you sure you want to remove this board member?')">
-
-@csrf
-@method('DELETE')
-
-<button
-class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-
-<i class="bi bi-trash"></i>
-Delete
-
-</button>
-
-</form>
-
-</div>
-
-</div>
-
-
-
-{{-- Status Badge --}}
-<div class="absolute top-6 left-6">
-
-<span class="px-3 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider
-{{ $member->is_active ? 'bg-emerald-500 text-white' : 'bg-gray-400 text-white' }}">
-
-{{ $member->is_active ? 'Active' : 'Inactive' }}
-
-</span>
-
-</div>
-
-
-
-{{-- Profile --}}
-<div class="flex flex-col items-center text-center mb-6">
-
-@if($member->photo)
-
-<img src="{{ asset('storage/'.$member->photo) }}"
-class="w-24 h-24 rounded-full object-cover ring-4 ring-white shadow-md mb-4 group-hover:scale-105 transition">
-
-@else
-
-<div class="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 mb-4">
-<i class="bi bi-person text-3xl"></i>
-</div>
-
-@endif
-
-
-<h3 class="text-lg font-bold text-gray-900">
-{{ $member->name }}
-</h3>
-
-<p class="text-xs uppercase tracking-widest text-blue-600 font-semibold mt-1">
-{{ $member->position }}
-</p>
-
-</div>
-
-
-
-{{-- Bio --}}
-@if($member->bio)
-
-<p class="text-sm text-gray-500 italic text-center leading-relaxed mb-6">
-"{{ $member->bio }}"
-</p>
-
-@endif
-
-
-
-{{-- Contact --}}
-<div class="space-y-2 text-sm">
-
-@if($member->email)
-
-<div class="flex items-center gap-2 text-gray-600">
-<i class="bi bi-envelope text-blue-500"></i>
-<span class="truncate">{{ $member->email }}</span>
-</div>
-
-@endif
-
-
-@if($member->phone)
-
-<div class="flex items-center gap-2 text-gray-600">
-<i class="bi bi-telephone text-blue-500"></i>
-<span>{{ $member->phone }}</span>
-</div>
-
-@endif
-
-
-@if($member->facebook)
-
-<div class="flex items-center gap-2 text-gray-600">
-<i class="bi bi-facebook text-blue-500"></i>
-
-<a href="{{ $member->facebook }}"
-target="_blank"
-class="hover:text-blue-600 transition">
-
-View Profile
-
-</a>
-
-</div>
-
-@endif
-
-</div>
-
-</div>
-
-@empty
-
-{{-- Empty State --}}
-<div class="col-span-full text-center py-24">
-
-<div class="w-20 h-20 bg-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
-
-<i class="bi bi-people text-4xl text-gray-400"></i>
-
-</div>
-
-<h3 class="text-xl font-bold text-gray-900 mb-2">
-No Board Members Yet
-</h3>
-
-<p class="text-gray-500 text-sm">
-Click "Add Member" to start building your subdivision leadership.
-</p>
-
-</div>
-
-@endforelse
-
-</div>
-
-</div>
+<script>
+function filterMembers(input) {
+    const filter = input.value.toLowerCase();
+    const cards = document.querySelectorAll('.member-card');
+    
+    cards.forEach(card => {
+        const name = card.getAttribute('data-name');
+        const position = card.getAttribute('data-position');
+        if (name.includes(filter) || position.includes(filter)) {
+            card.classList.remove('hidden');
+        } else {
+            card.classList.add('hidden');
+        }
+    });
+}
+
+function filterByStatus(status) {
+    const cards = document.querySelectorAll('.member-card');
+    cards.forEach(card => {
+        if (status === 'all' || card.getAttribute('data-status') === status) {
+            card.classList.remove('hidden');
+        } else {
+            card.classList.add('hidden');
+        }
+    });
+}
+</script>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #CBD5E0; }
+</style>
 
 @endsection

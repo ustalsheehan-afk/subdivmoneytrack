@@ -1,28 +1,49 @@
 @php
     $isActive = request()->routeIs($link['pattern']);
     
-    // Official Palette Active State
-    // Active: bg-[rgba(91,134,182,0.15)] text-[#c0e6fd]
-    // Inactive: text-[#80aad3] hover:bg-[rgba(192,230,253,0.08)] hover:text-[#c0e6fd]
-    
-    
     $containerClass = $isActive 
-        ? 'bg-[#5b86b6]/15 text-white font-semibold' 
-        : 'text-gray-300 font-medium hover:bg-[#c0e6fd]/10 hover:text-white';
+        ? 'bg-[#B6FF5C]/10 text-[#B6FF5C] font-bold shadow-[inset_0_0_12px_rgba(182,255,92,0.05)]' 
+        : 'text-[#A0AEC0] font-medium hover:bg-[#B6FF5C]/5 hover:text-white transition-all duration-300';
 
     $iconClass = $isActive
-        ? 'text-white' 
-        : 'text-gray-400 group-hover:text-white';
+        ? 'text-[#B6FF5C]' 
+        : 'text-[#A0AEC0] group-hover:text-white group-hover:scale-110 transition-all duration-300';
+
+    // Map label to notification key
+    $notifKey = match($link['label']) {
+        'Requests' => 'requests',
+        'Payments' => 'payments',
+        'Dues' => 'dues',
+        'Reservations' => 'reservations',
+        'Resident Support' => 'messages',
+        'Notifications' => 'system_notifications',
+        default => null
+    };
 @endphp
 
 <a href="{{ route($link['route']) }}" 
-   class="group relative flex items-center gap-3.5 px-4 py-3 rounded-lg transition-all duration-200 {{ $containerClass }}">
+   class="group relative flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 {{ $containerClass }}">
     
-    {{-- Active Indicator Line (Left) using #5b86b6 --}}
-    @if($isActive)
-        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-7 bg-[#5b86b6] rounded-r-full shadow-[0_0_8px_rgba(91,134,182,0.6)]"></div>
-    @endif
+    <div class="flex items-center gap-3.5">
+        {{-- Active Indicator Line (Left) --}}
+        @if($isActive)
+            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#B6FF5C] rounded-r-full shadow-[0_0_12px_rgba(182,255,92,0.6)]"></div>
+        @endif
 
-    <i class="{{ $link['icon'] }} text-[1.2rem] {{ $iconClass }} transition-colors duration-200 ml-1"></i>
-    <span class="tracking-wide text-[14px]">{{ $link['label'] }}</span>
+        <i class="{{ $link['icon'] }} text-[1.2rem] {{ $iconClass }} ml-1"></i>
+        <span class="tracking-wide text-[14px]">{{ $link['label'] }}</span>
+    </div>
+
+    @if($notifKey)
+        <template x-if="counts['{{ $notifKey }}'] && counts['{{ $notifKey }}'].count > 0">
+            <span x-text="formatCount(counts['{{ $notifKey }}'].count)" 
+                  :class="{
+                      'bg-[#B6FF5C] text-[#0B1F1A]': counts['{{ $notifKey }}'].priority === 'normal',
+                      'bg-amber-400 text-amber-950': counts['{{ $notifKey }}'].priority === 'warning',
+                      'bg-red-500 text-white animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.3)]': counts['{{ $notifKey }}'].priority === 'critical'
+                  }"
+                  class="flex items-center justify-center h-[18px] px-2 rounded-full text-[11px] font-black tracking-tighter transition-all duration-300 hover:brightness-110">
+            </span>
+        </template>
+    @endif
 </a>

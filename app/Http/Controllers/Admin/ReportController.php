@@ -74,8 +74,8 @@ class ReportController extends Controller
                 foreach ($data as $item) {
                     $rows[] = [
                         $item->created_at->format('Y-m-d H:i'),
-                        $item->resident->full_name ?? 'N/A',
-                        ($item->resident->block ?? '') . '-' . ($item->resident->lot ?? ''),
+                        $item->resident?->full_name ?? 'N/A',
+                        ($item->resident?->block ?? '') . '-' . ($item->resident?->lot ?? ''),
                         $item->payment_method,
                         '₱' . number_format($item->amount, 2),
                         ucfirst($item->status)
@@ -103,7 +103,7 @@ class ReportController extends Controller
                 $summaryCount = 0;
 
                 foreach ($grouped as $residentId => $residentDues) {
-                    $resident = $residentDues->first()->resident;
+                    $resident = $residentDues->first()?->resident;
                     if ($resident) {
                         $totalUnpaid = $residentDues->sum('amount');
                         $summaryTotal += $totalUnpaid;
@@ -145,7 +145,7 @@ class ReportController extends Controller
                 foreach ($data as $item) {
                     $rows[] = [
                         $item->date_issued->format('Y-m-d'),
-                        $item->resident->full_name ?? 'N/A',
+                        $item->resident?->full_name ?? 'N/A',
                         $item->reason,
                         '₱' . number_format($item->amount, 2),
                         ucfirst($item->status)
@@ -234,8 +234,8 @@ class ReportController extends Controller
                         
                     $rows[] = [
                         $item->date_paid ? $item->date_paid->format('Y-m-d') : $item->created_at->format('Y-m-d'),
-                        $item->resident->full_name ?? 'Unknown',
-                        ($item->resident->block ?? '') . '-' . ($item->resident->lot ?? ''),
+                        $item->resident?->full_name ?? 'Unknown',
+                        ($item->resident?->block ?? '') . '-' . ($item->resident?->lot ?? ''),
                         $period,
                         number_format($item->amount, 2),
                         ucfirst($item->status)
@@ -300,7 +300,7 @@ class ReportController extends Controller
                     $rows[] = [
                         $item->created_at->format('Y-m-d'),
                         str_replace('Amenity: ', '', $item->type),
-                        $item->resident->full_name ?? 'N/A',
+                        $item->resident?->full_name ?? 'N/A',
                         ucfirst($item->status)
                     ];
                 }
@@ -354,7 +354,7 @@ class ReportController extends Controller
                     $rows[] = [
                         $item->date_paid ? $item->date_paid->format('Y-m-d') : $item->created_at->format('Y-m-d'),
                         $item->due->title ?? 'N/A',
-                        $item->resident->full_name ?? 'N/A',
+                        $item->resident?->full_name ?? 'N/A',
                         number_format($item->amount, 2)
                     ];
                 }
@@ -388,7 +388,7 @@ class ReportController extends Controller
                     $rows[] = [
                         $item->created_at->format('Y-m-d H:i'),
                         str_replace('Amenity: ', '', $item->type),
-                        $item->resident->full_name ?? 'N/A',
+                        $item->resident?->full_name ?? 'N/A',
                         ucfirst($item->status)
                     ];
                 }
@@ -455,7 +455,7 @@ class ReportController extends Controller
                  $rows[] = [
                      $item->created_at->format('Y-m-d'),
                      $item->type,
-                     $item->resident->full_name ?? 'N/A',
+                     $item->resident?->full_name ?? 'N/A',
                      ucfirst($item->priority),
                      ucfirst($item->status)
                  ];
@@ -511,8 +511,8 @@ class ReportController extends Controller
                     $row = [];
                     foreach ($columnMap as $colKey) {
                         if ($colKey === 'created_at') $row[] = $item->created_at->format('Y-m-d H:i');
-                        elseif ($colKey === 'resident_name') $row[] = $item->resident->full_name ?? 'N/A';
-                        elseif ($colKey === 'unit') $row[] = ($item->resident->block ?? '') . '-' . ($item->resident->lot ?? '');
+                        elseif ($colKey === 'resident_name') $row[] = $item->resident?->full_name ?? 'N/A';
+                        elseif ($colKey === 'unit') $row[] = ($item->resident?->block ?? '') . '-' . ($item->resident?->lot ?? '');
                         elseif ($colKey === 'amount') $row[] = '₱' . number_format($item->amount, 2);
                         elseif ($colKey === 'status') $row[] = ucfirst($item->status);
                         elseif ($colKey === 'payment_method') $row[] = $item->payment_method;

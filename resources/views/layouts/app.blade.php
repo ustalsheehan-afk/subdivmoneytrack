@@ -12,11 +12,13 @@
 
     <style>
         body {
-            background-color: #f8f9fa;
+            background-color: #ffffff;
+            color: #1A202C;
         }
         .card {
             border-radius: 1rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid #E2E8F0;
         }
         .btn-primary {
             background-color: #0069d9;

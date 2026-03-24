@@ -30,12 +30,13 @@ class AnnouncementController extends Controller
         $query->orderByDesc('is_pinned')->orderByDesc('date_posted');
         $announcements = $query->get();
         $totalResidents = \App\Models\User::where('role', 'resident')->count();
+        $draftsCount = Announcement::where('status', 'draft')->count();
 
         if ($request->ajax() && $request->has('load_more')) {
-            return view('admin.announcements.partials.list', compact('announcements', 'totalResidents'))->render();
+            return view('admin.announcements.partials.list', compact('announcements', 'totalResidents', 'draftsCount'))->render();
         }
 
-        return view('admin.announcements.index', compact('announcements', 'totalResidents'));
+        return view('admin.announcements.index', compact('announcements', 'totalResidents', 'draftsCount'));
     }
 
     public function create()
@@ -46,19 +47,37 @@ class AnnouncementController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'title'        => 'required|string|max:255',
-            'content'      => 'required|string',
-            'category'     => 'required|string',
-            'date_posted'  => 'required',
+        $isDraft = $request->input('status') === 'draft';
+
+        $rules = [
+            'title'        => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
+            'content'      => $isDraft ? 'nullable|string' : 'required|string',
+            'category'     => $isDraft ? 'nullable|string' : 'required|string',
+            'date_posted'  => $isDraft ? 'nullable' : 'required',
             'is_pinned'    => 'nullable|boolean',
             'pin_duration' => 'nullable|integer',
             'image'        => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+        ];
+
+        $request->validate($rules);
 
         $data = $request->only(['title', 'content', 'category', 'date_posted', 'is_pinned', 'status']);
-        // Set timezone explicitly to ensure accuracy
-        $data['date_posted'] = Carbon::parse($request->date_posted, config('app.timezone'));
+        
+        if ($request->filled('date_posted')) {
+            $data['date_posted'] = Carbon::parse($request->date_posted, config('app.timezone'));
+        } else {
+            $data['date_posted'] = now();
+        }
+
+        // Ensure non-null values for DB constraints when saving as draft
+        if ($isDraft) {
+            $data['title'] = $data['title'] ?? 'Untitled Draft';
+            $data['content'] = $data['content'] ?? '';
+            $data['category'] = $data['category'] ?? 'General';
+            $data['status'] = 'draft';
+        } else {
+            $data['status'] = 'active';
+        }
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('announcements', 'public');
@@ -73,12 +92,15 @@ class AnnouncementController extends Controller
             $data['pin_expires_at'] = null;
         }
 
-        $data['status'] = 'active';
-
         Announcement::create($data);
 
+        if ($data['status'] === 'draft') {
+            return redirect()->route('admin.announcements.drafts')
+                ->with('success', 'Announcement saved as draft.');
+        }
+
         return redirect()->route('admin.announcements.index')
-            ->with('success', 'Announcement created successfully.');
+            ->with('success', 'Announcement published successfully.');
     }
 
     public function edit(Announcement $announcement)
@@ -89,19 +111,33 @@ class AnnouncementController extends Controller
 
     public function update(Request $request, Announcement $announcement)
     {
-        $request->validate([
-            'title'        => 'required|string|max:255',
-            'content'      => 'required|string',
-            'category'     => 'required|string',
-            'date_posted'  => 'required',
+        $isDraft = $request->input('status') === 'draft';
+
+        $rules = [
+            'title'        => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
+            'content'      => $isDraft ? 'nullable|string' : 'required|string',
+            'category'     => $isDraft ? 'nullable|string' : 'required|string',
+            'date_posted'  => $isDraft ? 'nullable' : 'required',
             'is_pinned'    => 'nullable|boolean',
             'pin_duration' => 'nullable|integer',
             'image'        => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+        ];
+
+        $request->validate($rules);
 
         $data = $request->only(['title', 'content', 'category', 'date_posted', 'is_pinned']);
-        // Set timezone explicitly to ensure accuracy
-        $data['date_posted'] = Carbon::parse($request->date_posted, config('app.timezone'));
+        
+        // Ensure non-null values for DB constraints when saving as draft
+        if ($isDraft) {
+            $data['title'] = $data['title'] ?? ($announcement->title ?? 'Untitled Draft');
+            $data['content'] = $data['content'] ?? ($announcement->content ?? '');
+            $data['category'] = $data['category'] ?? ($announcement->category ?? 'General');
+            $data['status'] = 'draft';
+        }
+
+        if ($request->filled('date_posted')) {
+            $data['date_posted'] = Carbon::parse($request->date_posted, config('app.timezone'));
+        }
 
         if ($request->hasFile('image')) {
             // Delete old image if exists
@@ -120,7 +156,16 @@ class AnnouncementController extends Controller
             $data['pin_expires_at'] = null;
         }
 
+        if ($request->has('status')) {
+            $data['status'] = $request->status;
+        }
+
         $announcement->update($data);
+
+        if ($announcement->status === 'draft') {
+            return redirect()->route('admin.announcements.drafts')
+                ->with('success', 'Draft updated successfully.');
+        }
 
         return redirect()->route('admin.announcements.index')
             ->with('success', 'Announcement updated successfully.');
@@ -173,8 +218,9 @@ class AnnouncementController extends Controller
         }
 
         $announcements = $query->orderByDesc('date_posted')->get();
+        $totalResidents = \App\Models\User::where('role', 'resident')->count();
 
-        return view('admin.announcements.trashed-announcements', compact('announcements'));
+        return view('admin.announcements.trashed-announcements', compact('announcements', 'totalResidents'));
     }
 
     // Archived announcements
@@ -191,8 +237,28 @@ class AnnouncementController extends Controller
         }
 
         $announcements = $query->orderByDesc('date_posted')->get();
+        $totalResidents = \App\Models\User::where('role', 'resident')->count();
 
-        return view('admin.announcements.archived-announcements', compact('announcements'));
+        return view('admin.announcements.archived-announcements', compact('announcements', 'totalResidents'));
+    }
+
+    // Drafts announcements
+    public function drafts(Request $request)
+    {
+        $query = Announcement::where('status', 'draft');
+
+        if ($request->filled('month')) {
+            $query->whereMonth('date_posted', $request->month);
+        }
+
+        if ($request->filled('year')) {
+            $query->whereYear('date_posted', $request->year);
+        }
+
+        $announcements = $query->orderByDesc('date_posted')->get();
+        $totalResidents = \App\Models\User::where('role', 'resident')->count();
+
+        return view('admin.announcements.drafts', compact('announcements', 'totalResidents'));
     }
 
     // Restore trashed announcement

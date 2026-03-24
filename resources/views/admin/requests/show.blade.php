@@ -10,13 +10,13 @@
 {{-- Header --}}
 <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 flex items-center justify-between relative overflow-hidden">
 
-<div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-l-2xl"></div>
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-[#0D1F1C] rounded-l-2xl"></div>
 
 <div class="pl-3">
 
 <div class="flex items-center gap-3 mb-1">
 
-<span class="text-[10px] font-bold uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-1 rounded-md border border-blue-100">
+<span class="text-[10px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
 Service Ticket
 </span>
 
@@ -56,7 +56,7 @@ Back
 <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
 
 <h3 class="font-semibold text-gray-800 mb-6 flex items-center gap-2">
-<i class="bi bi-clock-history text-blue-600"></i>
+<i class="bi bi-clock-history text-[#0D1F1C]"></i>
 Request Progress
 </h3>
 
@@ -67,13 +67,13 @@ Request Progress
 {{-- Submitted --}}
 <div class="relative">
 
-<div class="absolute -left-[26px] top-1 w-4 h-4 rounded-full bg-blue-500 border-4 border-white shadow"></div>
+<div class="absolute -left-[26px] top-1 w-4 h-4 rounded-full bg-emerald-500 border-4 border-white shadow"></div>
 
 <p class="text-sm font-semibold text-gray-900">
 Request Submitted
 </p>
 
-<p class="text-xs text-blue-600 font-medium mt-1">
+<p class="text-xs text-emerald-600 font-medium mt-1">
 {{ $request->created_at->format('F d, Y • g:i A') }}
 </p>
 
@@ -240,7 +240,7 @@ Request Details
 
 <span class="px-3 py-1 text-xs rounded-full font-semibold
 @if($request->status == 'pending') bg-gray-200 text-gray-700
-@elseif($request->status == 'in progress') bg-blue-100 text-blue-700
+@elseif($request->status == 'in progress') bg-emerald-100 text-emerald-700
 @elseif($request->status == 'completed') bg-green-100 text-green-700
 @endif">
 {{ ucfirst($request->status) }}
@@ -275,7 +275,7 @@ Update Status
 @csrf
 
 <select name="status"
-class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0D1F1C] focus:border-[#0D1F1C]">
 
 <option value="pending" {{ $request->status == 'pending' ? 'selected' : '' }}>Pending</option>
 
@@ -286,7 +286,7 @@ class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 f
 </select>
 
 <button
-class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 rounded-lg font-medium transition">
+class="w-full bg-[#0D1F1C] hover:bg-emerald-900 text-white text-sm py-2 rounded-lg font-medium transition">
 Save Changes
 </button>
 

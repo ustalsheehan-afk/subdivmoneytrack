@@ -14,8 +14,11 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 
+use App\Traits\LogsActivity;
+
 class AmenityReservationController extends Controller
 {
+    use LogsActivity;
     use HandlesReservationConflict;
 
     public function index()
@@ -534,6 +537,12 @@ class AmenityReservationController extends Controller
             ],
             'previous_status' => $oldStatus,
             'new_status' => $request->status,
+        ]);
+
+        // Log Activity
+        $this->logActivity($request->status, 'reservations', ucfirst($request->status) . " reservation for " . optional($reservation->amenity)->name . " by " . (optional($reservation->resident)->full_name ?? 'Unknown'), [
+            'reservation_id' => $reservation->id,
+            'amenity_id' => $reservation->amenity_id
         ]);
 
         return response()->json(['success' => true]);

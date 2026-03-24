@@ -45,7 +45,7 @@
                             <td class="px-6 py-3 text-gray-600 truncate">{{ $user->email }}</td>
 
                             <td class="px-6 py-3 text-gray-600">
-                                @if($user->resident && $user->resident->contact_number)
+                                @if($user->resident?->contact_number)
                                     {{ $user->resident->contact_number }}
                                 @else
                                     <span class="text-gray-400 italic">—</span>
@@ -53,7 +53,7 @@
                             </td>
 
                             <td class="px-6 py-3">
-                                @if($user->resident && $user->resident->block_lot)
+                                @if($user->resident?->block_lot)
                                     <span class="inline-block px-2 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full">
                                         {{ $user->resident->block_lot }}
                                     </span>
@@ -63,7 +63,7 @@
                             </td>
 
                             <td class="px-6 py-3 text-gray-600">
-                                @if($user->resident && $user->resident->move_in_date)
+                                @if($user->resident?->move_in_date)
                                     {{ \Carbon\Carbon::parse($user->resident->move_in_date)->format('M d, Y') }}
                                 @else
                                     <span class="text-gray-400 italic">Not set</span>
@@ -110,7 +110,7 @@
                 <h3 class="font-bold text-gray-900">{{ $user->name }}</h3>
                 <p class="text-sm text-gray-600">{{ $user->email }}</p>
                 <p class="text-xs text-gray-500 mt-1">
-                    {{ $user->resident->block_lot ?? 'No block/lot' }}
+                    {{ $user->resident?->block_lot ?? 'No block/lot' }}
                 </p>
             </div>
         @endforeach

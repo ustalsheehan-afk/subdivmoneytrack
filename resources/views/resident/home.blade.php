@@ -3,7 +3,7 @@
 @section('title', 'Dashboard')
 
 @section('content')
-<div class="min-h-screen bg-[#F8FAFC] pb-8 text-[#4B5563]">
+<div class="min-h-screen bg-white pb-8 text-[#1A202C]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
         
         {{-- HERO SECTION --}}
@@ -54,105 +54,55 @@
         </section>
         @endif
 
-        {{-- 2. QUICK ACTIONS (Enhanced Premium Cards) --}}
-<section class="bg-white rounded-[20px] p-6 border border-slate-100 shadow-sm">
-    <h3 class="section-title uppercase tracking-[0.1em] mb-5 flex items-center gap-2 text-[#1F2937] text-[16px] font-semibold">
-        <i class="bi bi-lightning-fill text-[#385780]"></i> QUICK ACTIONS
-    </h3>
+        {{-- 2. QUICK ACTIONS (Uniform Cinematic Design) --}}
+        <section class="space-y-4">
+            <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] px-1">Quick Actions</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
 
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                {{-- Pay Dues --}}
+                <a href="{{ route('resident.payments.index') }}"
+                   class="bg-white rounded-[32px] border border-gray-100 shadow-sm p-8 flex flex-col items-center justify-center text-center gap-4 group hover:border-emerald-500/30 transition-all duration-500 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    
+                    <div class="w-16 h-16 rounded-[24px] bg-gray-50 flex items-center justify-center shrink-0 border border-gray-100 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-500 transition-all duration-500 shadow-sm relative z-10">
+                        <i class="bi bi-credit-card text-2xl"></i>
+                    </div>
+                    
+                    <div class="relative z-10">
+                        <p class="text-[11px] font-black text-gray-900 uppercase tracking-widest">Pay Dues</p>
+                    </div>
+                </a>
 
-        {{-- Pay Dues --}}
-        <a href="{{ route('resident.payments.index') }}"
-           class="relative h-28 rounded-[16px] bg-gradient-to-br from-[#4E73DF] to-[#224ABE]
-           p-4 flex items-center gap-4 group transition-all duration-300
-           hover:-translate-y-0.5 hover:brightness-110 hover:shadow-xl hover:shadow-black/10 overflow-hidden">
+                {{-- Submit Request --}}
+                <a href="{{ route('resident.requests.create') }}"
+                   class="bg-white rounded-[32px] border border-gray-100 shadow-sm p-8 flex flex-col items-center justify-center text-center gap-4 group hover:border-emerald-500/30 transition-all duration-500 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    
+                    <div class="w-16 h-16 rounded-[24px] bg-gray-50 flex items-center justify-center shrink-0 border border-gray-100 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-500 transition-all duration-500 shadow-sm relative z-10">
+                        <i class="bi bi-file-earmark-text text-2xl"></i>
+                    </div>
+                    
+                    <div class="relative z-10">
+                        <p class="text-[11px] font-black text-gray-900 uppercase tracking-widest">Submit Request</p>
+                    </div>
+                </a>
 
-            {{-- BIG visible circle (main effect) --}}
-            <div class="absolute right-[-50px] bottom-[-50px] w-[200px] h-[200px] rounded-full bg-white/10 opacity-70"></div>
+                {{-- Reservations --}}
+                <a href="{{ route('resident.amenities.index') }}"
+                   class="bg-white rounded-[32px] border border-gray-100 shadow-sm p-8 flex flex-col items-center justify-center text-center gap-4 group hover:border-emerald-500/30 transition-all duration-500 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    
+                    <div class="w-16 h-16 rounded-[24px] bg-gray-50 flex items-center justify-center shrink-0 border border-gray-100 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-500 transition-all duration-500 shadow-sm relative z-10">
+                        <i class="bi bi-calendar-event text-2xl"></i>
+                    </div>
+                    
+                    <div class="relative z-10">
+                        <p class="text-[11px] font-black text-gray-900 uppercase tracking-widest">Reservations</p>
+                    </div>
+                </a>
 
-            {{-- secondary subtle circle --}}
-            <div class="absolute right-[30px] top-[-40px] w-[120px] h-[120px] rounded-full bg-white/5 opacity-60"></div>
-
-            {{-- soft gradient overlay --}}
-            <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-30"></div>
-
-            {{-- Icon --}}
-            <div class="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shrink-0 shadow-sm relative z-10">
-                <i class="bi bi-credit-card text-[#224ABE] text-2xl"></i>
             </div>
-
-            {{-- Text --}}
-            <div class="flex-1 relative z-10">
-                <div class="flex items-center justify-between mb-0.5">
-                    <p class="text-white text-[16px] font-semibold">Pay Dues</p>
-                    <span class="px-2 py-0.5 rounded-full bg-white/20 text-white text-[12px] font-semibold">
-                        ₱{{ number_format($summary['outstanding_dues'], 0) }}
-                    </span>
-                </div>
-                <p class="text-white/80 text-[13px]">Association fee</p>
-            </div>
-
-            {{-- Arrow --}}
-            <i class="bi bi-arrow-right text-white/60 text-xl group-hover:translate-x-1 group-hover:text-white transition-all relative z-10"></i>
-        </a>
-
-        {{-- Submit Request --}}
-        <a href="{{ route('resident.requests.create') }}"
-           class="relative h-28 rounded-[16px] bg-gradient-to-br from-[#10B981] to-[#059669]
-           p-4 flex items-center gap-4 group transition-all duration-300
-           hover:-translate-y-0.5 hover:brightness-110 hover:shadow-xl hover:shadow-black/10 overflow-hidden">
-
-            <div class="absolute right-[-50px] bottom-[-50px] w-[200px] h-[200px] rounded-full bg-white/10 opacity-70"></div>
-            <div class="absolute right-[30px] top-[-40px] w-[120px] h-[120px] rounded-full bg-white/5 opacity-60"></div>
-            <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-30"></div>
-
-            <div class="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shrink-0 shadow-sm relative z-10">
-                <i class="bi bi-file-earmark-text text-[#059669] text-2xl"></i>
-            </div>
-
-            <div class="flex-1 relative z-10">
-                <div class="flex items-center justify-between mb-0.5">
-                    <p class="text-white text-[16px] font-semibold">Submit Request</p>
-                    <span class="px-2 py-0.5 rounded-full bg-white/20 text-white text-[12px] font-semibold">
-                        {{ $activeRequestsCount }} pending
-                    </span>
-                </div>
-                <p class="text-white/80 text-[13px]">Report an issue</p>
-            </div>
-
-            <i class="bi bi-arrow-right text-white/60 text-xl group-hover:translate-x-1 group-hover:text-white transition-all relative z-10"></i>
-        </a>
-
-        {{-- Reservations --}}
-        <a href="{{ route('resident.amenities.index') }}"
-           class="relative h-28 rounded-[16px] bg-gradient-to-br from-[#F43F5E] to-[#E11D48]
-           p-4 flex items-center gap-4 group transition-all duration-300
-           hover:-translate-y-0.5 hover:brightness-110 hover:shadow-xl hover:shadow-black/10 overflow-hidden">
-
-            <div class="absolute right-[-50px] bottom-[-50px] w-[200px] h-[200px] rounded-full bg-white/10 opacity-70"></div>
-            <div class="absolute right-[30px] top-[-40px] w-[120px] h-[120px] rounded-full bg-white/5 opacity-60"></div>
-            <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-30"></div>
-
-            <div class="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shrink-0 shadow-sm relative z-10">
-                <i class="bi bi-calendar-event text-[#E11D48] text-2xl"></i>
-            </div>
-
-            <div class="flex-1 relative z-10">
-                <div class="flex items-center justify-between mb-0.5">
-                    <p class="text-white text-[16px] font-semibold">Reservations</p>
-                    <span class="px-2 py-0.5 rounded-full bg-white/20 text-white text-[12px] font-semibold">
-                        Book now
-                    </span>
-                </div>
-                <p class="text-white/80 text-[13px]">Pool, gym, hall</p>
-            </div>
-
-            <i class="bi bi-arrow-right text-white/60 text-xl group-hover:translate-x-1 group-hover:text-white transition-all relative z-10"></i>
-        </a>
-
-    </div>
-</section>
+        </section>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {{-- LEFT COLUMN: Recent Activity --}}
