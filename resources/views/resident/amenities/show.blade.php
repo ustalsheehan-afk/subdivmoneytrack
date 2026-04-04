@@ -4,8 +4,7 @@
 @section('page-title', 'Book Amenity')
 
 @section('content')
-<div class="h-full bg-[#F8F9FB] overflow-y-auto custom-scrollbar" x-data="bookingWizard()">
-    <div class="max-w-5xl mx-auto px-6 py-8 flex flex-col gap-10 pb-24">
+<div class="space-y-6" x-data="bookingWizard()">
         
         <!-- Navigation Back -->
         <a href="{{ route('resident.amenities.index') }}" class="inline-flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-gray-400 hover:text-emerald-600 transition-all group w-fit">
@@ -15,31 +14,31 @@
             <span>Back to Amenities</span>
         </a>
 
-        <div class="bg-white rounded-[40px] shadow-2xl border border-gray-100 overflow-hidden animate-fade-in">
+        <div class="bg-white rounded-[40px] shadow-2xl border border-gray-100 overflow-hidden animate-fade-in max-w-3xl mx-auto">
             
             <!-- Header / Stepper -->
-            <div class="bg-[#081412] p-10 md:p-12 relative overflow-hidden">
+            <div class="bg-[#081412] p-6 md:p-7 relative overflow-hidden">
                 <div class="absolute -right-20 -top-20 w-80 h-80 bg-brand-accent/10 rounded-full blur-3xl group-hover:bg-brand-accent/20 transition-all duration-1000"></div>
                 <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl"></div>
 
-                <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
+                <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                     <div class="space-y-3">
                         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                             <i class="bi bi-calendar-check-fill text-emerald-400 text-xs"></i>
                             <span class="text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em]">Reservation Wizard</span>
                         </div>
-                        <h1 class="text-3xl md:text-4xl font-black text-white tracking-tight leading-none">Book {{ $amenity->name }}</h1>
+                        <h1 class="text-2xl md:text-3xl font-black text-white tracking-tight leading-none">Book {{ $amenity->name }}</h1>
                     </div>
                 </div>
                 
                 <!-- Progress Stepper -->
-                <div class="relative z-10 flex items-center justify-between max-w-3xl mx-auto px-4">
-                    <div class="absolute left-0 top-5 w-full h-1 bg-white/10 rounded-full"></div>
-                    <div class="absolute left-0 top-5 h-1 bg-emerald-500 transition-all duration-700 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.5)]" :style="'width: ' + ((step - 1) / 3 * 100) + '%'"></div>
+                <div class="relative z-10 flex items-center justify-between max-w-xl mx-auto px-1">
+                    <div class="absolute left-0 top-4 w-full h-1 bg-white/10 rounded-full"></div>
+                    <div class="absolute left-0 top-4 h-1 bg-emerald-500 transition-all duration-700 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.5)]" :style="'width: ' + ((step - 1) / 3 * 100) + '%'"></div>
 
                     <!-- Step 1 -->
                     <div class="relative flex flex-col items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs transition-all duration-500 border-2"
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs transition-all duration-500 border-2"
                              :class="step >= 1 ? 'bg-emerald-500 border-emerald-400 text-black shadow-lg shadow-emerald-500/20' : 'bg-[#081412] border-white/10 text-white/40'">
                             1
                         </div>
@@ -48,7 +47,7 @@
 
                     <!-- Step 2 -->
                     <div class="relative flex flex-col items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs transition-all duration-500 border-2"
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs transition-all duration-500 border-2"
                              :class="step >= 2 ? 'bg-emerald-500 border-emerald-400 text-black shadow-lg shadow-emerald-500/20' : 'bg-[#081412] border-white/10 text-white/40'">
                             2
                         </div>
@@ -57,7 +56,7 @@
 
                     <!-- Step 3 -->
                     <div class="relative flex flex-col items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs transition-all duration-500 border-2"
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs transition-all duration-500 border-2"
                              :class="step >= 3 ? 'bg-emerald-500 border-emerald-400 text-black shadow-lg shadow-emerald-500/20' : 'bg-[#081412] border-white/10 text-white/40'">
                             3
                         </div>
@@ -66,7 +65,7 @@
 
                     <!-- Step 4 -->
                     <div class="relative flex flex-col items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs transition-all duration-500 border-2 bg-[#081412] border-white/10 text-white/40">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs transition-all duration-500 border-2 bg-[#081412] border-white/10 text-white/40">
                             4
                         </div>
                         <span class="text-[9px] font-black uppercase tracking-widest text-white/20">Confirm</span>
@@ -75,15 +74,15 @@
             </div>
 
             <!-- Form Content -->
-            <form action="{{ route('resident.amenities.reserve', $amenity) }}" method="POST" class="p-8 md:p-12 bg-white" enctype="multipart/form-data">
+            <form action="{{ route('resident.amenities.reserve', $amenity) }}" method="POST" class="p-5 md:p-7 bg-white" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="equipment_addons" :value="JSON.stringify(getSelectedEquipmentObjects())">
                 
                 <!-- STEP 1: Booking Details -->
                 <div x-show="step === 1" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                         <!-- Left: Inputs -->
-                        <div class="lg:col-span-7 space-y-10">
+                        <div class="lg:col-span-7 space-y-6">
                             <!-- Date Selection -->
                             <div class="space-y-4">
                                 <label class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
@@ -93,9 +92,9 @@
                                 <div class="relative group">
                                     <input type="date" name="date" x-model="date" @change="checkAvailability()"
                                            min="{{ date('Y-m-d') }}"
-                                           class="w-full p-6 text-xl font-black border-2 border-gray-100 rounded-[24px] focus:border-emerald-500 focus:ring-0 transition-all cursor-pointer bg-gray-50 hover:bg-white hover:shadow-xl hover:shadow-emerald-500/5 tabular-nums">
+                                           class="w-full p-5 text-lg font-black border-2 border-gray-100 rounded-[24px] focus:border-emerald-500 focus:ring-0 transition-all cursor-pointer bg-gray-50 hover:bg-white hover:shadow-xl hover:shadow-emerald-500/5 tabular-nums">
                                     <div class="absolute right-6 top-1/2 -translate-y-1/2 text-emerald-500 group-hover:scale-110 transition-transform pointer-events-none">
-                                        <i class="bi bi-calendar-week text-2xl"></i>
+                                        <i class="bi bi-calendar-week text-xl"></i>
                                     </div>
                                 </div>
                                 <p class="text-[10px] font-black text-red-500 uppercase tracking-widest flex items-center gap-2 mt-2" x-show="!isDateValid && date">
@@ -111,7 +110,7 @@
                                         02. Start Time
                                     </label>
                                     <div class="relative">
-                                        <select name="start_time" x-model="startTime" class="w-full p-6 text-lg font-black border-2 border-gray-100 rounded-[24px] focus:border-emerald-500 focus:ring-0 bg-gray-50 hover:bg-white hover:shadow-xl hover:shadow-emerald-500/5 cursor-pointer appearance-none transition-all tabular-nums">
+                                        <select name="start_time" x-model="startTime" class="w-full p-5 text-base font-black border-2 border-gray-100 rounded-[24px] focus:border-emerald-500 focus:ring-0 bg-gray-50 hover:bg-white hover:shadow-xl hover:shadow-emerald-500/5 cursor-pointer appearance-none transition-all tabular-nums">
                                             <option value="" disabled>Select Time Slot</option>
                                             <template x-for="time in generatedTimes" :key="time.value">
                                                 <option :value="time.value" x-text="time.label"></option>
@@ -128,7 +127,7 @@
                                         03. Duration
                                     </label>
                                     <div class="relative">
-                                        <select name="duration" x-model="duration" class="w-full p-6 text-lg font-black border-2 border-gray-100 rounded-[24px] focus:border-emerald-500 focus:ring-0 bg-gray-50 hover:bg-white hover:shadow-xl hover:shadow-emerald-500/5 cursor-pointer appearance-none transition-all tabular-nums">
+                                        <select name="duration" x-model="duration" class="w-full p-5 text-base font-black border-2 border-gray-100 rounded-[24px] focus:border-emerald-500 focus:ring-0 bg-gray-50 hover:bg-white hover:shadow-xl hover:shadow-emerald-500/5 cursor-pointer appearance-none transition-all tabular-nums">
                                             @for($i=1; $i<=10; $i++)
                                                 <option value="{{ $i }}">{{ $i }} Hour{{ $i > 1 ? 's' : '' }} Session</option>
                                             @endfor
@@ -146,13 +145,13 @@
                                     <span class="w-8 h-px bg-gray-200"></span>
                                     04. Guest Count
                                 </label>
-                                <div class="flex items-center gap-6 bg-gray-50 p-6 rounded-[24px] border-2 border-gray-100 group hover:bg-white hover:shadow-xl transition-all">
+                                <div class="flex items-center gap-4 bg-gray-50 p-5 rounded-[24px] border-2 border-gray-100 group hover:bg-white hover:shadow-xl transition-all">
                                     <button type="button" @click="guestCount > 1 ? guestCount-- : null" class="w-14 h-14 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-xl font-black text-gray-900 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 hover:shadow-lg transition-all">
                                         <i class="bi bi-dash"></i>
                                     </button>
                                     <div class="flex-1 text-center">
                                         <input type="number" name="guest_count" x-model="guestCount" 
-                                               class="w-full text-center p-0 text-3xl font-black border-none bg-transparent text-gray-900 focus:ring-0 tabular-nums">
+                                               class="w-full text-center p-0 text-2xl font-black border-none bg-transparent text-gray-900 focus:ring-0 tabular-nums">
                                         <p class="text-[9px] font-black uppercase tracking-widest mt-1 transition-colors"
                                            :class="guestCount > maxCapacity ? 'text-red-500 animate-pulse' : 'text-gray-400'">
                                             <template x-if="guestCount > maxCapacity">
@@ -198,66 +197,83 @@
 
                         <!-- Right: Summary & Notes -->
                         <div class="lg:col-span-5">
-                            <div class="sticky top-8 space-y-8">
-                                <div class="bg-[#081412] rounded-[32px] p-8 shadow-2xl relative overflow-hidden group">
-                                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-brand-accent/5 rounded-full blur-3xl group-hover:bg-brand-accent/10 transition-all duration-700"></div>
-                                    
-                                    <h3 class="text-[11px] font-black text-emerald-400 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
-                                        <span class="w-4 h-px bg-emerald-500/30"></span>
-                                        Summary
-                                    </h3>
-                                    
-                                    <div class="space-y-6">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-[10px] font-black text-white/30 uppercase tracking-widest">Selected Date</span>
-                                            <span class="text-sm font-black text-white tracking-tight tabular-nums" x-text="date ? formatDate(date) : 'Pending...'"></span>
-                                        </div>
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-[10px] font-black text-white/30 uppercase tracking-widest">Time Slot</span>
-                                            <span class="text-sm font-black text-white tracking-tight tabular-nums" x-text="startTime ? formatTimeRange() : 'Pending...'"></span>
-                                        </div>
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-[10px] font-black text-white/30 uppercase tracking-widest">Guests</span>
-                                            <span class="text-sm font-black text-white tracking-tight tabular-nums" x-text="guestCount + ' PAX'"></span>
+                            <div class="sticky top-6 space-y-6">
+                                <div class="glass-card p-6 space-y-6">
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-sm font-black text-gray-900 tracking-tight">Reservation Summary</div>
+                                        <div class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Estimated</div>
+                                    </div>
+
+                                    <div class="space-y-4">
+                                        <div class="flex items-center justify-between gap-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700">
+                                                    <i class="bi bi-calendar-week"></i>
+                                                </div>
+                                                <div class="leading-tight">
+                                                    <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</div>
+                                                    <div class="text-[12px] font-black text-gray-900 tabular-nums" x-text="date ? formatDate(date) : '—'"></div>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <div x-show="selectedEquipmentIndices.length > 0" class="pt-6 mt-6 border-t border-white/5 space-y-4">
-                                            <p class="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Additional Items</p>
-                                            <template x-for="index in selectedEquipmentIndices" :key="index">
-                                                <div class="flex justify-between items-center">
-                                                    <span class="text-xs font-bold text-white/50" x-text="equipmentList[index].name"></span>
-                                                    <span class="text-xs font-black text-white tabular-nums" x-text="'₱' + parseFloat(equipmentList[index].price).toFixed(0)"></span>
+                                        <div class="flex items-center justify-between gap-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700">
+                                                    <i class="bi bi-clock"></i>
                                                 </div>
-                                            </template>
+                                                <div class="leading-tight">
+                                                    <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Time</div>
+                                                    <div class="text-[12px] font-black text-gray-900 tabular-nums" x-text="startTime ? formatTimeRange() : '—'"></div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        
-                                        <div class="pt-8 mt-8 border-t border-white/10">
-                                            <div class="flex justify-between items-end">
-                                                <span class="text-[10px] font-black text-white/30 uppercase tracking-widest mb-2">Total Estimated Cost</span>
-                                                <div class="text-right">
-                                                    <span class="text-4xl font-black text-emerald-400 tracking-tighter tabular-nums" x-text="'₱' + calculateTotal().toFixed(0)"></span>
+
+                                        <div class="flex items-center justify-between gap-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700">
+                                                    <i class="bi bi-people"></i>
+                                                </div>
+                                                <div class="leading-tight">
+                                                    <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Guests</div>
+                                                    <div class="text-[12px] font-black text-gray-900 tabular-nums" x-text="guestCount ? (guestCount + ' People') : '—'"></div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <!-- Notes -->
-                                <div class="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm space-y-4">
-                                    <label class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
-                                        <span class="w-8 h-px bg-gray-200"></span>
-                                        Special Requests
-                                    </label>
-                                    <textarea name="notes" rows="4" class="w-full p-6 rounded-[24px] border-2 border-gray-50 focus:border-emerald-500 focus:ring-0 bg-gray-50 hover:bg-white transition-all text-sm font-medium leading-relaxed" placeholder="Tell us if you have any special requirements for your booking..."></textarea>
+                                    <div x-show="selectedEquipmentIndices.length > 0" class="pt-5 border-t border-gray-100 space-y-3">
+                                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Add-ons</div>
+                                        <template x-for="index in selectedEquipmentIndices" :key="index">
+                                            <div class="flex items-center justify-between gap-4">
+                                                <div class="text-[12px] font-bold text-gray-700" x-text="equipmentList[index].name"></div>
+                                                <div class="text-[12px] font-black text-gray-900 tabular-nums" x-text="'₱' + parseFloat(equipmentList[index].price).toFixed(0)"></div>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <div class="pt-5 border-t border-gray-100">
+                                        <div class="flex items-end justify-between gap-4">
+                                            <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Estimated Cost</div>
+                                            <div class="text-right">
+                                                <div class="text-2xl font-black text-emerald-700 tracking-tight tabular-nums" x-text="'₱' + calculateTotal().toFixed(0)"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="pt-5 border-t border-gray-100 space-y-2">
+                                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Special Requests / Notes</div>
+                                        <textarea name="notes" rows="3" class="w-full p-4 rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-emerald-500 focus:ring-0 transition-all text-sm font-medium leading-relaxed" placeholder="Optional..."></textarea>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="mt-12 pt-8 border-t border-gray-100 flex justify-end">
+                    <div class="mt-10 pt-6 border-t border-gray-100 flex justify-end">
                         <button type="button" @click="validateStep1() && (step = 2)" 
                                 :disabled="!isValidStep1()"
-                                class="px-10 py-5 bg-[#081412] text-white text-[11px] font-black uppercase tracking-widest rounded-2xl hover:shadow-[0_0_25px_rgba(182,255,92,0.2)] transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-3 group/btn border border-white/5">
+                                class="px-8 py-4 bg-[#081412] text-white text-[11px] font-black uppercase tracking-widest rounded-2xl hover:shadow-[0_0_25px_rgba(182,255,92,0.2)] transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-3 group/btn border border-white/5">
                             <span>Review Booking Details</span>
                             <i class="bi bi-arrow-right text-brand-accent group-hover/btn:translate-x-1 transition-transform"></i>
                         </button>

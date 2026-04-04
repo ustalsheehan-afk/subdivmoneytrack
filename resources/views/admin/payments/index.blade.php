@@ -22,13 +22,6 @@
                     Track community collections, review transactions, and manage resident payments.
                 </p>
             </div>
-
-            <div class="flex items-center gap-3">
-                <a href="{{ route('admin.payments.create') }}" class="btn-premium">
-                    <i class="bi bi-plus-lg"></i>
-                    Record Payment
-                </a>
-            </div>
         </div>
     </div>
 
@@ -190,10 +183,10 @@
                 <thead class="bg-gray-50/50 border-b border-gray-100">
                     <tr>
                         <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Resident</th>
-                        <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Description</th>
                         <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Reference</th>
                         <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Method</th>
                         <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Amount</th>
+                        <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Paid Date</th>
                         <th class="p-5 w-40 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Status</th>
                         <th class="p-5 w-32 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
                     </tr>
@@ -213,10 +206,7 @@
                             </div>
                         </td>
                         <td class="p-5 align-middle">
-                            <span class="text-sm font-medium text-gray-600 line-clamp-1">{{ $payment->description }}</span>
-                        </td>
-                        <td class="p-5 align-middle">
-                            <span class="text-xs font-black text-gray-400 uppercase tracking-widest">{{ $payment->reference_number ?? 'N/A' }}</span>
+                            <span class="text-xs font-black text-gray-400 uppercase tracking-widest">{{ $payment->reference_no ?? 'N/A' }}</span>
                         </td>
                         <td class="p-5 text-center align-middle">
                             <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-gray-100 bg-gray-50 text-gray-600 capitalize">
@@ -225,6 +215,12 @@
                         </td>
                         <td class="p-5 text-right align-middle">
                             <span class="text-base font-black text-gray-900">₱{{ number_format($payment->amount, 2) }}</span>
+                        </td>
+                        <td class="p-5 text-center align-middle">
+                            <div class="space-y-0.5">
+                                <p class="text-xs font-black text-gray-900">{{ $payment->date_paid ? $payment->date_paid->format('M d, Y') : '-' }}</p>
+                                <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $payment->date_paid ? $payment->date_paid->format('h:i A') : '' }}</p>
+                            </div>
                         </td>
                         <td class="p-5 text-center align-middle">
                             <div class="w-full flex justify-center">

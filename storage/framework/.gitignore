@@ -1,9 +1,29 @@
-compiled.php
-config.php
-down
-events.scanned.php
-maintenance.php
-routes.php
-routes.scanned.php
-schedule-*
-services.json
+/vendor
+/node_modules
+/public/storage
+/storage/*.key
+
+# Laravel storage
+/storage/app/*
+!/storage/app/.gitignore
+/storage/framework/*
+!/storage/framework/.gitignore
+/storage/logs/*
+
+# Environment files
+.env
+.env.backup
+.env.production
+
+# Cache & compiled
+bootstrap/cache/*
+*.log
+*.cache
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

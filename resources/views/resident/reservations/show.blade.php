@@ -44,6 +44,24 @@
                 </div>
                 @endif
 
+                {{-- Cancellation Note (Conditional) --}}
+                @if($reservation->status === 'cancelled')
+                <div class="bg-gray-50 border border-gray-100 rounded-[32px] p-8 shadow-lg shadow-gray-500/5">
+                    <div class="flex items-start gap-6">
+                        <div class="w-12 h-12 rounded-2xl bg-gray-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-gray-500/20">
+                            <i class="bi bi-x-circle-fill text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-black text-gray-900 text-[10px] uppercase tracking-[0.2em] mb-2">Reservation Cancelled</h3>
+                            <p class="text-gray-700 font-medium leading-relaxed text-sm mb-4">{{ $reservation->cancellation_reason }}</p>
+                            @if($reservation->cancelled_at)
+                            <p class="text-gray-500 text-xs">Cancelled on {{ \Carbon\Carbon::parse($reservation->cancelled_at)->format('M d, Y \a\t g:i A') }}</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endif
+
                 {{-- Main Details Card --}}
                 <div class="glass-card overflow-hidden">
                     <div class="p-10">
@@ -69,6 +87,10 @@
                                 @elseif($reservation->status === 'rejected')
                                     <span class="badge-standard bg-red-50 text-red-600 border border-red-100">
                                         <i class="bi bi-x-circle-fill mr-1.5"></i> Rejected
+                                    </span>
+                                @elseif($reservation->status === 'cancelled')
+                                    <span class="badge-standard bg-gray-50 text-gray-600 border border-gray-100">
+                                        <i class="bi bi-x-circle-fill mr-1.5"></i> Cancelled
                                     </span>
                                 @endif
                             </div>
@@ -269,28 +291,130 @@
                         </div>
                     @endif
 
+                    {{-- Cancel Reservation Button --}}
+                    @if(in_array($reservation->status, ['pending', 'approved']) && !$reservation->cancelled_at)
+                        <div class="mt-10 pt-10 border-t border-gray-100 relative z-10">
+                            <button type="button" 
+                                class="btn-cancel w-full py-6 flex justify-center"
+                                onclick="openCancelModal()">
+                                Cancel Reservation <i class="bi bi-x-circle text-lg"></i>
+                            </button>
+                        </div>
+                    @endif
+
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+{{-- Cancellation Modal --}}
+<div id="cancelModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-[32px] shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-8">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-black text-gray-900 tracking-tight">Cancel Reservation</h3>
+                <button onclick="closeCancelModal()" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-all">
+                    <i class="bi bi-x text-lg"></i>
+                </button>
+            </div>
+
+            <form id="cancelForm" action="{{ route('resident.amenities.reservation.cancel', $reservation->id) }}" method="POST">
+                @csrf
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Reason for Cancellation</label>
+                        <select name="cancellation_reason_id" required class="w-full p-4 border-2 border-gray-50 bg-gray-50 rounded-[16px] text-sm font-medium focus:ring-0 focus:border-red-500 focus:bg-white transition-all outline-none">
+                            <option value="">Select a reason</option>
+                            @foreach($cancellationReasons as $reason)
+                            <option value="{{ $reason->id }}">{{ $reason->label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Additional Notes (Optional)</label>
+                        <textarea name="notes" rows="3" class="w-full p-4 border-2 border-gray-50 bg-gray-50 rounded-[16px] text-sm font-medium focus:ring-0 focus:border-red-500 focus:bg-white transition-all outline-none resize-none" placeholder="Any additional details..."></textarea>
+                    </div>
+
+                    <div class="bg-red-50 border border-red-100 rounded-[16px] p-4">
+                        <div class="flex items-start gap-3">
+                            <i class="bi bi-exclamation-triangle-fill text-red-500 text-sm mt-0.5"></i>
+                            <p class="text-red-700 text-xs font-medium leading-relaxed">This action cannot be undone. Your reservation will be permanently cancelled.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-8">
+                    <button type="button" onclick="closeCancelModal()" class="flex-1 py-4 bg-gray-50 text-gray-700 text-sm font-black uppercase tracking-widest rounded-[16px] hover:bg-gray-100 transition-all">
+                        Back
+                    </button>
+                    <button type="submit" id="confirmCancelBtn" class="flex-1 py-4 bg-red-500 text-white text-sm font-black uppercase tracking-widest rounded-[16px] hover:bg-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        Confirm Cancellation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <style>
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fade-in {
-        animation: fadeIn 0.5s ease-out forwards;
-    }
-    .btn-premium {
-        @apply inline-flex items-center gap-3 px-8 py-4 bg-[#081412] text-white text-[11px] font-black uppercase tracking-widest rounded-2xl hover:shadow-[0_0_25px_rgba(182,255,92,0.2)] transition-all active:scale-95 border border-white/5;
-    }
-    .badge-standard {
-        @apply inline-flex items-center px-4 py-1.5 text-[10px] font-black rounded-xl uppercase tracking-widest shadow-sm;
-    }
-    .glass-card {
-        @apply bg-white rounded-[40px] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] relative overflow-hidden;
+    .btn-cancel {
+        @apply inline-flex items-center gap-3 px-8 py-4 bg-red-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl hover:bg-red-600 transition-all active:scale-95 border border-red-400;
     }
 </style>
+
+<script>
+function openCancelModal() {
+    document.getElementById('cancelModal').classList.remove('hidden');
+    document.getElementById('cancelModal').classList.add('flex');
+}
+
+function closeCancelModal() {
+    document.getElementById('cancelModal').classList.add('hidden');
+    document.getElementById('cancelModal').classList.remove('flex');
+}
+
+// Handle form submission
+document.getElementById('cancelForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const btn = document.getElementById('confirmCancelBtn');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = 'Processing...';
+    
+    fetch(this.action, {
+        method: 'POST',
+        body: new FormData(this),
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload the page to show updated status
+            window.location.reload();
+        } else {
+            alert(data.message || 'An error occurred');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        alert('An error occurred. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+});
+
+// Close modal when clicking outside
+document.getElementById('cancelModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeCancelModal();
+    }
+});
+</script>
+
 @endsection

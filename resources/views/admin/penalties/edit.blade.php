@@ -4,7 +4,7 @@
 @section('page-title', 'Edit Penalty')
 
 @section('content')
-<div class="space-y-8 animate-fade-in pb-20">
+<div class="space-y-8 animate-fade-in pb-20" x-data="penaltyForm()">
 
     {{-- ===================== --}}
     {{-- HEADER SECTION --}}
@@ -69,12 +69,12 @@
                             <div class="space-y-3">
                                 <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Penalty Type</label>
                                 <div class="relative group/select">
-                                    <select name="type" class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium appearance-none focus:bg-white focus:border-emerald-500 transition-all outline-none cursor-pointer">
-                                        <option value="general" {{ old('type', $penalty->type) == 'general' ? 'selected' : '' }}>General</option>
-                                        <option value="late_payment" {{ old('type', $penalty->type) == 'late_payment' ? 'selected' : '' }}>Late Payment</option>
-                                        <option value="overdue" {{ old('type', $penalty->type) == 'overdue' ? 'selected' : '' }}>Overdue</option>
-                                        <option value="violation" {{ old('type', $penalty->type) == 'violation' ? 'selected' : '' }}>Violation</option>
-                                        <option value="damage" {{ old('type', $penalty->type) == 'damage' ? 'selected' : '' }}>Damage</option>
+                                    <select name="type" x-model="penaltyType" class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium appearance-none focus:bg-white focus:border-emerald-500 transition-all outline-none cursor-pointer">
+                                        <option value="general">General</option>
+                                        <option value="late_payment">Late Payment</option>
+                                        <option value="overdue">Overdue</option>
+                                        <option value="violation">Violation</option>
+                                        <option value="damage">Damage</option>
                                     </select>
                                     <i class="bi bi-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-hover/select:text-emerald-600 transition-colors"></i>
                                 </div>
@@ -94,7 +94,7 @@
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Financial Amount</label>
                             <div class="relative max-w-xs group/input">
                                 <span class="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 font-black text-lg transition-colors group-focus-within/input:text-emerald-600">₱</span>
-                                <input type="number" step="0.01" name="amount" value="{{ old('amount', $penalty->amount) }}" 
+                                <input type="number" step="0.01" name="amount" x-model="amount" 
                                     class="w-full pl-12 pr-6 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-lg font-black text-gray-900 focus:bg-white focus:border-emerald-500 transition-all outline-none shadow-sm" 
                                     placeholder="0.00" required>
                             </div>
@@ -181,4 +181,30 @@
         </div>
     </form>
 </div>
+@push('scripts')
+<script>
+    function penaltyForm() {
+        return {
+            penaltyType: '{{ old('type', $penalty->type) }}',
+            amount: '{{ old('amount', $penalty->amount) }}',
+            init() {
+                // Watch penalty type to sync standard amounts
+                this.$watch('penaltyType', (newVal) => {
+                    const amounts = {
+                        'late_payment': 50.00,
+                        'overdue': 100.00,
+                        'violation': 200.00,
+                        'damage': 500.00,
+                        'general': 50.00
+                    };
+                    
+                    if (amounts[newVal]) {
+                        this.amount = amounts[newVal].toFixed(2);
+                    }
+                });
+            }
+        }
+    }
+</script>
+@endpush
 @endsection

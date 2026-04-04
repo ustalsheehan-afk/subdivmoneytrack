@@ -5,11 +5,17 @@ namespace App\Http\Controllers\Resident;
 use App\Http\Controllers\Controller;
 use App\Models\Amenity;
 use App\Models\AmenityReservation;
+use App\Models\Notification;
+use App\Models\ReservationCancellationReason;
+use App\Models\User;
+use App\Services\AmenityReservationBookingService;
+use App\Services\ReservationCancellationService;
 use App\Traits\HandlesReservationConflict;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AmenityReservationController extends Controller
 {
@@ -53,70 +59,28 @@ class AmenityReservationController extends Controller
             'payment_reference_no' => 'nullable|string|max:50',
         ]);
 
-        // Calculate time range
-        $startTime = $request->start_time; // e.g., "08:00"
-        $duration = (int) $request->duration;
-        $endTime = date('H:i', strtotime("$startTime + $duration hours"));
-        $timeSlot = "$startTime - $endTime"; 
-
-        // 1. Check if open on that day
-        $dayName = date('D', strtotime($request->date)); // Mon, Tue...
-        if (!in_array($dayName, $amenity->days_available ?? [])) {
-             return back()->withErrors(['date' => 'The amenity is closed on ' . $dayName . '.'])->withInput();
-        }
-
-        // 2. Conflict Detection & Creation (Atomic)
         try {
-            DB::beginTransaction();
-
-            // Lock Amenity row for update to prevent race conditions during heavy load
-            // This serializes attempts to book the same amenity
-            Amenity::where('id', $amenity->id)->lockForUpdate()->first();
-
-            // Check availability using trait
-            if (!$this->isSlotAvailable($amenity->id, $request->date, $startTime, $endTime)) {
-                DB::rollBack();
-                return back()->withErrors(['time_slot' => "The selected time ($timeSlot) is no longer available. Please choose another slot."])->withInput();
-            }
-
             // Handle File Upload
             $proofPath = null;
             if ($request->hasFile('payment_proof')) {
                 $proofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
             }
 
-            // Calculate Total Price
-            $pricePerHour = $amenity->price;
-            $amenityCost = $pricePerHour * $duration;
-            $totalPrice = $amenityCost;
-            
             $equipment = [];
             if ($request->equipment_addons) {
                 $equipment = json_decode($request->equipment_addons, true);
-                if (is_array($equipment)) {
-                    foreach ($equipment as $item) {
-                        $totalPrice += ($item['price'] ?? 0);
-                    }
-                }
             }
 
-            // Create Reservation
-            // Status is 'approved' because schedule is confirmed, 
-            // but payment_status tracks the "approval" workflow.
-            // If admin workflow requires "pending", we can stick to 'pending',
-            // but user asked for "No 'Pending Approval' status".
-            // So we set status = 'approved' (meaning slot secured), and use payment_status for verification.
-            $reservation = AmenityReservation::create([
+            $reservation = app(AmenityReservationBookingService::class)->create($amenity, [
                 'resident_id' => $resident->id,
-                'amenity_id' => $amenity->id,
+                'customer_type' => 'resident',
+                'booking_source' => 'resident_portal',
                 'date' => $request->date,
-                'start_time' => $startTime,
-                'end_time' => $endTime,
-                'time_slot' => $timeSlot, // Keep for legacy/display compatibility
+                'start_time' => $request->start_time,
+                'duration' => (int) $request->duration,
                 'guest_count' => $request->guest_count,
-                'equipment_addons' => $equipment, 
-                'total_price' => $totalPrice,
-                'status' => 'approved', // Slot confirmed!
+                'equipment_addons' => is_array($equipment) ? $equipment : [],
+                'status' => 'approved',
                 'payment_status' => ($request->payment_method === 'gcash' && $proofPath) ? 'submitted' : 'pending',
                 'payment_method' => $request->payment_method,
                 'payment_proof' => $proofPath,
@@ -124,12 +88,31 @@ class AmenityReservationController extends Controller
                 'notes' => $request->notes,
             ]);
 
-            DB::commit();
+            // Notify all admins of new reservation (non-blocking)
+            try {
+                $admins = User::where('role', 'admin')->orWhereHas('roles', function ($q) {
+                    $q->where('name', 'admin');
+                })->get();
+                
+                foreach ($admins as $admin) {
+                    Notification::create([
+                        'admin_id' => $admin->id,
+                        'title' => 'New Amenity Reservation',
+                        'message' => $resident->full_name . ' booked ' . $amenity->name . ' on ' . $reservation->date->format('M d, Y'),
+                        'type' => 'reservation',
+                        'link' => route('admin.amenity-reservations.index'),
+                        'is_read' => false,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to create admin notifications for reservation: ' . $e->getMessage());
+            }
 
             return redirect()->route('resident.amenities.confirmation', $reservation->id);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
-            DB::rollBack();
             // Log error if needed
             return back()->withErrors(['error' => 'An error occurred while processing your reservation. Please try again.'])->withInput();
         }
@@ -149,7 +132,15 @@ class AmenityReservationController extends Controller
             ->with('amenity')
             ->firstOrFail();
 
-        return view('resident.reservations.show', compact('reservation'));
+        $cancellationReasons = ReservationCancellationReason::where('active', true)
+            ->where(function($q) {
+                $q->where('scope', 'resident')
+                  ->orWhere('scope', 'both');
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('resident.reservations.show', compact('reservation', 'cancellationReasons'));
     }
 
     public function uploadPayment(Request $request, $id)
@@ -211,5 +202,100 @@ class AmenityReservationController extends Controller
         $request->validate(['date' => 'required|date']);
         $slots = $this->getUnavailableRanges($amenityId, $request->date);
         return response()->json($slots);
+    }
+
+    /**
+     * Cancel a reservation
+     */
+    public function cancel(Request $request, AmenityReservation $reservation)
+    {
+        $user = Auth::user();
+        $resident = $user?->resident;
+
+        if (!$resident) {
+            abort(403, 'Resident profile not found.');
+        }
+
+        // Ensure the reservation belongs to the resident
+        if ($reservation->resident_id !== $resident->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $request->validate([
+            'cancellation_reason_id' => 'required|exists:reservation_cancellation_reasons,id',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $reason = ReservationCancellationReason::findOrFail($request->cancellation_reason_id);
+            $service = new ReservationCancellationService();
+            $service->cancel($reservation, $user, $reason, $request->notes, 'user_cancelled');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Reservation cancelled successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    public function viewReceipt(AmenityReservation $reservation)
+    {
+        $user = Auth::user();
+        $resident = $user?->resident;
+
+        if (!$resident) {
+            abort(403, 'Resident profile not found.');
+        }
+
+        // Ensure the reservation belongs to the resident
+        if ($reservation->resident_id !== $resident->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        // Only show receipt if payment is verified
+        if ($reservation->payment_status !== 'paid') {
+            abort(403, 'Receipt is only available for verified payments.');
+        }
+
+        $reservation->load(['resident', 'amenity']);
+        
+        return view('admin.reservations.receipt', [
+            'reservation' => $reservation,
+            'verified_by' => $reservation->verified_by ? User::find($reservation->verified_by)->name : 'Admin',
+            'verified_at' => $reservation->verified_at ?? now(),
+        ]);
+    }
+
+    public function downloadReceipt(AmenityReservation $reservation)
+    {
+        $user = Auth::user();
+        $resident = $user?->resident;
+
+        if (!$resident) {
+            abort(403, 'Resident profile not found.');
+        }
+
+        if ($reservation->resident_id !== $resident->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        if ($reservation->payment_status !== 'paid') {
+            abort(403, 'Receipt is only available for verified payments.');
+        }
+
+        $reservation->load(['resident', 'amenity']);
+
+        $pdf = Pdf::loadView('admin.reservations.receipt', [
+            'reservation' => $reservation,
+            'verified_by' => $reservation->verified_by ? User::find($reservation->verified_by)->name : 'Admin',
+            'verified_at' => $reservation->verified_at ?? now(),
+        ]);
+
+        return $pdf->download('reservation-receipt-' . $reservation->id . '.pdf');
     }
 }

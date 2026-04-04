@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\PaymentStatusChanged;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Payment;
@@ -18,6 +19,16 @@ use App\Traits\LogsActivity;
 class PaymentController extends Controller
 {
     use LogsActivity;
+
+    public function __construct()
+    {
+        $this->middleware('permission:payments.view')->only(['index', 'show', 'review', 'receipt', 'downloadReceipt', 'getData', 'getDuesByResident']);
+        $this->middleware('permission:payments.record')->only(['create', 'store', 'confirm', 'approve']);
+        $this->middleware('permission:payments.update')->only(['edit', 'update', 'bulkAction', 'updateStatus', 'reject']);
+        $this->middleware('permission:payments.delete')->only(['destroy']);
+        $this->middleware('permission:payments.export')->only([]);
+    }
+
     /* =========================
        Status & Method Constants
        ========================= */
@@ -423,6 +434,7 @@ class PaymentController extends Controller
 
             $this->handlePenaltyAndMarkDue($payment);
         });
+        event(new PaymentStatusChanged($payment->fresh(['resident', 'due', 'penalty']), self::STATUS_APPROVED));
 
         $this->logActivity('approved', 'payments', 'Approved payment of ₱' . number_format($payment->amount, 2) . ' from ' . $payment->resident->full_name, [
             'payment_id' => $payment->id,
@@ -443,6 +455,7 @@ class PaymentController extends Controller
 
         $payment->update(['status' => self::STATUS_REJECTED]);
         $this->handlePenaltyAndMarkDue($payment);
+        event(new PaymentStatusChanged($payment->fresh(['resident', 'due', 'penalty']), self::STATUS_REJECTED));
 
         $this->logActivity('rejected', 'payments', 'Rejected payment of ₱' . number_format($payment->amount, 2) . ' from ' . $payment->resident->full_name, [
             'payment_id' => $payment->id,
@@ -476,6 +489,7 @@ class PaymentController extends Controller
 
         $payment->update(['status' => $status]);
         $this->handlePenaltyAndMarkDue($payment);
+        event(new PaymentStatusChanged($payment->fresh(['resident', 'due', 'penalty']), $status));
 
         return back()->with('success', "Payment status updated to {$status}.");
     }

@@ -111,14 +111,14 @@
             </div>
             
             <!-- Actions / Footer -->
-            <div class="mt-10 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div class="mt-10 pt-8 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-emerald-400 border border-white/5">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-700 border border-emerald-100">
                         <i class="bi bi-shield-check"></i>
                     </div>
                     <div>
-                        <p class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Authority</p>
-                        <p class="text-xs font-black text-white uppercase tracking-widest">Administration</p>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Authority</p>
+                        <p class="text-xs font-black text-gray-900 uppercase tracking-widest">Administration</p>
                     </div>
                 </div>
 
@@ -127,15 +127,15 @@
                         <form method="POST" action="{{ route('resident.announcements.read', $announcement->id) }}" class="flex-1 sm:flex-none">
                             @csrf
                             <button type="submit"
-                                    class="inline-flex items-center gap-3 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500 hover:text-black transition-all w-full sm:w-auto justify-center group shadow-lg shadow-emerald-500/5">
-                                <i class="bi bi-check2-circle text-lg group-hover:scale-110 transition-transform"></i>
+                                    class="btn-premium w-full sm:w-auto justify-center">
+                                <i class="bi bi-check2-circle"></i>
                                 Mark as read
                             </button>
                         </form>
                     @endif
                     
                     <a href="{{ route('resident.announcements.index') }}" 
-                       class="px-8 py-3 bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all w-full sm:w-auto text-center border border-white/5">
+                       class="btn-secondary w-full sm:w-auto justify-center text-center">
                         Close
                     </a>
                 </div>

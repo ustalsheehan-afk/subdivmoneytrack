@@ -11,6 +11,14 @@ use Carbon\Carbon;
 
 class InvitationController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:invitations.view')->only(['index', 'show']);
+        $this->middleware('permission:invitations.create')->only(['store']);
+        $this->middleware('permission:invitations.resend')->only(['resend', 'renew']);
+        $this->middleware('permission:invitations.delete')->only(['cancel']);
+    }
+
     /**
      * List invitations (Dashboard)
      */
@@ -75,30 +83,95 @@ class InvitationController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:invitations,email|unique:users,email',
+        \Log::info('Invitation store called', ['email' => $request->email, 'resident_id' => $request->resident_id]);
+        $baseRules = [
+            'email' => 'required|email|unique:users,email',
             'phone' => 'nullable|string|max:20',
-        ]);
+        ];
 
-        $invitation = Invitation::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'token' => Str::random(40),
-            'status' => Invitation::STATUS_PENDING,
-            'expires_at' => Carbon::now()->addDays(7),
-            'last_sent_at' => Carbon::now(),
-        ]);
+        if ($request->filled('resident_id')) {
+            $request->validate(array_merge($baseRules, [
+                'resident_id' => 'required|integer|exists:residents,id',
+            ]));
 
-        return response()->json([
-            'success' => true,
-            'token' => $invitation->token,
-            'link' => route('register.invitation', ['token' => $invitation->token]),
-            'message' => 'Invitation created successfully.'
-        ]);
+            $resident = Resident::find($request->resident_id);
+            $email = trim((string) $request->email);
+            $phone = $request->phone;
+            $firstName = $resident?->first_name;
+            $lastName = $resident?->last_name;
+
+            if (!$firstName || !$lastName) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Resident record is missing first name/last name.',
+                ], 422);
+            }
+
+            $payload = [
+                'resident_id' => $resident->id,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'email' => $email,
+                'phone' => $phone,
+            ];
+        } else {
+            $request->validate(array_merge($baseRules, [
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+            ]));
+
+            $payload = [
+                'resident_id' => null,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => trim((string) $request->email),
+                'phone' => $request->phone,
+            ];
+        }
+
+        $existing = Invitation::where('email', $payload['email'])
+            ->where('status', '!=', Invitation::STATUS_ACCEPTED)
+            ->orderByDesc('id')
+            ->first();
+
+        $token = Str::random(64);
+        $expiresAt = Carbon::now()->addDays(7);
+
+        if ($existing) {
+            $existing->update([
+                'resident_id' => $payload['resident_id'],
+                'first_name' => $payload['first_name'],
+                'last_name' => $payload['last_name'],
+                'phone' => $payload['phone'],
+                'token' => $token,
+                'status' => Invitation::STATUS_PENDING,
+                'expires_at' => $expiresAt,
+                'accepted_at' => null,
+                'last_sent_at' => Carbon::now(),
+            ]);
+            $invitation = $existing;
+            \Log::info('Invitation updated for existing email', ['email' => $payload['email'], 'token' => $token]);
+        } else {
+            $invitation = Invitation::create([
+                'resident_id' => $payload['resident_id'],
+                'first_name' => $payload['first_name'],
+                'last_name' => $payload['last_name'],
+                'email' => $payload['email'],
+                'phone' => $payload['phone'],
+                'token' => $token,
+                'status' => Invitation::STATUS_PENDING,
+                'expires_at' => $expiresAt,
+                'last_sent_at' => Carbon::now(),
+            ]);
+            \Log::info('New invitation created', ['email' => $payload['email'], 'token' => $token]);
+        }
+
+        if (!$invitation->exists) {
+            \Log::error('Invitation creation failed', ['payload' => $payload]);
+            return redirect()->route('admin.invitations.index')->with('error', 'Failed to create invitation record.');
+        }
+
+        return redirect()->route('admin.invitations.index')->with('success', 'Invitation created successfully.');
     }
 
     /**

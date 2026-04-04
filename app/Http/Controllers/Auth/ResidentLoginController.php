@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use App\Models\Resident;
 
 class ResidentLoginController extends Controller
 {
@@ -28,10 +31,28 @@ class ResidentLoginController extends Controller
         ]);
 
         // Attempt to login using resident guard
-        if (Auth::guard('resident')->attempt($credentials, $request->filled('remember'))) {
-            $request->session()->regenerate();
+        $email = trim(strtolower($credentials['email']));
+        $password = $credentials['password'];
 
-            // Redirect to resident dashboard
+        if (Auth::guard('resident')->attempt(['email' => $email, 'password' => $password], $request->filled('remember'))) {
+            $request->session()->regenerate();
+            return redirect()->intended(route('resident.home'));
+        }
+
+        // Legacy fallback using residents table
+        $legacy = Resident::whereRaw('LOWER(email) = ?', [$email])->first();
+        if ($legacy && Hash::check($password, $legacy->password)) {
+            $user = User::firstOrCreate(
+                ['email' => $email],
+                [
+                    'name' => trim(($legacy->first_name ?? '') . ' ' . ($legacy->last_name ?? '')) ?: 'Resident',
+                    'password' => Hash::make($password),
+                    'role' => 'resident',
+                    'active' => true,
+                ]
+            );
+            Auth::login($user, $request->filled('remember'));
+            $request->session()->regenerate();
             return redirect()->intended(route('resident.home'));
         }
 

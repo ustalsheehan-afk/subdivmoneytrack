@@ -9,6 +9,28 @@ use Illuminate\Support\Carbon;
 
 class AnnouncementController extends Controller
 {
+    private const DEFAULT_PIN_DURATION_DAYS = 7;
+
+    public function __construct()
+    {
+        $this->middleware('permission:announcements.view')->only(['index', 'show', 'archived', 'drafts', 'trash']);
+        $this->middleware('permission:announcements.create')->only(['create', 'store']);
+        $this->middleware('permission:announcements.update')->only([
+            'edit',
+            'update',
+            'togglePin',
+            'archiveOne',
+            'restore',
+            'bulkArchive',
+        ]);
+        $this->middleware('permission:announcements.delete')->only([
+            'destroy',
+            'bulkTrash',
+            'bulkForceDelete',
+            'forceDelete',
+        ]);
+    }
+
     // Active announcements
     public function index(Request $request)
     {
@@ -53,6 +75,7 @@ class AnnouncementController extends Controller
             'title'        => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
             'content'      => $isDraft ? 'nullable|string' : 'required|string',
             'category'     => $isDraft ? 'nullable|string' : 'required|string',
+            'priority'     => 'nullable|in:low,normal,high,urgent,fyi,important',
             'date_posted'  => $isDraft ? 'nullable' : 'required',
             'is_pinned'    => 'nullable|boolean',
             'pin_duration' => 'nullable|integer',
@@ -61,7 +84,8 @@ class AnnouncementController extends Controller
 
         $request->validate($rules);
 
-        $data = $request->only(['title', 'content', 'category', 'date_posted', 'is_pinned', 'status']);
+        $data = $request->only(['title', 'content', 'category', 'date_posted']);
+        $data['priority'] = $this->normalizePriority($request->input('priority'));
         
         if ($request->filled('date_posted')) {
             $data['date_posted'] = Carbon::parse($request->date_posted, config('app.timezone'));
@@ -84,13 +108,7 @@ class AnnouncementController extends Controller
             $data['image'] = $path;
         }
 
-        if ($request->boolean('is_pinned') && $request->filled('pin_duration')) {
-            $data['is_pinned'] = true;
-            $data['pin_expires_at'] = Carbon::now()->addDays((int)$request->pin_duration);
-        } else {
-            $data['is_pinned'] = false;
-            $data['pin_expires_at'] = null;
-        }
+        $this->applyPinState($request, $data);
 
         Announcement::create($data);
 
@@ -111,12 +129,20 @@ class AnnouncementController extends Controller
 
     public function update(Request $request, Announcement $announcement)
     {
+        if ($this->isDraftPublishRequest($request, $announcement)) {
+            $announcement->update(['status' => 'active']);
+
+            return redirect()->route('admin.announcements.index')
+                ->with('success', 'Announcement published successfully.');
+        }
+
         $isDraft = $request->input('status') === 'draft';
 
         $rules = [
             'title'        => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
             'content'      => $isDraft ? 'nullable|string' : 'required|string',
             'category'     => $isDraft ? 'nullable|string' : 'required|string',
+            'priority'     => 'nullable|in:low,normal,high,urgent,fyi,important',
             'date_posted'  => $isDraft ? 'nullable' : 'required',
             'is_pinned'    => 'nullable|boolean',
             'pin_duration' => 'nullable|integer',
@@ -125,13 +151,15 @@ class AnnouncementController extends Controller
 
         $request->validate($rules);
 
-        $data = $request->only(['title', 'content', 'category', 'date_posted', 'is_pinned']);
+        $data = $request->only(['title', 'content', 'category', 'date_posted']);
+        $data['priority'] = $this->normalizePriority($request->input('priority'));
         
         // Ensure non-null values for DB constraints when saving as draft
         if ($isDraft) {
             $data['title'] = $data['title'] ?? ($announcement->title ?? 'Untitled Draft');
             $data['content'] = $data['content'] ?? ($announcement->content ?? '');
             $data['category'] = $data['category'] ?? ($announcement->category ?? 'General');
+            $data['priority'] = $data['priority'] ?? ($announcement->priority ?? 'normal');
             $data['status'] = 'draft';
         }
 
@@ -148,13 +176,7 @@ class AnnouncementController extends Controller
             $data['image'] = $path;
         }
 
-        if ($request->boolean('is_pinned') && $request->filled('pin_duration')) {
-            $data['is_pinned'] = true;
-            $data['pin_expires_at'] = Carbon::now()->addDays((int)$request->pin_duration);
-        } else {
-            $data['is_pinned'] = false;
-            $data['pin_expires_at'] = null;
-        }
+        $this->applyPinState($request, $data, $announcement);
 
         if ($request->has('status')) {
             $data['status'] = $request->status;
@@ -397,4 +419,42 @@ public static function expirePins(): void
         ->update(['is_pinned' => false, 'pin_expires_at' => null]);
 }
 
+    private function isDraftPublishRequest(Request $request, Announcement $announcement): bool
+    {
+        return $announcement->status === 'draft'
+            && $request->input('submit_action') === 'publish_draft'
+            && $request->input('status') === 'active';
+    }
+
+    private function normalizePriority(?string $priority): string
+    {
+        return match ($priority) {
+            'fyi', null, '' => 'normal',
+            'important' => 'high',
+            default => $priority,
+        };
+    }
+
+    private function applyPinState(Request $request, array &$data, ?Announcement $announcement = null): void
+    {
+        if ($request->boolean('is_pinned')) {
+            $pinDuration = (int) ($request->input('pin_duration')
+                ?: $announcement?->pin_duration
+                ?: self::DEFAULT_PIN_DURATION_DAYS);
+
+            $baseDate = $data['date_posted']
+                ?? $announcement?->date_posted
+                ?? now();
+
+            $data['is_pinned'] = true;
+            $data['pin_duration'] = $pinDuration;
+            $data['pin_expires_at'] = Carbon::parse($baseDate)->copy()->addDays($pinDuration);
+
+            return;
+        }
+
+        $data['is_pinned'] = false;
+        $data['pin_duration'] = null;
+        $data['pin_expires_at'] = null;
+    }
 }

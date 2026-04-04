@@ -5,8 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Amenity;
 use App\Models\AmenityReservation;
+use App\Models\Notification;
 use App\Models\ReservationAuditLog;
+use App\Models\ReservationCancellationReason;
+use App\Models\Resident;
 use App\Models\User;
+use App\Services\AmenityReservationBookingService;
+use App\Services\ReservationCancellationService;
 use App\Traits\HandlesReservationConflict;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +25,15 @@ class AmenityReservationController extends Controller
 {
     use LogsActivity;
     use HandlesReservationConflict;
+
+    public function __construct()
+    {
+        $this->middleware('permission:reservations.view')->only(['index', 'getData']);
+        $this->middleware('permission:reservations.create')->only(['create', 'store', 'reschedule']);
+        $this->middleware('permission:reservations.approve')->only(['updateStatus', 'bulkAction', 'toggleMaintenance']);
+        $this->middleware('permission:reservations.cancel')->only([]);
+        $this->middleware('permission:reservations.export')->only(['export', 'exportCsv']);
+    }
 
     public function index()
     {
@@ -37,63 +51,60 @@ class AmenityReservationController extends Controller
     public function create()
     {
         $amenities = Amenity::where('status', '!=', 'inactive')->get();
-        $residents = User::where('role', 'resident')->get(['id', 'name', 'block', 'lot']); // Assume User model has role or resident scope
+        $residents = Resident::with('user')
+            ->where('status', 'active')
+            ->get()
+            ->filter(fn ($resident) => $resident->user)
+            ->values();
+
         return view('admin.reservations.create', compact('amenities', 'residents'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'resident_id' => 'required|exists:users,id',
+            'customer_type' => 'required|in:resident,non_resident',
+            'resident_id' => 'nullable|required_if:customer_type,resident|exists:users,id',
+            'guest_name' => 'nullable|required_if:customer_type,non_resident|string|max:255',
+            'guest_contact' => 'nullable|required_if:customer_type,non_resident|string|max:50',
+            'guest_email' => 'nullable|email|max:255',
             'amenity_id' => 'required|exists:amenities,id',
             'date' => 'required|date|after_or_equal:today',
             'start_time' => 'required|string',
             'duration' => 'required|integer|min:1',
             'guest_count' => 'required|integer|min:1',
             'payment_method' => 'required|in:cash,gcash',
+            'payment_status' => 'required|in:paid,pending',
             'override' => 'nullable|boolean',
+            'payment_reference_no' => 'nullable|string|max:50',
+            'notes' => 'nullable|string|max:500',
         ]);
 
         $amenity = Amenity::findOrFail($request->amenity_id);
-        
-        // Calculate time range
-        $startTime = $request->start_time;
-        $duration = (int) $request->duration;
-        $endTime = date('H:i', strtotime("$startTime + $duration hours"));
-        $timeSlot = "$startTime - $endTime";
 
         try {
-            DB::beginTransaction();
-
-            // Lock the amenity row to prevent race conditions
-            Amenity::where('id', $amenity->id)->lockForUpdate()->first();
-
-            // Check availability (unless overridden)
             $isOverride = $request->boolean('override');
-            if (!$isOverride) {
-                if (!$this->isSlotAvailable($amenity->id, $request->date, $startTime, $endTime)) {
-                    DB::rollBack();
-                    return back()->withErrors(['time_slot' => "Conflict detected: The selected slot ($timeSlot) is already booked."])->withInput();
-                }
-            }
 
-            // Calculate Price
-            $totalPrice = $amenity->price * $duration;
-
-            // Create
-            $reservation = AmenityReservation::create([
-                'resident_id' => $request->resident_id,
-                'amenity_id' => $amenity->id,
+            $reservation = app(AmenityReservationBookingService::class)->create($amenity, [
+                'resident_id' => $request->input('customer_type') === 'resident' ? $request->resident_id : null,
+                'customer_type' => $request->customer_type,
+                'guest_name' => $request->input('customer_type') === 'non_resident' ? $request->guest_name : null,
+                'guest_contact' => $request->input('customer_type') === 'non_resident' ? $request->guest_contact : null,
+                'guest_email' => $request->input('customer_type') === 'non_resident' ? $request->guest_email : null,
+                'booking_source' => 'admin_created',
+                'created_by_admin_id' => Auth::id(),
                 'date' => $request->date,
-                'start_time' => $startTime,
-                'end_time' => $endTime,
-                'time_slot' => $timeSlot,
+                'start_time' => $request->start_time,
+                'duration' => (int) $request->duration,
                 'guest_count' => $request->guest_count,
-                'total_price' => $totalPrice,
-                'status' => 'approved', // Admin bookings are confirmed
-                'payment_status' => 'pending',
+                'status' => 'approved',
+                'payment_status' => $request->payment_status,
                 'payment_method' => $request->payment_method,
+                'payment_reference_no' => $request->payment_reference_no,
                 'notes' => $request->notes,
+            ], [
+                'override' => $isOverride,
+                'verified_by' => Auth::id(),
             ]);
 
             // Audit Log if override used
@@ -108,13 +119,29 @@ class AmenityReservationController extends Controller
                 ]);
             }
 
-            DB::commit();
-            return redirect()->route('admin.amenity-reservations.index')->with('success', 'Reservation created successfully.');
+            return redirect()->route('admin.amenity-reservations.confirmation', $reservation);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
-            DB::rollBack();
             return back()->withErrors(['error' => 'An error occurred: ' . $e->getMessage()])->withInput();
         }
+    }
+
+    public function confirmation(AmenityReservation $reservation)
+    {
+        $reservation->load(['resident.user', 'amenity', 'createdByAdmin']);
+
+        return view('admin.reservations.confirmation', compact('reservation'));
+    }
+
+    public function getUnavailableSlots(Request $request, Amenity $amenity)
+    {
+        $request->validate(['date' => 'required|date']);
+
+        $slots = $this->getUnavailableRanges($amenity->id, $request->date);
+
+        return response()->json($slots);
     }
 
     public function getData(Request $request)
@@ -203,11 +230,14 @@ class AmenityReservationController extends Controller
 
                 return [
                     'id' => $res->id,
-                    'resident_name' => optional($res->resident)->full_name ?? 'Unknown',
-                    'contact' => optional($res->resident)->contact_number ?? 'N/A',
-                    'email' => optional($res->resident)->email ?? '',
-                    'unit' => (optional($res->resident)->block ?? '?') . '-' . (optional($res->resident)->lot ?? '?'),
-                    'full_address' => 'Block ' . (optional($res->resident)->block ?? '?') . ' Lot ' . (optional($res->resident)->lot ?? '?'),
+                    'resident_name' => $res->customer_name,
+                    'customer_type' => $res->customer_type_label,
+                    'contact' => $res->customer_contact,
+                    'email' => $res->customer_email,
+                    'unit' => $res->customer_unit,
+                    'full_address' => $res->customer_type === 'non_resident'
+                        ? 'Walk-in / External Booking'
+                        : 'Block ' . (optional($res->resident)->block ?? '?') . ' Lot ' . (optional($res->resident)->lot ?? '?'),
                     'amenity_id' => $res->amenity_id,
                     'amenity_name' => optional($res->amenity)->name,
                     'status' => $res->status,
@@ -216,6 +246,7 @@ class AmenityReservationController extends Controller
                     'time_slot' => $res->time_slot,
                     'guest_count' => $res->guest_count,
                     'payment_status' => $res->payment_status ?? 'unpaid',
+                    'payment_reference_no' => $res->payment_reference_no,
                     'total_price' => $res->total_price,
                     'notes' => $res->notes,
                     'equipment_addons' => $res->equipment_addons,
@@ -276,14 +307,18 @@ class AmenityReservationController extends Controller
                 return $data;
             });
 
+        $cancelledReservations = $reservations->where('status', 'cancelled')->values();
+
         return response()->json([
             'amenities' => $amenities,
             'reservations' => $reservations,
             'actionable' => $actionable,
+            'cancelled_reservations' => $cancelledReservations,
             'metrics' => [
                 'total_bookings' => $totalBookings,
                 'pending' => $actionable->count(),
                 'approved' => $approvedCount,
+                'cancelled' => $cancelledReservations->count(),
                 'available_slots' => $availableSlots,
                 'revenue' => $revenue
             ],
@@ -294,16 +329,17 @@ class AmenityReservationController extends Controller
     private function transformReservation($res) {
         return [
             'id' => $res->id,
-            'resident_name' => optional($res->resident)->full_name ?? 'Unknown',
-            'unit' => (optional($res->resident)->block ?? '?') . '-' . (optional($res->resident)->lot ?? '?'),
+            'resident_name' => $res->customer_name,
+            'customer_type' => $res->customer_type_label,
+            'unit' => $res->customer_unit,
             'amenity_id' => $res->amenity_id,
             'amenity_name' => optional($res->amenity)->name,
             'amenity_image' => $res->amenity && $res->amenity->image ? asset('storage/' . $res->amenity->image) : null,
             'date' => $res->date->format('M d, Y'),
             'time_slot' => $res->time_slot,
             'guest_count' => $res->guest_count,
-            'email' => optional($res->resident)->email ?? '',
-            'contact' => optional($res->resident)->contact_number ?? 'N/A',
+            'email' => $res->customer_email,
+            'contact' => $res->customer_contact,
             'notes' => $res->notes,
             'equipment_addons' => $res->equipment_addons,
             'total_price' => $res->total_price,
@@ -312,6 +348,9 @@ class AmenityReservationController extends Controller
             'payment_proof' => $res->payment_proof ? asset('storage/' . $res->payment_proof) : null,
             'payment_reference_no' => $res->payment_reference_no,
             'created_at_formatted' => $res->created_at->format('M d, h:i A'),
+            'status' => $res->status,
+            'cancellation_reason' => $res->cancellation_reason,
+            'reference_code' => $res->reference_code,
         ];
     }
 
@@ -335,7 +374,39 @@ class AmenityReservationController extends Controller
             'new_status' => 'paid',
         ]);
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment verified successfully!',
+            'receipt_url' => route('admin.amenity-reservations.receipt', $reservation->id)
+        ]);
+    }
+
+    public function viewReceipt(AmenityReservation $reservation)
+    {
+        $reservation->load(['resident', 'amenity']);
+        
+        return view('admin.reservations.receipt', [
+            'reservation' => $reservation,
+            'verified_by' => $reservation->verified_by ? \App\Models\User::find($reservation->verified_by)->name : 'Admin',
+            'verified_at' => $reservation->verified_at ?? now(),
+        ]);
+    }
+
+    public function downloadReceipt(AmenityReservation $reservation)
+    {
+        $reservation->load(['resident', 'amenity']);
+
+        if ($reservation->payment_status !== 'paid') {
+            abort(403, 'Receipt is only available for verified payments.');
+        }
+
+        $pdf = Pdf::loadView('admin.reservations.receipt', [
+            'reservation' => $reservation,
+            'verified_by' => $reservation->verified_by ? \App\Models\User::find($reservation->verified_by)->name : 'Admin',
+            'verified_at' => $reservation->verified_at ?? now(),
+        ]);
+
+        return $pdf->download('reservation-receipt-' . $reservation->id . '.pdf');
     }
 
     public function rejectPayment(Request $request, AmenityReservation $reservation)
@@ -448,13 +519,16 @@ class AmenityReservationController extends Controller
 
         foreach ($reservations as $reservation) {
             if ($request->action === 'delete') {
+                // Prevent deletion of cancelled or approved reservations to maintain audit trail
+                if (in_array($reservation->status, ['cancelled', 'approved', 'completed'])) {
+                    continue; // Skip deletion of protected statuses
+                }
+
                 $reservation->delete();
                 $count++;
                 
                 ReservationAuditLog::create([
-                    'amenity_reservation_id' => $reservation->id, // Might be null if hard deleted, but soft deletes are usually preferred. Assuming hard delete for now based on typical implementation unless SoftDeletes trait is used. Actually, let's keep ID if possible or just log it. 
-                    // If hard delete, we can't link to reservation. 
-                    // Let's assume hard delete for 'delete' action as per typical simple implementations.
+                    'amenity_reservation_id' => $reservation->id,
                     'user_id' => Auth::id(),
                     'action' => 'deleted',
                     'details' => ['reason' => 'Bulk action'],
@@ -510,6 +584,11 @@ class AmenityReservationController extends Controller
             'reason' => 'nullable|string|max:255',
         ]);
 
+        // Prevent status changes on already-cancelled reservations to preserve audit trail
+        if ($reservation->status === 'cancelled') {
+            return response()->json(['error' => 'Cannot change status of cancelled reservation. Cancelled reservations are immutable for audit purposes.'], 422);
+        }
+
         if ($request->status === 'approved') {
             $start = $reservation->start_time;
             $end = $reservation->end_time;
@@ -526,6 +605,29 @@ class AmenityReservationController extends Controller
 
         $oldStatus = $reservation->status;
         $reservation->update(['status' => $request->status]);
+
+        // Notify resident of status change (non-blocking)
+        if ($reservation->resident_id) {
+            try {
+                $statusMessage = match($request->status) {
+                    'approved' => 'Your reservation for ' . optional($reservation->amenity)->name . ' has been approved!',
+                    'rejected' => 'Your reservation for ' . optional($reservation->amenity)->name . ' has been rejected.',
+                    'pending' => 'Your reservation for ' . optional($reservation->amenity)->name . ' is pending review.',
+                    default => 'Your reservation status has been updated.',
+                };
+                
+                Notification::create([
+                    'resident_id' => $reservation->resident_id,
+                    'title' => 'Reservation ' . ucfirst($request->status),
+                    'message' => $statusMessage,
+                    'type' => 'reservation',
+                    'link' => route('resident.amenities.reservation.show', $reservation->id),
+                    'is_read' => false,
+                ]);
+            } catch (\Exception $e) {
+                \Log::warning('Failed to create resident notification: ' . $e->getMessage());
+            }
+        }
 
         // Audit Log
         ReservationAuditLog::create([
@@ -611,5 +713,45 @@ class AmenityReservationController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    public function cancel(Request $request, AmenityReservation $reservation)
+    {
+        $request->validate([
+            'cancellation_reason_id' => 'required|exists:reservation_cancellation_reasons,id',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $reason = ReservationCancellationReason::findOrFail($request->cancellation_reason_id);
+            $service = new ReservationCancellationService();
+            $service->cancel($reservation, Auth::user(), $reason, $request->notes, 'admin_cancelled');
+
+            // Notify resident of cancellation (non-blocking)
+            if ($reservation->resident_id) {
+                try {
+                    Notification::create([
+                        'resident_id' => $reservation->resident_id,
+                        'title' => 'Reservation Cancelled',
+                        'message' => 'Your reservation for ' . optional($reservation->amenity)->name . ' has been cancelled. Reason: ' . $reason->label,
+                        'type' => 'reservation',
+                        'link' => route('resident.amenities.reservation.show', $reservation->id),
+                        'is_read' => false,
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to create cancellation notification: ' . $e->getMessage());
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Reservation cancelled successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400);
+        }
     }
 }

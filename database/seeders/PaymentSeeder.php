@@ -34,6 +34,7 @@ class PaymentSeeder extends Seeder
                     'date_paid'      => now()->subDays(rand(5, 30)), // Paid a while ago
                     'status'         => Payment::STATUS_APPROVED,
                     'payment_method' => Payment::METHOD_GCASH,
+                    'reference_no'   => 'SEED-' . strtoupper(uniqid()),
                 ]);
 
                 // Mark due as paid
@@ -48,6 +49,7 @@ class PaymentSeeder extends Seeder
                     'date_paid'      => now()->subHours(rand(1, 24)), // Paid recently (today/yesterday)
                     'status'         => Payment::STATUS_PENDING,
                     'payment_method' => Payment::METHOD_BANK_TRANSFER,
+                    'reference_no'   => 'SEED-' . strtoupper(uniqid()),
                 ]);
                 
                 // Pending payments do NOT update the due status yet
@@ -61,6 +63,7 @@ class PaymentSeeder extends Seeder
                     'date_paid'      => now(),
                     'status'         => Payment::STATUS_PENDING,
                     'payment_method' => Payment::METHOD_GCASH,
+                    'reference_no'   => 'SEED-' . strtoupper(uniqid()),
                 ]);
             }
         }

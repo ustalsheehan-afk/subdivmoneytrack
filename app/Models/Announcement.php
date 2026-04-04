@@ -16,6 +16,7 @@ class Announcement extends Model
         'priority',
         'date_posted',
         'is_pinned',
+        'pin_duration',
         'pin_expires_at',
         'status',
         'image',

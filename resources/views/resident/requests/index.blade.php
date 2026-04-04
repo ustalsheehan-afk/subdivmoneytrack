@@ -3,8 +3,7 @@
 @section('page-title', 'Service Requests')
 
 @section('content')
-<div class="h-full bg-[#F8F9FB] overflow-y-auto custom-scrollbar" x-data="{ filter: 'all' }">
-    <div class="max-w-6xl mx-auto px-6 py-8 flex flex-col gap-8 pb-24 animate-fade-in">
+<div class="space-y-8" x-data="{ filter: 'all' }">
 
         <x-resident-hero-header 
             label="Resident Services" 
@@ -19,10 +18,9 @@
             ]"
         >
             <x-slot name="actions">
-                <a href="{{ route('resident.requests.create') }}" 
-                   class="group relative inline-flex items-center gap-3 px-8 py-4 bg-brand-accent text-brand-dark rounded-2xl hover:bg-white transition-all duration-500 shadow-xl hover:shadow-brand-accent/20 overflow-hidden">
-                    <i class="bi bi-plus-lg text-brand-dark"></i>
-                    <span class="text-[10px] font-black uppercase tracking-widest relative z-10">New Request</span>
+                <a href="{{ route('resident.requests.create') }}" class="btn-premium">
+                    <i class="bi bi-plus-lg"></i>
+                    New Request
                 </a>
             </x-slot>
         </x-resident-hero-header>
@@ -30,9 +28,7 @@
         {{-- ========================= --}}
         {{-- REQUESTS TABLE CARD --}}
         {{-- ========================= --}}
-        <div class="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden relative">
-            {{-- Subtle background decoration --}}
-            <div class="absolute -right-20 -top-20 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl"></div>
+        <div class="glass-card overflow-hidden relative">
             
             <div class="overflow-x-auto relative z-10">
                 <table class="w-full text-left border-separate border-spacing-0">
@@ -140,19 +136,5 @@
                 </table>
             </div>
         </div>
-    </div>
 </div>
-
-<style>
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fade-in {
-        animation: fadeIn 0.5s ease-out forwards;
-    }
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
-</style>
 @endsection

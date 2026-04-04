@@ -88,6 +88,7 @@ foreach ($hoaDues as $due) {
         'date_paid' => $paidDate,
         'payment_method' => $method,
         'status' => 'approved',
+        'reference_no' => 'JAN-' . strtoupper(uniqid()),
     ]);
 
     $due->update(['status' => 'paid']);
@@ -110,6 +111,7 @@ foreach ($payingResidents as $due) {
         'date_paid' => $paidDate,
         'payment_method' => $method,
         'status' => 'approved',
+        'reference_no' => 'JAN-' . strtoupper(uniqid()),
     ]);
 
     $due->update(['status' => 'paid']);

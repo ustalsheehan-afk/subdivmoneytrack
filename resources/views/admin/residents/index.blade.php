@@ -49,10 +49,7 @@
                 </div>
 
                 {{-- Add Resident Button --}}
-                <a href="{{ route('admin.residents.create') }}" class="btn-premium">
-                    <i class="bi bi-person-plus-fill"></i>
-                    Add Resident
-                </a>
+             
             </div>
         </div>
     </div>

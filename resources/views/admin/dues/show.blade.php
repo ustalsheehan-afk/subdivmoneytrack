@@ -222,167 +222,201 @@
         </div>
     </div>
 
-    {{-- PAYMENT MODAL --}}
-    <div id="paymentModal" x-show="showPaymentModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm" x-cloak>
-    {{-- STEP 1: RECORD PAYMENT --}}
-    <div x-show="step === 1" class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate__animated animate__zoomIn animate__faster">
-        <div class="p-8">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-black text-gray-900">Record Payment</h3>
-                <button type="button" @click="closePaymentModal()" class="text-gray-400 hover:text-gray-600 transition-colors"><i class="bi bi-x-lg"></i></button>
-            </div>
+    {{-- PAYMENT MODAL (Teleported to Body) --}}
+    <template x-teleport="body">
+        <div id="paymentModal" x-show="showPaymentModal" 
+             class="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto bg-black/40 backdrop-blur-[2px]" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             @keydown.escape.window="closePaymentModal()"
+             x-cloak>
+            
+            {{-- Click Outside to Close Backdrop --}}
+            <div class="absolute inset-0 cursor-default" @click="closePaymentModal()"></div>
 
-            <div class="bg-emerald-50 p-4 rounded-2xl mb-6">
-                <div class="text-[10px] font-bold text-emerald-400 uppercase mb-1">Resident</div>
-                <div x-text="paymentData.name" class="text-sm font-bold text-[#0D1F1C]">-</div>
-            </div>
+            <div class="relative w-full max-w-md my-auto pointer-events-auto">
+                {{-- STEP 1: RECORD PAYMENT --}}
+                <div x-show="step === 1" class="bg-white rounded-[32px] shadow-2xl overflow-hidden border border-gray-100">
+                    <div class="p-8">
+                        <div class="flex items-center justify-between mb-8">
+                            <h3 class="text-xl font-black text-gray-900 tracking-tight">Record Payment</h3>
+                            <button type="button" @click="closePaymentModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-all">
+                                <i class="bi bi-x-lg text-sm"></i>
+                            </button>
+                        </div>
 
-            <div class="space-y-4">
-                <div class="space-y-2">
-                    <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Amount to Pay</label>
-                    <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₱</span>
-                        <input type="number" x-model="paymentData.amount" step="0.01" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-emerald-500 outline-none transition-all" required>
+                        <div class="bg-emerald-50/50 p-5 rounded-2xl mb-8 border border-emerald-100/50">
+                            <div class="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em] mb-1.5">Resident</div>
+                            <div x-text="paymentData.name" class="text-base font-black text-[#0D1F1C] tracking-tight">-</div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div class="space-y-2.5">
+                                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Amount to Pay</label>
+                                <div class="relative group">
+                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold transition-colors group-focus-within:text-emerald-500">₱</span>
+                                    <input type="number" x-model="paymentData.amount" step="0.01" class="w-full pl-10 pr-4 py-3.5 rounded-2xl border border-gray-100 bg-gray-50 text-sm font-bold focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none transition-all" required>
+                                </div>
+                                <p class="text-[10px] text-emerald-600 font-black uppercase tracking-widest ml-1">Balance: ₱<span x-text="paymentData.balance.toLocaleString(undefined, {minimumFractionDigits: 2})">0.00</span></p>
+                            </div>
+
+                            <div class="space-y-2.5">
+                                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Payment Method</label>
+                                <div class="relative group">
+                                    <select x-model="paymentData.method" class="w-full px-4 py-3.5 rounded-2xl border border-gray-100 bg-gray-50 text-sm font-bold focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none transition-all appearance-none cursor-pointer" required>
+                                        <option value="cash">Cash</option>
+                                        <option value="gcash">GCash</option>
+                                        <option value="bank_transfer">Bank Transfer</option>
+                                        <option value="check">Check</option>
+                                    </select>
+                                    <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs group-focus-within:text-emerald-500 transition-colors"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mt-10">
+                            <button type="button" @click="closePaymentModal()" class="py-4 rounded-2xl border border-gray-100 text-gray-500 text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all active:scale-95">Cancel</button>
+                            <button type="button" @click="step = 2" class="py-4 rounded-2xl bg-[#0D1F1C] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1a2e2a] transition-all shadow-lg shadow-emerald-500/10 active:scale-95">Review Payment</button>
+                        </div>
                     </div>
-                    <p class="text-[10px] text-emerald-500 font-medium">Balance: ₱<span x-text="paymentData.balance.toLocaleString(undefined, {minimumFractionDigits: 2})">0.00</span></p>
                 </div>
 
-                <div class="space-y-2">
-                    <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Payment Method</label>
-                    <select x-model="paymentData.method" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-emerald-500 outline-none transition-all" required>
-                        <option value="cash">Cash</option>
-                        <option value="gcash">GCash</option>
-                        <option value="bank_transfer">Bank Transfer</option>
-                        <option value="check">Check</option>
-                    </select>
+                {{-- STEP 2: REVIEW PAYMENT --}}
+                <div x-show="step === 2" class="bg-white rounded-[32px] shadow-2xl overflow-hidden border border-gray-100" x-cloak>
+                    <div class="p-8">
+                        <div class="flex items-center justify-between mb-8">
+                            <h3 class="text-xl font-black text-gray-900 tracking-tight">Review Settlement</h3>
+                            <button type="button" @click="closePaymentModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-all">
+                                <i class="bi bi-x-lg text-sm"></i>
+                            </button>
+                        </div>
+
+                        <div class="space-y-1">
+                            <div class="flex justify-between items-center py-4 border-b border-gray-50 group">
+                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Resident</span>
+                                <span x-text="paymentData.name" class="text-sm font-black text-gray-900"></span>
+                            </div>
+                            <div class="flex justify-between items-start py-4 border-b border-gray-50">
+                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">Billing</span>
+                                <div class="text-right">
+                                    <p x-text="paymentData.title" class="text-sm font-black text-gray-900"></p>
+                                    <p x-text="paymentData.type" class="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-0.5"></p>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center py-4 border-b border-gray-50">
+                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Amount to Pay</span>
+                                <span class="text-xl font-black text-gray-900">₱<span x-text="parseFloat(paymentData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})"></span></span>
+                            </div>
+                            <div class="flex justify-between items-center py-4 border-b border-gray-50">
+                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Remaining Balance</span>
+                                <span :class="(paymentData.balance - parseFloat(paymentData.amount)) <= 0 ? 'text-emerald-600' : 'text-red-600'" class="text-xl font-black">
+                                    ₱<span x-text="Math.max(0, paymentData.balance - parseFloat(paymentData.amount)).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center py-4">
+                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Method</span>
+                                <span x-text="paymentData.method" class="px-3 py-1.5 bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-widest rounded-full border border-emerald-100 capitalize"></span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mt-10">
+                            <button type="button" @click="step = 1" class="py-4 rounded-2xl border border-gray-100 text-gray-500 text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center justify-center gap-2 active:scale-95">
+                                <i class="bi bi-arrow-left"></i>
+                                Back
+                            </button>
+                            <button type="button" @click="confirmPayment()" :disabled="loading" class="py-4 rounded-2xl bg-[#081412] text-[#B6FF5C] text-[10px] font-black uppercase tracking-widest hover:bg-[#1a2e2a] transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95">
+                                <template x-if="!loading">
+                                    <span>Confirm & Record</span>
+                                </template>
+                                <template x-if="loading">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="animate-spin h-3 w-3 text-[#B6FF5C]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        Processing...
+                                    </span>
+                                </template>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mt-8">
-                <button type="button" @click="closePaymentModal()" class="py-3.5 rounded-2xl border border-gray-100 text-gray-500 font-bold hover:bg-gray-50 transition-all">Cancel</button>
-                <button type="button" @click="step = 2" class="py-3.5 rounded-2xl bg-[#0D1F1C] text-white font-bold hover:shadow-[0_0_15px_rgba(182,255,92,0.15)] transition-all">Review Payment</button>
+            {{-- STEP 3: RECEIPT PREVIEW (Wider modal) --}}
+            <div x-show="step === 3" class="relative w-full max-w-2xl my-auto pointer-events-auto" x-cloak>
+                <div class="bg-white rounded-[32px] shadow-2xl overflow-hidden border border-gray-100">
+                    <div class="p-8">
+                        <div class="flex items-center justify-between mb-8">
+                            <h3 class="text-xl font-black text-gray-900 tracking-tight">Official Receipt</h3>
+                            <button type="button" @click="closePaymentModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-all">
+                                <i class="bi bi-x-lg text-sm"></i>
+                            </button>
+                        </div>
+
+                        <div class="border border-gray-100 rounded-[24px] p-8 bg-gray-50/50 mb-8 max-h-[60vh] overflow-y-auto custom-scrollbar relative">
+                            <div class="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none">
+                                <i class="bi bi-patch-check-fill text-[120px] text-emerald-600"></i>
+                            </div>
+                            
+                            <div class="space-y-10 relative z-10">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h4 class="text-2xl font-black text-[#081412] tracking-tighter">VISTABELLA</h4>
+                                        <p class="text-[9px] font-black text-emerald-500 uppercase tracking-[0.3em] mt-1">Official Receipt</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Receipt No.</p>
+                                        <p class="text-lg font-black text-gray-900 tabular-nums" x-text="receiptData.id ? '#' + receiptData.id.toString().padStart(8, '0') : 'Generating...'"></p>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-12 text-sm">
+                                    <div>
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Resident</p>
+                                        <p x-text="paymentData.name" class="font-black text-[#081412] tracking-tight text-base"></p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Date Processed</p>
+                                        <p x-text="new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })" class="font-black text-[#081412] tracking-tight text-base"></p>
+                                    </div>
+                                </div>
+
+                                <div class="border-t border-dashed border-gray-200 pt-8">
+                                    <div class="flex justify-between items-center mb-6">
+                                        <div class="space-y-1">
+                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Particulars</p>
+                                            <p class="text-sm font-black text-gray-700" x-text="paymentData.title"></p>
+                                        </div>
+                                        <span class="text-base font-black text-[#081412] tabular-nums" x-text="'₱' + parseFloat(paymentData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
+                                    </div>
+                                    <div class="flex justify-between items-center pt-6 border-t border-gray-200">
+                                        <span class="text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Total Amount Paid</span>
+                                        <span class="text-3xl font-black text-emerald-600 tabular-nums" x-text="'₱' + parseFloat(paymentData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap justify-center gap-4">
+                            <button type="button" @click="printReceipt()" class="px-8 py-4 rounded-2xl bg-[#081412] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1a2e2a] transition-all flex items-center gap-3 shadow-lg shadow-emerald-500/10 active:scale-95">
+                                <i class="bi bi-printer-fill text-sm"></i>
+                                Print Receipt
+                            </button>
+                            <button type="button" @click="downloadReceipt()" class="px-8 py-4 rounded-2xl bg-white border border-gray-200 text-gray-700 text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center gap-3 active:scale-95">
+                                <i class="bi bi-download text-sm"></i>
+                                Download PDF
+                            </button>
+                            <button type="button" @click="closePaymentModal()" class="px-8 py-4 rounded-2xl bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all active:scale-95">
+                                Close Window
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-
-    {{-- STEP 2: REVIEW PAYMENT --}}
-    <div x-show="step === 2" class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate__animated animate__zoomIn animate__faster" x-cloak>
-        <div class="p-8">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-black text-gray-900">Review Settlement</h3>
-                <button type="button" @click="closePaymentModal()" class="text-gray-400 hover:text-gray-600 transition-colors"><i class="bi bi-x-lg"></i></button>
-            </div>
-
-            <div class="space-y-6">
-                <div class="flex justify-between items-start py-3 border-b border-gray-50">
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Resident</span>
-                    <span x-text="paymentData.name" class="text-sm font-bold text-gray-900 text-right"></span>
-                </div>
-                <div class="flex justify-between items-start py-3 border-b border-gray-50">
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Billing</span>
-                    <div class="text-right">
-                        <p x-text="paymentData.title" class="text-sm font-bold text-gray-900"></p>
-                        <p x-text="paymentData.type" class="text-[10px] font-bold text-gray-400 uppercase"></p>
-                    </div>
-                </div>
-                <div class="flex justify-between items-center py-3 border-b border-gray-50">
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Amount to Pay</span>
-                    <span class="text-lg font-black text-gray-900">₱<span x-text="parseFloat(paymentData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})"></span></span>
-                </div>
-                <div class="flex justify-between items-center py-3 border-b border-gray-50">
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Remaining Balance</span>
-                    <span :class="(paymentData.balance - parseFloat(paymentData.amount)) <= 0 ? 'text-emerald-600' : 'text-red-600'" class="text-lg font-black">
-                        ₱<span x-text="Math.max(0, paymentData.balance - parseFloat(paymentData.amount)).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
-                    </span>
-                </div>
-                <div class="flex justify-between items-center py-3 border-b border-gray-50">
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Method</span>
-                    <span x-text="paymentData.method" class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase rounded-lg border border-emerald-100"></span>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 mt-10">
-                <button type="button" @click="step = 1" class="py-3.5 rounded-2xl border border-gray-100 text-gray-500 font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
-                    <i class="bi bi-arrow-left"></i>
-                    Back
-                </button>
-                <button type="button" @click="confirmPayment()" :disabled="loading" class="py-3.5 rounded-2xl bg-[#081412] text-[#B6FF5C] font-bold hover:shadow-[0_0_20px_rgba(182,255,92,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <template x-if="!loading">
-                        <span>Confirm & Record</span>
-                    </template>
-                    <template x-if="loading">
-                        <span class="flex items-center gap-2">
-                            <svg class="animate-spin h-4 w-4 text-[#B6FF5C]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            Processing...
-                        </span>
-                    </template>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    {{-- STEP 3: RECEIPT PREVIEW --}}
-    <div x-show="step === 3" class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate__animated animate__zoomIn animate__faster" x-cloak>
-        <div class="p-8">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-black text-gray-900">Official Receipt</h3>
-                <button type="button" @click="closePaymentModal()" class="text-gray-400 hover:text-gray-600 transition-colors"><i class="bi bi-x-lg"></i></button>
-            </div>
-
-            <div class="border border-gray-100 rounded-2xl p-8 bg-gray-50/50 mb-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                {{-- Mock Receipt Preview --}}
-                <div class="space-y-8">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h4 class="text-2xl font-black text-[#081412]">VISTABELLA</h4>
-                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Official Receipt</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Receipt No.</p>
-                            <p class="text-lg font-black text-emerald-600" x-text="receiptData.id ? '#' + receiptData.id.toString().padStart(8, '0') : 'Generating...'"></p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-8 text-sm">
-                        <div>
-                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Resident</p>
-                            <p x-text="paymentData.name" class="font-black text-[#081412]"></p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Date</p>
-                            <p x-text="new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })" class="font-black text-[#081412]"></p>
-                        </div>
-                    </div>
-
-                    <div class="border-t border-gray-200 pt-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest" x-text="paymentData.title"></span>
-                            <span class="text-sm font-black text-[#081412]" x-text="'₱' + parseFloat(paymentData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
-                        </div>
-                        <div class="flex justify-between items-center pt-4 border-t border-gray-100">
-                            <span class="text-sm font-black text-gray-900 uppercase">Total Amount Paid</span>
-                            <span class="text-2xl font-black text-emerald-600" x-text="'₱' + parseFloat(paymentData.amount).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex flex-wrap justify-center gap-4">
-                <button type="button" @click="printReceipt()" class="px-8 py-3.5 rounded-2xl bg-[#081412] text-white text-xs font-black uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center gap-2">
-                    <i class="bi bi-printer-fill"></i>
-                    Print Receipt
-                </button>
-                <button type="button" @click="downloadReceipt()" class="px-8 py-3.5 rounded-2xl bg-white border border-gray-200 text-gray-600 text-xs font-black uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center gap-2">
-                    <i class="bi bi-download"></i>
-                    Download PDF
-                </button>
-                <button type="button" @click="closePaymentModal()" class="px-8 py-3.5 rounded-2xl bg-emerald-50 text-emerald-600 text-xs font-black uppercase tracking-widest hover:bg-emerald-100 transition-all">
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+    </template>
 </div>
 
 <style>
@@ -417,6 +451,15 @@
             },
             receiptData: {
                 id: 0
+            },
+            init() {
+                this.$watch('showPaymentModal', value => {
+                    if (value) {
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        document.body.style.overflow = 'auto';
+                    }
+                });
             },
             openPaymentModal(data) {
                 this.paymentData = {

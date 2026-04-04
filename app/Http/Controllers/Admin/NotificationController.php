@@ -9,9 +9,15 @@ use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:notifications.view');
+    }
+
     public function markAllRead()
     {
         Notification::where('admin_id', Auth::id())
+            ->where('role', Notification::ROLE_ADMIN)
             ->where('is_read', false)
             ->update(['is_read' => true]);
 
@@ -22,7 +28,7 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
         
-        if ($user->role === 'admin') {
+        if ($user && $user->can('dashboard.view')) {
             $overdueDues = \App\Models\Due::where('status', 'unpaid')->where('due_date', '<', now())->count();
             $urgentRequests = \App\Models\ServiceRequest::where('status', 'pending')->where('priority', 'High')->count();
             $pendingRequests = \App\Models\ServiceRequest::where('status', 'pending')->where('priority', '!=', 'High')->count();
@@ -41,47 +47,27 @@ class NotificationController extends Controller
                     'priority' => $overdueDues > 0 ? 'critical' : 'normal'
                 ],
                 'reservations' => [
-                    'count' => \App\Models\AmenityReservation::where('status', 'pending')->count(),
-                    'priority' => 'normal'
+                    'count' => \App\Models\AmenityReservation::where('status', 'pending')->count() 
+                              + \App\Models\Notification::where('admin_id', $user->id)
+                                  ->where('type', 'reservation')
+                                  ->where('is_read', false)
+                                  ->count(),
+                    'priority' => \App\Models\AmenityReservation::where('status', 'pending')->exists() ? 'normal' : 'normal'
                 ],
                 'messages' => [
                     'count' => \App\Models\MessageThread::where('status', 'pending')->count(),
-                    'priority' => 'normal'
+                    'priority' => \App\Models\MessageThread::where('priority', 'urgent')->where('status', 'pending')->exists() ? 'critical' : 'normal'
                 ],
                 'system_notifications' => [
-                    'count' => \App\Models\Notification::where('admin_id', $user->id)->where('is_read', false)->count(),
-                    'priority' => 'normal'
-                ],
-            ]);
-        } else {
-            $resident = $user->resident;
-            if (!$resident) return response()->json([]);
-
-            $unpaidDues = \App\Models\Due::where('resident_id', $resident->id)->whereIn('status', ['unpaid', 'pending'])->get();
-            $overdueCount = $unpaidDues->where('due_date', '<', now())->count();
-            $warningCount = $unpaidDues->where('due_date', '>=', now())->where('due_date', '<=', now()->addDays(3))->count();
-            
-            return response()->json([
-                'payments' => [
-                    'count' => $unpaidDues->count(),
-                    'priority' => $overdueCount > 0 ? 'critical' : ($warningCount > 0 ? 'warning' : 'normal')
-                ],
-                'requests' => [
-                    'count' => \App\Models\ServiceRequest::where('resident_id', $resident->id)->whereIn('status', ['in progress', 'completed', 'approved', 'rejected'])->where('updated_at', '>', now()->subDays(7))->count(),
-                    'priority' => 'normal'
-                ],
-                'reservations' => [
-                    'count' => \App\Models\AmenityReservation::where('resident_id', $user->id)->whereIn('status', ['approved', 'rejected'])->where('updated_at', '>', now()->subDays(7))->count(),
-                    'priority' => 'normal'
-                ],
-                'messages' => [
-                    'count' => \App\Models\MessageThread::where('resident_id', $resident->id)
-                        ->whereHas('messages', function($q) {
-                            $q->where('is_read', false)->whereIn('sender_type', [\App\Models\User::class, \App\Models\Admin::class]);
-                        })->count(),
+                    'count' => \App\Models\Notification::where('admin_id', $user->id)
+                        ->where('role', \App\Models\Notification::ROLE_ADMIN)
+                        ->where('is_read', false)
+                        ->count(),
                     'priority' => 'normal'
                 ],
             ]);
         }
+
+        return response()->json([]);
     }
 }

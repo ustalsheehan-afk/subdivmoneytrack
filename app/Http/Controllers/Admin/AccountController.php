@@ -3,22 +3,36 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Traits\LogsActivity;
 
 class AccountController extends Controller
 {
+    use LogsActivity;
+
+    public function __construct()
+    {
+        $this->middleware('permission:users.view')->only(['index']);
+        $this->middleware('permission:users.create')->only(['create', 'store']);
+        $this->middleware('permission:users.update')->only(['toggle', 'reset']);
+    }
+
     /**
      * 🧾 Display all accounts (only admin + resident)
      */
     public function index()
     {
-        $accounts = User::whereIn('role', ['admin', 'resident'])
-                        ->orderBy('id', 'desc')
-                        ->get();
+        $accounts = User::with('rbacRole')
+            ->whereIn('role', ['admin', 'resident'])
+            ->orderBy('id', 'desc')
+            ->get();
 
-        return view('admin.accounts.index', compact('accounts'));
+        $roles = Role::orderBy('name')->get();
+
+        return view('admin.accounts.index', compact('accounts', 'roles'));
     }
 
     /**
@@ -26,7 +40,8 @@ class AccountController extends Controller
      */
     public function create()
     {
-        return view('admin.accounts.create');
+        $roles = Role::orderBy('name')->get();
+        return view('admin.accounts.create', compact('roles'));
     }
 
     /**
@@ -38,15 +53,25 @@ class AccountController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:6|confirmed',
-            'role' => 'required|in:resident,admin',
+            'role_id' => 'required|integer|exists:roles,id',
+            'active' => 'nullable|boolean',
         ]);
 
-        User::create([
+        $role = Role::find($request->role_id);
+
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
-            'active' => true,
+            'role' => 'admin',
+            'role_id' => $request->role_id,
+            'active' => (bool) $request->boolean('active', true),
+        ]);
+
+        $this->logActivity('assigned_role', 'accounts', 'Assigned role ' . ($role?->name ?? 'unknown') . ' to user: ' . $user->name, [
+            'user_id' => $user->id,
+            'role_id' => $role?->id,
+            'role_name' => $role?->name,
         ]);
 
         return redirect()->route('admin.accounts.index')

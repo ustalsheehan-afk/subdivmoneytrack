@@ -4,25 +4,25 @@
 @section('page-title', 'Announcements')
 
 @section('content')
-<div class="h-full bg-[#F8F9FB] overflow-y-auto custom-scrollbar">
-    <div class="max-w-5xl mx-auto px-6 py-8 flex flex-col gap-10 pb-24">
+<div class="space-y-8">
         <x-resident-hero-header 
             label="Community Notice" 
             icon="bi-megaphone-fill"
             title="Announcements" 
             description="Stay updated with the latest news and alerts from the administration."
             :tabs="[
-                ['id' => '', 'label' => 'All', 'icon' => 'bi-grid-fill', 'href' => route('resident.announcements.index'), 'active' => !request('category')],
+                ['id' => '', 'label' => 'All Categories', 'icon' => 'bi-grid-fill', 'href' => route('resident.announcements.index'), 'active' => !request('category')],
                 ['id' => 'Emergency', 'label' => 'Emergency', 'icon' => 'bi-exclamation-octagon-fill', 'href' => route('resident.announcements.index', ['category' => 'Emergency']), 'active' => request('category') == 'Emergency'],
                 ['id' => 'Maintenance', 'label' => 'Maintenance', 'icon' => 'bi-tools', 'href' => route('resident.announcements.index', ['category' => 'Maintenance']), 'active' => request('category') == 'Maintenance'],
                 ['id' => 'Meeting', 'label' => 'Meeting', 'icon' => 'bi-people-fill', 'href' => route('resident.announcements.index', ['category' => 'Meeting']), 'active' => request('category') == 'Meeting'],
                 ['id' => 'Event', 'label' => 'Event', 'icon' => 'bi-calendar-event-fill', 'href' => route('resident.announcements.index', ['category' => 'Event']), 'active' => request('category') == 'Event'],
+                ['id' => 'Security', 'label' => 'Security', 'icon' => 'bi-shield-lock-fill', 'href' => route('resident.announcements.index', ['category' => 'Security']), 'active' => request('category') == 'Security'],
+                ['id' => 'Finance', 'label' => 'Finance', 'icon' => 'bi-cash-stack', 'href' => route('resident.announcements.index', ['category' => 'Finance']), 'active' => request('category') == 'Finance'],
             ]"
         />
 
 @php
-$pinned = $announcements->filter(fn($a) => $a->is_pinned);
-$normal = $announcements->filter(fn($a) => !$a->is_pinned);
+$normal = $announcements->getCollection();
 
 $categoryColors = [
     'Maintenance' => '#E6B566',
@@ -123,9 +123,6 @@ $defaultIcon  = 'bi-megaphone-fill';
                         {{-- Footer Meta --}}
                         <div class="pt-2 flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
                             <span class="flex items-center gap-1.5">
-                                <i class="bi bi-eye"></i> 1 / 59 SEEN
-                            </span>
-                            <span class="flex items-center gap-1.5">
                                 <i class="bi bi-clock"></i> {{ $announcement->created_at->diffForHumans() }}
                             </span>
                         </div>
@@ -208,9 +205,6 @@ $defaultIcon  = 'bi-megaphone-fill';
                         {{-- Footer Meta --}}
                         <div class="pt-2 flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
                             <span class="flex items-center gap-1.5">
-                                <i class="bi bi-eye"></i> 1 / 59 SEEN
-                            </span>
-                            <span class="flex items-center gap-1.5">
                                 <i class="bi bi-clock"></i> {{ $announcement->created_at->diffForHumans() }}
                             </span>
                         </div>
@@ -242,9 +236,6 @@ $defaultIcon  = 'bi-megaphone-fill';
 </div>
 
 </div>
-
-</div>
-
 @push('scripts')
 <script>
     async function markAsRead(btn, id) {

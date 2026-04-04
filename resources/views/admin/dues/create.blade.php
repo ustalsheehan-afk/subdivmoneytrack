@@ -27,18 +27,34 @@
                     </p>
                 </div>
             </div>
-
-            <div class="flex items-center gap-3">
-                <button type="button" onclick="document.getElementById('billing-form').submit()" class="btn-premium" id="header-submit-btn" disabled>
-                    <i class="bi bi-check2-circle"></i>
-                    Generate Batch
-                </button>
-            </div>
         </div>
     </div>
 
-    <form id="billing-form" action="{{ route('admin.dues.store') }}" method="POST">
+    <form id="billing-form" action="{{ route('admin.dues.store') }}" method="POST" x-data="billingForm()">
         @csrf
+
+        @if ($errors->any())
+            <div class="mb-8 p-6 bg-red-50 border border-red-100 rounded-[2rem] animate-in fade-in slide-in-from-top-4 duration-300">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shadow-sm">
+                        <i class="bi bi-exclamation-triangle-fill text-lg"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-black text-red-900 uppercase tracking-tight">Generation Failed</h4>
+                        <p class="text-[10px] font-bold text-red-500 uppercase tracking-widest">Please correct the following errors</p>
+                    </div>
+                </div>
+                <ul class="space-y-2 ml-14">
+                    @foreach ($errors->all() as $error)
+                        <li class="text-sm font-medium text-red-700 flex items-center gap-2">
+                            <span class="w-1 h-1 rounded-full bg-red-400"></span>
+                            {{ $error }}
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {{-- FORM SIDE --}}
             <div class="lg:col-span-2 space-y-8">
@@ -65,11 +81,11 @@
                             <div class="space-y-3">
                                 <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Billing Type <span class="text-red-500">*</span></label>
                                 <div class="relative group/select">
-                                    <select name="type" id="type" onchange="updatePreview()" 
+                                    <select name="type" id="type" x-model="billingType" 
                                         class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium appearance-none focus:bg-white focus:border-emerald-500 transition-all outline-none cursor-pointer" required>
                                         <option value="" disabled selected>Select Type</option>
                                         <option value="monthly_hoa">Monthly HOA Fees</option>
-                                        <option value="special_assessment">Special Assessment</option>
+                                        <option value="special_assessments">Special Assessment</option>
                                         <option value="regular_fees">Regular Service Fees</option>
                                         <option value="amenity_dues">Amenity Dues</option>
                                     </select>
@@ -106,7 +122,7 @@
                 </section>
 
                 {{-- 2. Billing Amount --}}
-                <section class="glass-card p-8 space-y-8 relative overflow-hidden group" x-data="billingAmount()">
+                <section class="glass-card p-8 space-y-8 relative overflow-hidden group">
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xl border border-emerald-100 shadow-sm">2</div>
                         <div>
@@ -120,9 +136,9 @@
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Amount Type <span class="text-red-500">*</span></label>
                             <div class="relative group/select">
                                 <select x-model="amountType" name="amount_type" id="amount_type" class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium appearance-none focus:bg-white focus:border-emerald-500 transition-all outline-none cursor-pointer" required>
-                                    <option value="standard">Standard HOA Fee</option>
-                                    <option value="assessment">Special Assessment</option>
-                                    <option value="amenity">Amenity Charge</option>
+                                    <option value="monthly_hoa">Monthly HOA Fees</option>
+                                    <option value="special_assessments">Special Assessment</option>
+                                    <option value="amenity_dues">Amenity Dues</option>
                                     <option value="custom">Custom Amount</option>
                                 </select>
                                 <i class="bi bi-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-hover/select:text-emerald-600 transition-colors"></i>
@@ -292,7 +308,7 @@
                                 <div class="text-3xl font-black tabular-nums text-white">₱<span id="preview-total">0.00</span></div>
                             </div>
                             
-                            <button type="submit" form="billing-form" class="btn-premium w-full py-5 text-xs group/btn" id="submit-btn" disabled>
+                            <button type="button" @click="openConfirmModal()" class="btn-premium w-full py-5 text-xs group/btn shadow-xl shadow-emerald-500/10 active:scale-[0.98]" id="submit-btn" disabled>
                                 <span>Generate Statement</span>
                                 <i class="bi bi-arrow-right text-lg group-hover/btn:translate-x-1 transition-transform"></i>
                             </button>
@@ -327,23 +343,36 @@
 
 @push('scripts')
 <script>
-    function billingAmount() {
+    function billingForm() {
         return {
-            amountType: 'standard',
+            billingType: '',
+            amountType: 'monthly_hoa',
             amount: 500.00,
             init() {
+                // Watch billingType to sync amountType
+                this.$watch('billingType', (newVal) => {
+                    if (newVal && this.amountType !== 'custom') {
+                        this.amountType = newVal;
+                    }
+                    updatePreview();
+                });
+
+                // Watch amountType to set amounts
                 this.$watch('amountType', (newVal) => {
-                    if (newVal === 'standard') {
+                    if (newVal === 'monthly_hoa') {
                         this.amount = 500.00;
-                    } else if (newVal === 'assessment') {
+                    } else if (newVal === 'special_assessments') {
                         this.amount = 1500.00; 
-                    } else if (newVal === 'amenity') {
+                    } else if (newVal === 'amenity_dues') {
                         this.amount = 250.00; 
-                    } else {
+                    } else if (newVal === 'regular_fees') {
+                        this.amount = 300.00;
+                    } else if (newVal === 'custom') {
                         this.amount = '';
                     }
                     this.$nextTick(() => updatePreview());
                 });
+
                 this.$watch('amount', () => {
                     updatePreview();
                 });
@@ -513,10 +542,39 @@
         
         count.textContent = selectedResidentIds.size;
         hiddenSelect.innerHTML = '';
-        list.innerHTML = '';
+        
+        // Clear everything EXCEPT the empty message element
+        const children = Array.from(list.children);
+        children.forEach(child => {
+            if (child !== emptyMsg) list.removeChild(child);
+        });
+
+        // Update left side (Available Residents) visual state
+        document.querySelectorAll('#available-list .resident-item').forEach(item => {
+            const id = parseInt(item.dataset.id);
+            const btn = item.querySelector('button');
+            const icon = btn.querySelector('i');
+            
+            if (selectedResidentIds.has(id)) {
+                item.classList.add('bg-emerald-50', 'border-emerald-200');
+                item.classList.remove('bg-white', 'border-gray-50');
+                btn.classList.add('bg-emerald-600', 'text-white', 'opacity-100');
+                btn.classList.remove('bg-emerald-50', 'text-emerald-600', 'opacity-0');
+                icon.classList.remove('bi-plus-lg');
+                icon.classList.add('bi-check-lg');
+                btn.onclick = () => removeResident(id);
+            } else {
+                item.classList.remove('bg-emerald-50', 'border-emerald-200');
+                item.classList.add('bg-white', 'border-gray-50');
+                btn.classList.remove('bg-emerald-600', 'text-white', 'opacity-100');
+                btn.classList.add('bg-emerald-50', 'text-emerald-600', 'opacity-0');
+                icon.classList.add('bi-plus-lg');
+                icon.classList.remove('bi-check-lg');
+                btn.onclick = () => addResident(id);
+            }
+        });
 
         if (selectedResidentIds.size === 0) {
-            list.appendChild(emptyMsg);
             emptyMsg.classList.remove('hidden');
         } else {
             emptyMsg.classList.add('hidden');
@@ -540,8 +598,11 @@
                         ${isSelectionMode ? `
                             <input type="checkbox" class="batch-checkbox w-5 h-5 rounded-lg border-emerald-300 text-emerald-600 focus:ring-emerald-500 pointer-events-none" ${batchSelectedIds.has(r.id) ? 'checked' : ''}>
                         ` : ''}
+                        <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:text-emerald-600 transition-colors shadow-sm shrink-0 border border-gray-100">
+                            <i class="bi bi-person text-lg"></i>
+                        </div>
                         <div>
-                            <div class="text-sm font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">${r.first_name} ${r.last_name}</div>
+                            <div class="text-sm font-black text-gray-900 group-hover:text-emerald-700 transition-colors">${r.first_name} ${r.last_name}</div>
                             <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5">B${r.block} / L${r.lot}</div>
                         </div>
                     </div>
@@ -568,7 +629,6 @@
 
         const isValid = title && type && amount && startDate && dueDate && hasResidents;
         document.getElementById('submit-btn').disabled = !isValid;
-        document.getElementById('header-submit-btn').disabled = !isValid;
     }
 
     function openConfirmModal() {

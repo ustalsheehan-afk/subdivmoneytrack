@@ -15,11 +15,14 @@ class DatabaseSeeder extends Seeder
         );
 
         $this->call([
+            RbacSeeder::class,
             ResidentSeeder::class,
             DueSeeder::class,
             PaymentSeeder::class,
             AnnouncementSeeder::class,
             PenaltySeeder::class,
+            ResidentSupportSeeder::class,
+            ReservationCancellationReasonSeeder::class,
         ]);
     }
 }

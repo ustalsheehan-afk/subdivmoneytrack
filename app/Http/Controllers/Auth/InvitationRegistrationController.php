@@ -19,13 +19,18 @@ class InvitationRegistrationController extends Controller
      * 4. ACCESS LINK
      * - Validation check for token access
      */
-    public function show($token)
+    public function show()
     {
+        $token = request('token');
+
+        \Log::info('Invitation registration access attempt', ['token' => $token]);
+
         // Find by token
         $invitation = Invitation::where('token', trim($token))->first();
 
         // 1. If not found -> invalid
         if (!$invitation) {
+            \Log::warning('Invalid invitation token accessed', ['token' => $token]);
             return view('auth.invitation-invalid', [
                 'type' => 'invalid',
                 'message' => 'Invalid invitation token.'
@@ -34,6 +39,7 @@ class InvitationRegistrationController extends Controller
 
         // 2. If status == accepted -> already registered
         if ($invitation->status === Invitation::STATUS_ACCEPTED) {
+            \Log::info('Accepted invitation accessed again', ['token' => $token, 'email' => $invitation->email]);
             return view('auth.invitation-invalid', [
                 'type' => 'accepted',
                 'message' => 'This invitation has already been used to create an account.'
@@ -42,6 +48,7 @@ class InvitationRegistrationController extends Controller
 
         // 3. If status == cancelled -> invalid
         if ($invitation->status === Invitation::STATUS_CANCELLED) {
+            \Log::warning('Cancelled invitation accessed', ['token' => $token, 'email' => $invitation->email]);
             return view('auth.invitation-invalid', [
                 'type' => 'cancelled',
                 'message' => 'This invitation has been cancelled by the administrator.'
@@ -50,11 +57,14 @@ class InvitationRegistrationController extends Controller
 
         // 4. If expires_at <= now -> expired
         if ($invitation->isExpired()) {
+            \Log::warning('Expired invitation accessed', ['token' => $token, 'email' => $invitation->email, 'expires_at' => $invitation->expires_at]);
             return view('auth.invitation-invalid', [
                 'type' => 'expired',
                 'message' => 'This invitation link has expired.'
             ]);
         }
+
+        \Log::info('Valid invitation registration page shown', ['token' => $token, 'email' => $invitation->email]);
 
         // Success
         return view('auth.register-invitation', [
@@ -66,12 +76,17 @@ class InvitationRegistrationController extends Controller
      * 5. REGISTER
      * - Strict processing flow with transaction
      */
-    public function register(Request $request, $token)
+    public function register(Request $request)
     {
+        $token = $request->input('token');
+
         $invitation = Invitation::where('token', trim($token))->first();
+
+        \Log::info('Invitation registration submission attempt', ['token' => $token, 'email' => $invitation->email ?? 'unknown']);
 
         // Final validity check
         if (!$invitation || !$invitation->isValid()) {
+            \Log::warning('Invalid invitation registration attempt', ['token' => $token]);
             return back()->with('error', 'Invalid or expired invitation.');
         }
 
@@ -85,6 +100,13 @@ class InvitationRegistrationController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
+        // Additional validation: ensure email is still unique (in case someone registered manually)
+        $existingUser = User::where('email', $invitation->email)->first();
+        if ($existingUser) {
+            \Log::warning('Attempted registration with existing email', ['email' => $invitation->email]);
+            return back()->with('error', 'An account with this email already exists.');
+        }
+
         try {
             DB::beginTransaction();
 
@@ -96,6 +118,8 @@ class InvitationRegistrationController extends Controller
                 'role' => 'resident',
                 'active' => true,
             ]);
+
+            \Log::info('User created during invitation registration', ['user_id' => $user->id, 'email' => $invitation->email]);
 
             // Create Resident (FULL DATA)
             Resident::create([
@@ -110,11 +134,15 @@ class InvitationRegistrationController extends Controller
                 'status' => 'active',
             ]);
 
+            \Log::info('Resident created during invitation registration', ['user_id' => $user->id, 'email' => $invitation->email]);
+
             // Mark invitation as accepted
             $invitation->update([
                 'status' => Invitation::STATUS_ACCEPTED,
                 'accepted_at' => Carbon::now(),
             ]);
+
+            \Log::info('Invitation marked as accepted', ['token' => $token, 'email' => $invitation->email]);
 
             DB::commit();
 
@@ -127,11 +155,13 @@ class InvitationRegistrationController extends Controller
             request()->session()->invalidate();
             request()->session()->regenerateToken();
             
-            return redirect('/resident/login')->with('success', 'Registration successful! You can now log in to your resident portal.');
+            \Log::info('Registration successful, redirecting to login', ['email' => $invitation->email]);
+
+            return redirect()->route('login')->with('success', 'Account created successfully. Please log in.');
 
         } catch (Throwable $e) {
             DB::rollBack();
-            Log::error('Registration Error: ' . $e->getMessage());
+            \Log::error('Registration Error: ' . $e->getMessage(), ['token' => $token, 'email' => $invitation->email ?? 'unknown', 'trace' => $e->getTraceAsString()]);
             return back()->withInput()->with('error', 'Registration failed. Please try again or contact support.');
         }
     }

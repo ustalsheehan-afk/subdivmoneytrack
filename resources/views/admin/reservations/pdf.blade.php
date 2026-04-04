@@ -28,7 +28,7 @@
             <tr>
                 <th>Time Slot</th>
                 <th>Amenity</th>
-                <th>Resident</th>
+                <th>Customer</th>
                 <th>Unit</th>
                 <th>Guests</th>
                 <th>Status</th>
@@ -39,8 +39,8 @@
                 <tr>
                     <td>{{ $res->time_slot }}</td>
                     <td>{{ optional($res->amenity)->name }}</td>
-                    <td>{{ optional($res->resident)->full_name ?? 'Unknown' }}</td>
-                    <td>{{ optional($res->resident)->block }}-{{ optional($res->resident)->lot }}</td>
+                    <td>{{ $res->customer_name }}</td>
+                    <td>{{ $res->customer_unit }}</td>
                     <td>{{ $res->guest_count }}</td>
                     <td class="status-{{ $res->status }}">
                         {{ ucfirst($res->status) }}

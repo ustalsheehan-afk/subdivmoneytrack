@@ -24,6 +24,10 @@
             </div>
 
             <div class="flex items-center gap-3">
+                <a href="{{ route('admin.amenity-reservations.create') }}" class="btn-premium flex items-center gap-3 group">
+                    <i class="bi bi-plus-circle text-brand-accent group-hover:rotate-12 transition-transform"></i>
+                    <span>Create Reservation</span>
+                </a>
                 <div class="flex items-center bg-white rounded-2xl p-1.5 border border-gray-100 shadow-sm ring-4 ring-gray-50/50">
                     <button @click="changeDate(-1)" class="w-10 h-10 flex items-center justify-center hover:bg-emerald-50 text-gray-400 hover:text-emerald-600 rounded-xl transition-all">
                         <i class="bi bi-chevron-left text-sm"></i>
@@ -125,11 +129,16 @@
                                  </div>
                              </div>
 
-                             {{-- Resident --}}
+                             {{-- Customer --}}
                              <div class="col-span-1">
-                                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Resident</p>
+                                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Customer</p>
                                  <p class="font-black text-sm text-gray-900 truncate" x-text="req.resident_name"></p>
-                                 <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-tight mt-0.5" x-text="'Unit ' + req.unit"></p>
+                                 <div class="flex items-center gap-2 mt-0.5">
+                                     <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-tight" x-text="req.unit"></p>
+                                     <span class="inline-flex px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border"
+                                           :class="req.customer_type === 'Non-Resident' ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'"
+                                           x-text="req.customer_type"></span>
+                                 </div>
                              </div>
 
                              {{-- Schedule --}}
@@ -161,6 +170,21 @@
                     <h3 class="text-gray-900 font-black text-xl uppercase tracking-tight">All Caught Up!</h3>
                     <p class="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mt-2 max-w-xs mx-auto">No pending reservations requiring your attention</p>
                 </div>
+
+                {{-- Cancelled Reservations --}}
+                <div x-show="cancelledReservations.length > 0" class="glass-card p-6 border border-red-100 bg-red-50/20">
+                    <h4 class="text-sm font-black text-red-700 uppercase tracking-widest mb-4">Cancelled Reservations</h4>
+                    <template x-for="cancel in cancelledReservations" :key="cancel.id">
+                        <div class="p-3 mb-3 rounded-xl border border-red-100 bg-white/80 flex justify-between items-start gap-3">
+                            <div>
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">"<span x-text="cancel.amenity_name"></span>"</p>
+                                <p class="text-xs text-gray-800 font-black" x-text="cancel.resident_name + ' - ' + cancel.time_slot"></p>
+                                <p class="text-[9px] text-red-600 font-semibold" x-text="cancel.cancellation_reason || 'cancelled'"></p>
+                            </div>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-red-700" x-text="cancel.date"></span>
+                        </div>
+                    </template>
+                </div>
             </div>
         </div>
 
@@ -186,29 +210,56 @@
                         </button>
                     </div>
                     
-                    <div class="mt-8 relative z-10">
-                        <span class="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border shadow-xl inline-block"
+                    <div class="mt-8 relative z-10 flex items-center gap-3">
+                        <span class="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border shadow-xl inline-flex items-center gap-2"
                               :class="{
                                   'bg-emerald-500 text-white border-emerald-400 shadow-emerald-500/20': selectedRequest?.action_type === 'verify_payment',
-                                  'bg-brand-accent text-[#081412] border-brand-accent/50 shadow-brand-accent/20': selectedRequest?.action_type === 'review',
-                                  'bg-orange-500 text-white border-orange-400 shadow-orange-500/20': selectedRequest?.action_type === 'collect_payment'
-                              }" 
-                              x-text="selectedRequest?.status_reason">
+                                  'bg-[#B6FF5C] text-[#081412] border-[#B6FF5C]/50 shadow-[#B6FF5C]/20': selectedRequest?.action_type === 'review',
+                                  'bg-orange-500 text-white border-orange-400 shadow-orange-500/20': selectedRequest?.action_type === 'collect_payment',
+                                  'bg-gray-700 text-white border-gray-600 shadow-black/20': !['verify_payment', 'review', 'collect_payment'].includes(selectedRequest?.action_type)
+                              }">
+                            <span class="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>
+                            <span x-text="selectedRequest?.status_reason"></span>
                         </span>
+
+                        <template x-if="selectedRequest?.is_overdue">
+                            <span class="px-4 py-2.5 rounded-xl bg-red-500 text-white text-[10px] font-black uppercase tracking-widest border border-red-400 shadow-lg shadow-red-500/20">
+                                Overdue
+                            </span>
+                        </template>
                     </div>
                 </div>
 
                 {{-- Scrollable Content --}}
                 <div class="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
                     
+                    {{-- Cancellation Alert (if cancelled) --}}
+                    <template x-if="selectedRequest && selectedRequest.status === 'cancelled'">
+                        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-6">
+                            <div class="flex items-start gap-4">
+                                <div class="w-10 h-10 rounded-xl bg-gray-100 text-gray-600 flex items-center justify-center flex-shrink-0 text-lg">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Cancellation Details</p>
+                                    <p class="text-sm font-medium text-gray-800 leading-relaxed break-words" x-text="selectedRequest.cancellation_reason || 'No reason provided'"></p>
+                                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-3" x-text="'Cancelled ' + (selectedRequest.created_at_formatted || '')"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    
                     {{-- Resident Profile --}}
                     <div class="flex items-center gap-5">
                         <div class="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 font-black text-2xl shadow-sm">
-                            <span x-text="selectedRequest?.resident_name.charAt(0)"></span>
+                            <span x-text="(selectedRequest?.resident_name || '?').charAt(0)"></span>
                         </div>
                         <div class="min-w-0 flex-1">
                             <p class="font-black text-gray-900 text-lg truncate tracking-tight mb-0.5" x-text="selectedRequest?.resident_name"></p>
-                            <span class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-widest rounded-lg border border-emerald-100" x-text="'Unit ' + selectedRequest?.unit"></span>
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-widest rounded-lg border border-emerald-100" x-text="selectedRequest?.unit"></span>
+                                <span class="px-3 py-1 bg-amber-50 text-amber-700 text-[9px] font-black uppercase tracking-widest rounded-lg border border-amber-100" x-show="selectedRequest?.customer_type === 'Non-Resident'">Walk-in</span>
+                            </div>
                         </div>
                     </div>
 
@@ -317,6 +368,15 @@
                         </button>
                     </template>
                 </div>
+
+                {{-- Cancel Action --}}
+                <div x-show="selectedRequest && selectedRequest.status !== 'cancelled' && (selectedRequest.status === 'approved' || selectedRequest.status === 'pending')" 
+                     class="p-8 bg-red-50/30 border-t border-red-100">
+                    <button @click="openCancelModal(selectedRequest.id)" 
+                            class="w-full px-6 py-4 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-red-600 transition-all shadow-lg">
+                        Cancel Reservation
+                    </button>
+                </div>
             </div>
 
             {{-- Empty Selection State --}}
@@ -383,11 +443,12 @@
                                         
                                         {{-- Events --}}
                                         <template x-for="res in getReservationsForAmenity(amenity.id)" :key="res.id">
-                                            <div class="absolute top-2 bottom-2 rounded-2xl border p-3 text-[9px] overflow-hidden cursor-help transition-all hover:shadow-xl hover:z-30 flex flex-col justify-center select-none bg-emerald-50 border-emerald-100 text-emerald-700 shadow-sm"
+                                            <div class="absolute top-2 bottom-2 rounded-2xl border p-3 text-[9px] overflow-hidden cursor-help transition-all hover:shadow-xl hover:z-30 flex flex-col justify-center select-none shadow-sm"
+                                                 :class="res.status === 'cancelled' ? 'bg-red-50 border-red-100 text-red-700' : 'bg-emerald-50 border-emerald-100 text-emerald-700'"
                                                  :style="getEventStyle(res)"
                                                  :title="res.resident_name + ' (' + res.time_slot + ')'">
                                                 <div class="font-black truncate uppercase tracking-widest mb-0.5" x-text="res.resident_name"></div>
-                                                <div class="font-bold opacity-60 tabular-nums" x-text="res.time_slot"></div>
+                                                <div class="font-bold opacity-60 tabular-nums" x-text="res.time_slot + (res.status === 'cancelled' ? ' (CANCELLED)' : '')"></div>
                                             </div>
                                         </template>
                                     </div>
@@ -438,7 +499,14 @@
 </div>
 
 {{-- Activity Log Modal --}}
-<div x-show="activityLogOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;" x-transition.opacity>
+<div x-show="activityLogOpen" 
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-300"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     class="fixed inset-0 z-50 overflow-y-auto">
     <div class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm transition-opacity" @click="activityLogOpen = false"></div>
     <div class="relative min-h-screen flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden max-h-[85vh] flex flex-col relative animate-zoom-in">
@@ -518,6 +586,7 @@
             amenities: [],
             reservations: [],
             actionable: [],
+            cancelledReservations: [],
             activities: [],
             hours: Array.from({length: 17}, (_, i) => i + 6), // 6 AM to 10 PM
             
@@ -532,6 +601,11 @@
             selectedRejectionId: null,
             activityLogOpen: false,
             processingIds: [],
+            cancelModalOpen: false,
+            cancelReservationId: null,
+            cancelReason: '',
+            cancelNotes: '',
+            canceling: false,
 
             init() {
                 this.fetchData();
@@ -551,11 +625,18 @@
                     this.amenities = data.amenities;
                     this.reservations = data.reservations;
                     this.actionable = data.actionable;
+                    this.cancelledReservations = data.cancelled_reservations || [];
                     this.activities = data.activities;
 
                     if (this.selectedRequest) {
                         const updated = this.actionable.find(r => r.id === this.selectedRequest.id);
                         this.selectedRequest = updated || null;
+                    } else {
+                        const requestedId = new URLSearchParams(window.location.search).get('active_id');
+                        if (requestedId) {
+                            const allReservations = [...this.actionable, ...this.reservations];
+                            this.selectedRequest = allReservations.find(r => String(r.id) === String(requestedId)) || null;
+                        }
                     }
                 } catch (error) {
                     console.error('Error fetching data:', error);
@@ -574,18 +655,33 @@
                     const response = await fetch(`/admin/amenity-reservations/${id}/verify-payment`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                         }
                     });
                     
                     if (response.ok) {
-                        await this.fetchData();
-                        if (this.selectedRequest?.id === id) {
-                            this.selectedRequest = null;
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            alert('Payment verified successfully!');
+                            
+                            // Open receipt in new window
+                            if (data.receipt_url) {
+                                window.open(data.receipt_url, '_blank');
+                            }
+                            
+                            // Refresh data and clear selection
+                            await this.fetchData();
+                            if (this.selectedRequest?.id === id) {
+                                this.selectedRequest = null;
+                            }
                         }
+                    } else {
+                        const data = await response.json();
+                        alert(data.message || 'Error verifying payment');
                     }
                 } catch (error) {
+                    console.error('Payment verification error:', error);
                     alert('Error verifying payment');
                 } finally {
                     this.processingIds = this.processingIds.filter(pid => pid !== id);
@@ -695,10 +791,113 @@
                 if (e.key === 'Escape') {
                     this.selectedRequest = null;
                     this.closeRejectionModal();
+                    this.closeCancelModal();
                     this.activityLogOpen = false;
+                }
+            },
+
+            openCancelModal(id) {
+                this.cancelReservationId = id;
+                this.cancelModalOpen = true;
+                // Update form action
+                document.getElementById('adminCancelForm').action = `/admin/amenity-reservations/${id}/cancel`;
+            },
+
+            closeCancelModal() {
+                this.cancelModalOpen = false;
+                this.cancelReservationId = null;
+                this.cancelReason = '';
+                this.cancelNotes = '';
+                this.canceling = false;
+            },
+
+            async submitCancel() {
+                if (!this.cancelReason || !this.cancelReservationId) return;
+
+                this.canceling = true;
+                try {
+                    const response = await fetch(`/admin/amenity-reservations/${this.cancelReservationId}/cancel`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            cancellation_reason_id: this.cancelReason,
+                            notes: this.cancelNotes
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        this.closeCancelModal();
+                        await this.fetchData();
+                        alert('Reservation cancelled successfully.');
+                    } else {
+                        alert(data.message || 'An error occurred while cancelling.');
+                    }
+                } catch (error) {
+                    console.error('Cancel submission error', error);
+                    alert('An error occurred. Please try again.');
+                } finally {
+                    this.canceling = false;
                 }
             }
         }
     }
 </script>
+
+{{-- Cancellation Modal --}}
+<div x-show="cancelModalOpen" x-cloak class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-[32px] shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-8">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-black text-gray-900 tracking-tight">Cancel Reservation</h3>
+                <button @click="closeCancelModal()" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-all">
+                    <i class="bi bi-x text-lg"></i>
+                </button>
+            </div>
+
+            <form id="adminCancelForm" method="POST" @submit.prevent="submitCancel">
+                @csrf
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Reason for Cancellation</label>
+                        <select x-model="cancelReason" required class="w-full p-4 border-2 border-gray-50 bg-gray-50 rounded-[16px] text-sm font-medium focus:ring-0 focus:border-red-500 focus:bg-white transition-all outline-none">
+                            <option value="">Select a reason</option>
+                            @foreach(\App\Models\ReservationCancellationReason::where('active', true)->where(function($q) { $q->where('scope', 'admin')->orWhere('scope', 'both'); })->orderBy('sort_order')->get() as $reason)
+                            <option value="{{ $reason->id }}">{{ $reason->label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Additional Notes (Optional)</label>
+                        <textarea x-model="cancelNotes" rows="3" class="w-full p-4 border-2 border-gray-50 bg-gray-50 rounded-[16px] text-sm font-medium focus:ring-0 focus:border-red-500 focus:bg-white transition-all outline-none resize-none" placeholder="Any additional details..."></textarea>
+                    </div>
+
+                    <div class="bg-red-50 border border-red-100 rounded-[16px] p-4">
+                        <div class="flex items-start gap-3">
+                            <i class="bi bi-exclamation-triangle-fill text-red-500 text-sm mt-0.5"></i>
+                            <p class="text-red-700 text-xs font-medium leading-relaxed">This action cannot be undone. The reservation will be permanently cancelled.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-8">
+                    <button type="button" @click="closeCancelModal()" class="flex-1 py-4 bg-gray-50 text-gray-700 text-sm font-black uppercase tracking-widest rounded-[16px] hover:bg-gray-100 transition-all">
+                        Back
+                    </button>
+                    <button type="submit" id="adminConfirmCancelBtn" :disabled="canceling || !cancelReason" class="flex-1 py-4 bg-red-500 text-white text-sm font-black uppercase tracking-widest rounded-[16px] hover:bg-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span x-show="!canceling">Confirm Cancellation</span>
+                        <span x-show="canceling">Processing...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @endsection

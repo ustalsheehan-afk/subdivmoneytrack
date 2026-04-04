@@ -25,10 +25,12 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <a href="{{ route('admin.accounts.create') }}" class="btn-premium">
-                    <i class="bi bi-person-plus-fill"></i>
-                    Create Account
-                </a>
+                @can('manage_users')
+                    <a href="{{ route('admin.accounts.create') }}" class="btn-premium">
+                        <i class="bi bi-person-plus-fill"></i>
+                        Create Account
+                    </a>
+                @endcan
             </div>
         </div>
     </div>
@@ -59,13 +61,13 @@
             </div>
         </div>
 
-        {{-- System Admins --}}
+        {{-- System Users --}}
         <div class="glass-card p-8 flex items-center gap-6 group hover:shadow-xl transition-all duration-300">
             <div class="w-16 h-16 rounded-[24px] bg-gray-900 flex items-center justify-center text-brand-accent group-hover:scale-110 transition-all duration-500 border border-white/10 shadow-lg">
                 <i class="bi bi-person-badge-fill text-2xl"></i>
             </div>
             <div>
-                <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">System Admins</p>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">System Users</p>
                 <h3 class="text-3xl font-black text-gray-900 tracking-tight tabular-nums">{{ $accounts->where('role', 'admin')->count() }}</h3>
             </div>
         </div>
@@ -103,8 +105,11 @@
                 <select id="roleFilter" onchange="filterByRole(this.value)"
                     class="h-11 px-4 flex items-center gap-2 rounded-xl border border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest text-gray-600 hover:border-emerald-500/30 hover:bg-gray-50 transition-all outline-none appearance-none cursor-pointer pr-10">
                     <option value="all">All Roles</option>
-                    <option value="admin">Admins</option>
-                    <option value="resident">Residents</option>
+                    <option value="super_admin">Super Admin</option>
+                    <option value="admin">Admin</option>
+                    <option value="staff">Staff</option>
+                    <option value="auditor">Auditor</option>
+                    <option value="resident">Resident</option>
                 </select>
                 <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[8px] opacity-50 pointer-events-none"></i>
             </div>
@@ -147,7 +152,7 @@
                             data-name="{{ strtolower($account->name) }}" 
                             data-email="{{ strtolower($account->email) }}"
                             data-status="{{ $account->active ? 'active' : 'inactive' }}"
-                            data-role="{{ $account->role }}">
+                            data-role="{{ $account->role === 'resident' ? 'resident' : ($account->rbacRole->name ?? 'admin') }}">
                             
                             {{-- # --}}
                             <td class="px-8 py-6 text-[10px] font-black text-gray-400 tabular-nums">
@@ -169,15 +174,32 @@
 
                             {{-- Role --}}
                             <td class="px-8 py-6">
-                                @if($account->role === 'admin')
-                                    <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-gray-900 text-white border border-white/10 shadow-lg shadow-gray-200">
-                                        <i class="bi bi-shield-lock-fill text-brand-accent"></i>
-                                        Admin
-                                    </span>
-                                @else
+                                @if($account->role === 'resident')
                                     <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-gray-50 text-gray-600 border border-gray-100">
                                         <i class="bi bi-person-fill"></i>
                                         Resident
+                                    </span>
+                                @else
+                                    @php
+                                        $roleName = $account->rbacRole->name ?? 'admin';
+                                        $roleStyle = match($roleName) {
+                                            'super_admin' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                                            'admin' => 'bg-blue-50 text-blue-700 border-blue-100',
+                                            'staff' => 'bg-yellow-50 text-yellow-700 border-yellow-100',
+                                            'auditor' => 'bg-gray-50 text-gray-600 border-gray-100',
+                                            default => 'bg-gray-50 text-gray-600 border-gray-100',
+                                        };
+                                        $roleIcon = match($roleName) {
+                                            'super_admin' => 'bi-shield-check',
+                                            'admin' => 'bi-shield-lock-fill',
+                                            'staff' => 'bi-person-workspace',
+                                            'auditor' => 'bi-clipboard-check',
+                                            default => 'bi-shield-lock',
+                                        };
+                                    @endphp
+                                    <span title="User Role determines access level" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest border {{ $roleStyle }}">
+                                        <i class="bi {{ $roleIcon }}"></i>
+                                        {{ strtoupper(str_replace('_',' ', $roleName)) }}
                                     </span>
                                 @endif
                             </td>

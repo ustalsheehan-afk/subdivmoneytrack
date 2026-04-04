@@ -113,7 +113,7 @@
                         <span class="text-[10px] font-medium text-white/60 mt-1">Settle this penalty immediately</span>
                     </a>
                     @endif
-                    <a href="{{ route('resident.support.index') }}" class="flex flex-col p-5 bg-white border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 rounded-2xl transition-all shadow-sm group">
+                    <a href="{{ route('resident.contact') }}" class="flex flex-col p-5 bg-white border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 rounded-2xl transition-all shadow-sm group">
                         <div class="flex items-center justify-between mb-3">
                             <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center">
                                 <i class="bi bi-chat-left-text"></i>

@@ -13,15 +13,34 @@ class MessageThread extends Model
         'resident_id',
         'subject',
         'category',
+        'intent',
         'status',
+        'priority',
+        'assigned_to',
         'module_type',
         'module_id',
+        'metadata',
         'last_message_at',
     ];
 
     protected $casts = [
         'last_message_at' => 'datetime',
+        'metadata' => 'array',
     ];
+
+    protected static function booted()
+    {
+        static::created(function ($thread) {
+            $intelligence = app(\App\Services\SupportIntelligenceService::class);
+            // We assume the first message is created immediately after the thread
+            // This might need a listener on the Message model instead if created separately
+        });
+    }
+
+    public function assignedAdmin()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
 
     public function resident()
     {

@@ -127,6 +127,18 @@ class Resident extends Model
         return $this->hasMany(Due::class, 'resident_id');
     }
 
+    // Service Requests
+    public function requests()
+    {
+        return $this->hasMany(ServiceRequest::class, 'resident_id');
+    }
+
+    // Amenity Reservations
+    public function amenityReservations()
+    {
+        return $this->hasMany(AmenityReservation::class, 'resident_id');
+    }
+
     // Payments
     public function payments()
     {

@@ -194,7 +194,7 @@
                         </td>
                         <td class="p-5">
                             <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-gray-100 bg-gray-50 text-gray-600 capitalize">
-                                {{ str_replace('_', ' ', $penalty->penalty_type) }}
+                                {{ str_replace('_', ' ', $penalty->type) }}
                             </span>
                         </td>
                         <td class="p-5">

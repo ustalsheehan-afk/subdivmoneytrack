@@ -72,6 +72,8 @@ class Kernel extends HttpKernel
 
     // Force password change
     'force_password_change' => \App\Http\Middleware\ForcePasswordChange::class,
+
+    'permission' => \App\Http\Middleware\PermissionMiddleware::class,
 ];
 
 }

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Resident;
 
 use App\Http\Controllers\Controller;
-use App\Models\MessageThread;
 use App\Models\Message;
+use App\Models\MessageThread;
+use App\Models\Resident;
 use App\Models\User;
+use App\Models\Notification;
 use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -63,11 +65,25 @@ class MessageController extends Controller
             }
 
             $thread->messages()->create([
-                'sender_type' => get_class($resident),
-                'sender_id' => $resident->id,
-                'body' => $request->body,
+                'sender_type' => get_class(Auth::user()),
+                'sender_id' => Auth::id(),
+                'body' => $request->message,
                 'attachment' => $attachmentPath,
             ]);
+
+            // Notify Admins
+            $admins = User::where('role', 'admin')->get();
+            $resident_profile = Auth::user()->resident;
+            foreach ($admins as $admin) {
+                Notification::create([
+                    'admin_id' => $admin->id,
+                    'title' => '💬 New Support Message',
+                    'message' => "{$resident_profile->full_name} has sent a new support message regarding '{$request->category}'.",
+                    'type' => 'system',
+                    'link' => route('admin.messages.index'),
+                    'is_read' => false,
+                ]);
+            }
 
             return $thread;
         });
@@ -77,15 +93,17 @@ class MessageController extends Controller
 
     public function show(MessageThread $thread)
     {
-        if ($thread->resident_id !== Auth::id()) {
-            abort(403);
-        }
-
+        $this->authorize('view', $thread);
+        
         $thread->load(['messages.sender']);
         
         // Mark admin messages as read
-        $thread->messages()
-            ->whereIn('sender_type', [User::class, Admin::class])
+        $thread->messages()->whereIn('sender_type', [User::class, Admin::class])->update(['is_read' => true]);
+
+        // Mark notifications as read
+        Notification::where('resident_id', Auth::user()->id)
+            ->where('link', 'like', '%' . route('resident.messages.show', $thread->id) . '%')
+            ->where('is_read', false)
             ->update(['is_read' => true]);
 
         return view('resident.messages.show', compact('thread'));
@@ -119,6 +137,20 @@ class MessageController extends Controller
                 'status' => 'pending', // Reset to pending for admin attention
                 'last_message_at' => now(),
             ]);
+
+            // Notify Admins
+            $admins = User::where('role', 'admin')->get();
+            $resident_profile = Auth::user()->resident;
+            foreach ($admins as $admin) {
+                Notification::create([
+                    'admin_id' => $admin->id,
+                    'title' => '💬 New Reply from Resident',
+                    'message' => "{$resident_profile->full_name} replied to: '{$thread->subject}'.",
+                    'type' => 'system',
+                    'link' => route('admin.messages.index'),
+                    'is_read' => false,
+                ]);
+            }
         });
 
         return back()->with('success', 'Reply sent successfully.');

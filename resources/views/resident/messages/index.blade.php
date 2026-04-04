@@ -1,10 +1,10 @@
-@extends('layouts.resident')
+@extends('resident.layouts.app')
 
 @section('title', 'Messages')
 @section('page-title', 'Messages Center')
 
 @section('content')
-<div class="max-w-7xl mx-auto pb-20" x-data="{ filter: 'all' }">
+<div class="space-y-8" x-data="{ filter: 'all' }">
     <x-resident-hero-header 
         label="Inbox & Notifications" 
         icon="bi-chat-dots-fill"
@@ -27,7 +27,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {{-- Inbox Section --}}
         <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden min-h-[500px]">
+            <div class="glass-card overflow-hidden min-h-[500px]">
                 <div class="p-8 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
                     <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest">Inbox Conversations</h3>
                     <div class="flex items-center gap-2">
@@ -106,7 +106,7 @@
                 </div>
             </div>
 
-            <div class="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
+            <div class="glass-card p-8">
                 <h4 class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-6">Need Support?</h4>
                 <div class="p-6 bg-emerald-50/50 rounded-2xl border border-emerald-100/50 text-center">
                     <i class="bi bi-headset text-2xl text-emerald-600 mb-2 inline-block"></i>

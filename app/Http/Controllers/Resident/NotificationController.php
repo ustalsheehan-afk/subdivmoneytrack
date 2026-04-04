@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Resident;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,7 +17,10 @@ class NotificationController extends Controller
         $resident = Auth::user()->resident;
         
         if ($resident) {
-            $resident->notifications()->where('is_read', false)->update(['is_read' => true]);
+            $resident->notifications()
+                ->where('role', Notification::ROLE_RESIDENT)
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
         }
 
         return back()->with('success', 'All notifications marked as read.');
@@ -28,7 +32,9 @@ class NotificationController extends Controller
     public function show($id)
     {
         $resident = Auth::user()->resident;
-        $notification = $resident->notifications()->findOrFail($id);
+        $notification = $resident->notifications()
+            ->where('role', Notification::ROLE_RESIDENT)
+            ->findOrFail($id);
         
         $notification->update(['is_read' => true]);
 

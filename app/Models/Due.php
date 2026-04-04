@@ -184,6 +184,7 @@ class Due extends Model
                 $due->billing_period_end = self::defaultBillingPeriodEnd($dueDate);
             }
         });
+
     }
 
     /**

@@ -4,7 +4,7 @@
 @section('page-title', 'Reports Management')
 
 @section('content')
-<div class="space-y-8 animate-fade-in pb-20">
+<div x-data="{ showSummary: false }" class="space-y-8 animate-fade-in pb-20">
 
     {{-- ===================== --}}
     {{-- HEADER SECTION --}}

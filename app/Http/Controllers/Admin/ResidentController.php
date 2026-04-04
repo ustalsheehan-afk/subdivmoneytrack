@@ -23,6 +23,15 @@ use App\Traits\LogsActivity;
 class ResidentController extends Controller
 {
     use LogsActivity;
+
+    public function __construct()
+    {
+        $this->middleware('permission:residents.view')->only(['index', 'show']);
+        $this->middleware('permission:residents.create')->only(['create', 'store']);
+        $this->middleware('permission:residents.update')->only(['edit', 'update', 'updateNotes']);
+        $this->middleware('permission:residents.delete')->only(['destroy', 'bulkDestroy']);
+    }
+
     // ================================
     // IMPERSONATION
     // ================================
@@ -309,5 +318,21 @@ class ResidentController extends Controller
             'status'       => 'required|in:active,inactive',
             'photo'        => 'nullable|image|max:2048',
         ]);
+    }
+
+    // ================================
+    // UPDATE NOTES
+    // ================================
+    public function updateNotes(Request $request, Resident $resident)
+    {
+        $request->validate([
+            'notes' => 'nullable|string',
+        ]);
+
+        $resident->update([
+            'notes' => $request->notes,
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }

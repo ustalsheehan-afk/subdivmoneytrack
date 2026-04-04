@@ -15,6 +15,12 @@ use Carbon\Carbon;
 
 class ReportController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:reports.view')->only(['index']);
+        $this->middleware('permission:reports.export')->only(['exportCsv', 'exportPdf', 'exportExcel']);
+    }
+
     public function index(Request $request)
     {
         $category = $request->input('category');
@@ -58,7 +64,10 @@ class ReportController extends Controller
         // FINANCIAL REPORTS
         if ($category === 'financial') {
             if ($type === 'monthly_collection' || $type === 'payment_history') {
-                $query = Payment::with('resident')->whereBetween('date_paid', [$startDate, $endDate]);
+                $query = Payment::with('resident')->where(function($q) use ($startDate, $endDate) {
+                    $q->whereBetween('date_paid', [$startDate, $endDate])
+                      ->orWhereBetween('created_at', [$startDate, $endDate]);
+                });
                 if ($status !== 'all') {
                     $query->where('status', $status);
                 }
@@ -140,12 +149,13 @@ class ReportController extends Controller
                     'Collected' => '₱' . number_format($data->where('status', 'paid')->sum('amount'), 2),
                     'Pending' => '₱' . number_format($data->where('status', 'pending')->sum('amount'), 2),
                 ];
-                $columns = ['Date Issued', 'Resident', 'Reason', 'Amount', 'Status'];
+                $columns = ['Date Issued', 'Resident', 'Type', 'Reason', 'Amount', 'Status'];
 
                 foreach ($data as $item) {
                     $rows[] = [
-                        $item->date_issued->format('Y-m-d'),
+                        $item->date_issued ? $item->date_issued->format('Y-m-d') : 'N/A',
                         $item->resident?->full_name ?? 'N/A',
+                        ucfirst($item->type ?? 'General'),
                         $item->reason,
                         '₱' . number_format($item->amount, 2),
                         ucfirst($item->status)
@@ -155,8 +165,11 @@ class ReportController extends Controller
             elseif ($type === 'financial_forecasting') {
                 $sixMonthsAgo = Carbon::now()->subMonths(6);
                 $collections = Payment::where('status', 'approved')
-                    ->where('date_paid', '>=', $sixMonthsAgo)
-                    ->selectRaw('YEAR(date_paid) as year, MONTH(date_paid) as month, SUM(amount) as total')
+                    ->where(function($q) use ($sixMonthsAgo) {
+                        $q->where('date_paid', '>=', $sixMonthsAgo)
+                          ->orWhere('created_at', '>=', $sixMonthsAgo);
+                    })
+                    ->selectRaw('YEAR(COALESCE(date_paid, created_at)) as year, MONTH(COALESCE(date_paid, created_at)) as month, SUM(amount) as total')
                     ->groupBy('year', 'month')
                     ->get();
                 
@@ -260,12 +273,14 @@ class ReportController extends Controller
                 if ($status !== 'all') {
                     $query->where('status', $status);
                 }
-                $query->whereBetween('move_in_date', [$startDate, $endDate]);
+                // Optional: Filter by move-in or registration date
+                // $query->whereBetween('move_in_date', [$startDate, $endDate]);
                 
-                $data = $query->get();
+                $data = $query->latest()->get();
                 $summary = [
                     'Total Residents' => $data->count(),
                     'Active' => $data->where('status', 'active')->count(),
+                    'Pending' => $data->where('status', 'pending')->count(),
                 ];
                 $columns = ['Name', 'Block/Lot', 'Contact', 'Status', 'Move In Date'];
                 
@@ -340,7 +355,11 @@ class ReportController extends Controller
                         $q->where('title', 'like', '%Amenity%')
                           ->orWhere('title', 'like', '%Reservation%');
                     })
-                    ->whereBetween('date_paid', [$startDate, $endDate])
+                    ->where('status', 'approved')
+                    ->where(function($q) use ($startDate, $endDate) {
+                        $q->whereBetween('date_paid', [$startDate, $endDate])
+                          ->orWhereBetween('created_at', [$startDate, $endDate]);
+                    })
                     ->with(['resident', 'due'])
                     ->get();
                 
@@ -650,8 +669,8 @@ class ReportController extends Controller
     {
         $category = $request->input('category');
         $type = $request->input('type');
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
         $status = $request->input('status', 'all');
         $selectedColumns = $request->input('columns', []);
         

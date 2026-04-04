@@ -9,6 +9,7 @@
         @csrf
         @method('PUT')
         <input type="hidden" name="status" id="form-status" value="{{ $announcement->status }}">
+        <input type="hidden" name="submit_action" id="submit-action" value="update">
         
         <div class="flex flex-col lg:flex-row gap-8 items-start">
             {{-- LEFT PANEL (FORM) --}}
@@ -49,8 +50,8 @@
                                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Priority Level</label>
                                 <select name="priority" id="input-priority" 
                                         class="w-full px-4 py-3 rounded-[10px] border border-gray-200 bg-gray-50/50 text-sm focus:ring-2 focus:ring-[#B6FF5C] focus:border-[#B6FF5C] focus:bg-white focus:outline-none transition-all duration-300 cursor-pointer">
-                                    <option value="fyi" {{ old('priority', $announcement->priority) == 'fyi' ? 'selected' : '' }}>FYI (Normal)</option>
-                                    <option value="important" {{ old('priority', $announcement->priority) == 'important' ? 'selected' : '' }}>Important</option>
+                                    <option value="normal" {{ in_array(old('priority', $announcement->priority), ['normal', 'fyi']) ? 'selected' : '' }}>FYI (Normal)</option>
+                                    <option value="high" {{ in_array(old('priority', $announcement->priority), ['high', 'important']) ? 'selected' : '' }}>Important</option>
                                     <option value="urgent" {{ old('priority', $announcement->priority) == 'urgent' ? 'selected' : '' }}>Urgent</option>
                                 </select>
                             </div>
@@ -243,7 +244,7 @@
                             Save as Draft
                         </button>
                     @endif
-                    <button type="submit"
+                    <button type="submit" @if($announcement->status === 'draft') onclick="prepareDraftPublish()" @endif
                             class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#081412] text-[#B6FF5C] rounded-[12px] text-sm font-bold hover:shadow-[0_0_20px_rgba(182,255,92,0.3)] hover:-translate-y-0.5 transition-all duration-300 border border-[#B6FF5C]/20">
                         <i class="bi bi-check2-circle"></i>
                         {{ $announcement->status === 'draft' ? 'Publish Announcement' : 'Update Announcement' }}
@@ -295,8 +296,8 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         priorities: {
             'urgent': { label: 'Urgent', class: 'bg-red-50 text-red-600 border-red-100' },
-            'important': { label: 'Important', class: 'bg-amber-50 text-amber-600 border-amber-100' },
-            'fyi': { label: 'FYI', class: 'bg-blue-50 text-blue-600 border-blue-100' }
+            'high': { label: 'Important', class: 'bg-amber-50 text-amber-600 border-amber-100' },
+            'normal': { label: 'FYI', class: 'bg-blue-50 text-blue-600 border-blue-100' }
         }
     };
 
@@ -322,7 +323,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Priority Badge
         const priority = inputs.priority.value;
-        if (priority && priority !== 'fyi') {
+        if (priority && priority !== 'normal') {
             previews.priorityBadge.textContent = config.priorities[priority].label;
             previews.priorityBadge.className = `px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${config.priorities[priority].class}`;
             previews.priorityBadge.classList.remove('hidden');
@@ -375,8 +376,14 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function submitAsDraft() {
+    document.getElementById('submit-action').value = 'save_draft';
     document.getElementById('form-status').value = 'draft';
     document.getElementById('announcementForm').submit();
+}
+
+function prepareDraftPublish() {
+    document.getElementById('submit-action').value = 'publish_draft';
+    document.getElementById('form-status').value = 'active';
 }
 </script>
 @endpush

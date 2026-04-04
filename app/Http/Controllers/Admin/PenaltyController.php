@@ -15,6 +15,15 @@ use App\Traits\LogsActivity;
 class PenaltyController extends Controller
 {
     use LogsActivity;
+
+    public function __construct()
+    {
+        $this->middleware('permission:penalties.view')->only(['index', 'getData']);
+        $this->middleware('permission:penalties.create')->only(['store', 'create']);
+        $this->middleware('permission:penalties.update')->only(['edit', 'update']);
+        $this->middleware('permission:penalties.delete')->only(['destroy', 'bulkDestroy']);
+    }
+
     /**
      * Display a listing of all penalties (index page).
      */
@@ -265,7 +274,7 @@ class PenaltyController extends Controller
             'customTitle' => 'Penalty #' . str_pad($penalty->id, 5, '0', STR_PAD_LEFT),
             'resident_name' => $penalty->resident->first_name . ' ' . $penalty->resident->last_name,
             'resident_photo' => $penalty->resident->photo 
-                ? Storage::disk('public')->url($penalty->resident->photo)
+                ? asset('storage/' . $penalty->resident->photo)
                 : null, // Frontend handles null with onerror
             'resident_property' => 'Block ' . ($penalty->resident->block ?? '?') . ' Lot ' . ($penalty->resident->lot ?? '?'),
             'resident_profile_url' => route('admin.residents.show', $penalty->resident->id),

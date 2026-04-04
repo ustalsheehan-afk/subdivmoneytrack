@@ -4,65 +4,83 @@
 @section('page-title', 'Service Requests')
 
 @section('content')
-<div class="h-full bg-[#F8F9FB] overflow-y-auto custom-scrollbar">
-    <div class="max-w-7xl mx-auto px-6 py-8 flex flex-col gap-8">
+<div class="space-y-8 animate-fade-in pb-20">
 
-        {{-- STATS SECTION --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {{-- Total Requests --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all duration-300">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div class="relative z-10">
-                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Total Requests</p>
-                    <h3 class="text-2xl font-black text-gray-900 tracking-tight">{{ $summaryTotal }}</h3>
-                    <div class="mt-4 flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                        <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Service Tickets</p>
-                    </div>
-                </div>
+    {{-- ===================== --}}
+    {{-- HEADER SECTION --}}
+    {{-- ===================== --}}
+    <div class="glass-card p-8 relative overflow-hidden group">
+        {{-- Subtle gradient glow in background --}}
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-brand-accent/5 rounded-full blur-3xl group-hover:bg-brand-accent/10 transition-all duration-700"></div>
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
+                    Service Requests
+                </h1>
+                <p class="mt-2 text-gray-600 text-lg max-w-xl">
+                    Manage maintenance tickets, facility requests, and community service inquiries.
+                </p>
             </div>
+        </div>
+    </div>
 
-            {{-- Pending --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all duration-300">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div class="relative z-10">
-                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Pending Action</p>
-                    <h3 class="text-2xl font-black text-gray-900 tracking-tight">{{ $summaryPending }}</h3>
-                    <div class="mt-4 flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
-                        <p class="text-[10px] font-black text-orange-600 uppercase tracking-widest">Awaiting Review</p>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Completed --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all duration-300">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div class="relative z-10">
-                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Total Completed</p>
-                    <h3 class="text-2xl font-black text-gray-900 tracking-tight">{{ $summaryCompleted }}</h3>
-                    <div class="mt-4 flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Resolved Tasks</p>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Rejected --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all duration-300">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-red-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div class="relative z-10">
-                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Total Rejected</p>
-                    <h3 class="text-2xl font-black text-gray-900 tracking-tight">{{ $summaryRejected }}</h3>
-                    <div class="mt-4 flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                        <p class="text-[10px] font-black text-red-600 uppercase tracking-widest">Denied Requests</p>
-                    </div>
+    {{-- STATS SECTION --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {{-- Total Requests --}}
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div class="relative z-10">
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Total Requests</p>
+                <h3 class="text-2xl font-black text-gray-900 tracking-tight">{{ $summaryTotal }}</h3>
+                <div class="mt-4 flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                    <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Service Tickets</p>
                 </div>
             </div>
         </div>
 
-        <div class="flex flex-col bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden relative min-h-[600px]">
+        {{-- Pending --}}
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div class="relative z-10">
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Pending Action</p>
+                <h3 class="text-2xl font-black text-gray-900 tracking-tight">{{ $summaryPending }}</h3>
+                <div class="mt-4 flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                    <p class="text-[10px] font-black text-orange-600 uppercase tracking-widest">Awaiting Review</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- Completed --}}
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div class="relative z-10">
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Total Completed</p>
+                <h3 class="text-2xl font-black text-gray-900 tracking-tight">{{ $summaryCompleted }}</h3>
+                <div class="mt-4 flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Resolved Tasks</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- Rejected --}}
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-red-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div class="relative z-10">
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Total Rejected</p>
+                <h3 class="text-2xl font-black text-gray-900 tracking-tight">{{ $summaryRejected }}</h3>
+                <div class="mt-4 flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                    <p class="text-[10px] font-black text-red-600 uppercase tracking-widest">Denied Requests</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex flex-col bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden relative min-h-[600px]">
 
             {{-- ========================================= --}}
             {{-- TOOLBAR (Sticky, Filters, Actions)        --}}

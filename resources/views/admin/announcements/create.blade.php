@@ -49,8 +49,8 @@
                                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Priority Level</label>
                                 <select name="priority" id="input-priority" 
                                         class="w-full px-4 py-3 rounded-[10px] border border-gray-200 bg-gray-50/50 text-sm focus:ring-2 focus:ring-[#B6FF5C] focus:border-[#B6FF5C] focus:bg-white focus:outline-none transition-all duration-300 cursor-pointer">
-                                    <option value="fyi">FYI (Normal)</option>
-                                    <option value="important">Important</option>
+                                    <option value="normal">FYI (Normal)</option>
+                                    <option value="high">Important</option>
                                     <option value="urgent">Urgent</option>
                                 </select>
                             </div>
@@ -291,8 +291,8 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         priorities: {
             'urgent': { label: 'Urgent', class: 'bg-red-50 text-red-600 border-red-100' },
-            'important': { label: 'Important', class: 'bg-amber-50 text-amber-600 border-amber-100' },
-            'fyi': { label: 'FYI', class: 'bg-blue-50 text-blue-600 border-blue-100' }
+            'high': { label: 'Important', class: 'bg-amber-50 text-amber-600 border-amber-100' },
+            'normal': { label: 'FYI', class: 'bg-blue-50 text-blue-600 border-blue-100' }
         }
     };
 
@@ -318,7 +318,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Priority Badge
         const priority = inputs.priority.value;
-        if (priority && priority !== 'fyi') {
+        if (priority && priority !== 'normal') {
             previews.priorityBadge.textContent = config.priorities[priority].label;
             previews.priorityBadge.className = `px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${config.priorities[priority].class}`;
             previews.priorityBadge.classList.remove('hidden');

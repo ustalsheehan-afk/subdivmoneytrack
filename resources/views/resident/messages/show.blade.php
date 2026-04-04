@@ -1,4 +1,4 @@
-@extends('layouts.resident')
+@extends('resident.layouts.app')
 
 @section('title', 'Message Thread - ' . $thread->subject)
 @section('page-title', 'Message Thread')

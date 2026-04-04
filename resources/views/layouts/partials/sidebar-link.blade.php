@@ -1,4 +1,5 @@
 @php
+    $allowed = !isset($link['permission']) || (auth()->check() && auth()->user()->can($link['permission']));
     $isActive = request()->routeIs($link['pattern']);
     
     $containerClass = $isActive 
@@ -21,6 +22,7 @@
     };
 @endphp
 
+@if($allowed)
 <a href="{{ route($link['route']) }}" 
    class="group relative flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 {{ $containerClass }}">
     
@@ -47,3 +49,4 @@
         </template>
     @endif
 </a>
+@endif

@@ -68,10 +68,10 @@
                     </span>
                 @endif
 
-                @if($announcement->priority && $announcement->priority !== 'fyi')
+                @if($announcement->priority && !in_array($announcement->priority, ['low', 'normal'], true))
                     <span class="badge-standard 
                         {{ $announcement->priority === 'urgent' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-amber-50 text-amber-600 border border-amber-100' }}">
-                        {{ $announcement->priority }}
+                        {{ $announcement->priority === 'high' ? 'important' : $announcement->priority }}
                     </span>
                 @endif
             </div>

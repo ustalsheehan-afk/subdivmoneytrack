@@ -9,6 +9,14 @@ use Illuminate\Support\Facades\Storage;
 
 class BoardMemberController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:board_members.view')->only(['index']);
+        $this->middleware('permission:board_members.create')->only(['create', 'store']);
+        $this->middleware('permission:board_members.update')->only(['edit', 'update']);
+        $this->middleware('permission:board_members.delete')->only(['destroy']);
+    }
+
     private $positions = [
         'President',
         'Vice President',

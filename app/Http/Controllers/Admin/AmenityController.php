@@ -9,6 +9,14 @@ use Illuminate\Support\Facades\Storage;
 
 class AmenityController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:amenities.view')->only(['index', 'show']);
+        $this->middleware('permission:amenities.create')->only(['create', 'store']);
+        $this->middleware('permission:amenities.update')->only(['edit', 'update']);
+        $this->middleware('permission:amenities.delete')->only(['destroy']);
+    }
+
     /**
      * Display a listing of the resource.
      */

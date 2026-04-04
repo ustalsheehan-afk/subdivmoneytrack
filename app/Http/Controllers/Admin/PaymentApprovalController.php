@@ -8,6 +8,12 @@ use App\Models\Payment;
 
 class PaymentApprovalController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:payments.view')->only(['index']);
+        $this->middleware('permission:payments.update')->only(['approve', 'reject']);
+    }
+
     public function index()
     {
         $payments = Payment::with('homeowner','due')->latest()->paginate(15);

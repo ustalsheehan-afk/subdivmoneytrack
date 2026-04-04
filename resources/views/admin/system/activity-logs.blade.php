@@ -1,155 +1,225 @@
 @extends('layouts.admin')
 
-@section('title', 'Activity Logs')
-@section('page-title', 'Activity Logs')
+@section('title', 'Activity Logs & Monitoring')
+@section('page-title', 'Activity Logs & Monitoring')
 
 @section('content')
-<div class="space-y-8 animate-fade-in">
-
-    {{-- ===================== --}}
-    {{-- HEADER SECTION --}}
-    {{-- ===================== --}}
-    <div class="glass-card p-8 relative overflow-hidden group">
-        {{-- Subtle gradient glow in background --}}
-        <div class="absolute -right-20 -top-20 w-64 h-64 bg-brand-accent/5 rounded-full blur-3xl group-hover:bg-brand-accent/10 transition-all duration-700"></div>
-        
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+<div class="space-y-8 animate-fade-in" x-data="activityLogs()">
+    <div class="glass-card p-8 relative overflow-hidden">
+        <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
-                    Activity Logs
-                </h1>
-                <p class="mt-2 text-gray-600 text-lg max-w-xl">
-                    System audit trail and administrative transparency records.
-                </p>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900">Activity Logs & Monitoring</h1>
+                <p class="mt-1 text-gray-600 text-sm">Auditability, monitoring, and administrator accountability</p>
             </div>
-
-            <div class="flex items-center gap-3">
-                <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-100">
-                    <i class="bi bi-journal-text text-2xl"></i>
+            <div class="flex items-center gap-4">
+                <button class="w-11 h-11 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-emerald-600 hover:border-emerald-200 transition">
+                    <i class="bi bi-bell-fill"></i>
+                </button>
+                <div class="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white border border-gray-200">
+                    <div class="w-8 h-8 rounded-full bg-gray-900 text-[#B6FF5C] flex items-center justify-center text-xs font-black">SA</div>
+                    <div class="leading-tight">
+                        <div class="text-sm font-black text-gray-900">Super Admin</div>
+                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Administrator</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-    {{-- ===================== --}}
-    {{-- TOOLBAR / FILTER SECTION --}}
-    {{-- ===================== --}}
+    @php
+        $todayCount = \App\Models\ActivityLog::whereDate('created_at', now())->count();
+        $failedLogins = \App\Models\ActivityLog::where('action', 'failed_login')->whereBetween('created_at', [now()->subDay(), now()])->count();
+        $activeAdmins = \App\Models\ActivityLog::whereBetween('created_at', [now()->subDay(), now()])->where('causer_type', \App\Models\User::class)->distinct('causer_id')->count('causer_id');
+        $topModule = \App\Models\ActivityLog::selectRaw('module, COUNT(*) as c')->whereBetween('created_at', [now()->subDay(), now()])->groupBy('module')->orderByDesc('c')->first();
+    @endphp
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="glass-card p-6 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100"><i class="bi bi-graph-up"></i></div>
+            <div>
+                <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Actions Today</div>
+                <div class="text-3xl font-black text-gray-900">{{ number_format($todayCount) }}</div>
+                <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Last 24 hours</div>
+            </div>
+        </div>
+        <div class="glass-card p-6 flex items-center gap-4 {{ $failedLogins > 0 ? 'border border-red-100' : '' }}">
+            <div class="w-12 h-12 rounded-2xl {{ $failedLogins > 0 ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-gray-50 text-gray-400 border border-gray-100' }} flex items-center justify-center"><i class="bi bi-exclamation-octagon"></i></div>
+            <div>
+                <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Failed Login Attempts</div>
+                <div class="text-3xl font-black {{ $failedLogins > 0 ? 'text-red-600' : 'text-gray-900' }}">{{ number_format($failedLogins) }}</div>
+                <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Last 24 hours</div>
+            </div>
+        </div>
+        <div class="glass-card p-6 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100"><i class="bi bi-people-fill"></i></div>
+            <div>
+                <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Admin Users</div>
+                <div class="text-3xl font-black text-gray-900">{{ number_format($activeAdmins) }}</div>
+                <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Last 24 hours</div>
+            </div>
+        </div>
+        <div class="glass-card p-6 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100"><i class="bi bi-sliders"></i></div>
+            <div>
+                <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Most Modified Module</div>
+                <div class="text-xl font-black text-gray-900">{{ $topModule->module ?? 'N/A' }}</div>
+                <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Last 24 hours</div>
+            </div>
+        </div>
+    </div>
     <div class="glass-card p-4">
-        <form action="{{ route('admin.system.activity-logs.index') }}" method="GET" class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div class="flex flex-wrap items-center gap-4 flex-1">
-                {{-- Module Filter --}}
-                <div class="relative group min-w-[200px]">
-                    <i class="bi bi-filter absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors"></i>
-                    <select name="module" onchange="this.form.submit()" 
-                        class="w-full pl-11 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-600 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all appearance-none cursor-pointer">
-                        <option value="">All Modules</option>
-                        <option value="dues" {{ request('module') == 'dues' ? 'selected' : '' }}>Dues</option>
-                        <option value="payments" {{ request('module') == 'payments' ? 'selected' : '' }}>Payments</option>
-                        <option value="reservations" {{ request('module') == 'reservations' ? 'selected' : '' }}>Reservations</option>
-                        <option value="requests" {{ request('module') == 'requests' ? 'selected' : '' }}>Requests</option>
-                        <option value="messages" {{ request('module') == 'messages' ? 'selected' : '' }}>Messages</option>
-                    </select>
-                    <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[8px] opacity-50 pointer-events-none"></i>
-                </div>
-
-                {{-- Action Filter --}}
-                <div class="relative group min-w-[200px]">
-                    <i class="bi bi-lightning absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors"></i>
-                    <select name="action" onchange="this.form.submit()" 
-                        class="w-full pl-11 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-600 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all appearance-none cursor-pointer">
-                        <option value="">All Actions</option>
-                        <option value="created" {{ request('action') == 'created' ? 'selected' : '' }}>Created</option>
-                        <option value="updated" {{ request('action') == 'updated' ? 'selected' : '' }}>Updated</option>
-                        <option value="deleted" {{ request('action') == 'deleted' ? 'selected' : '' }}>Deleted</option>
-                        <option value="approved" {{ request('action') == 'approved' ? 'selected' : '' }}>Approved</option>
-                    </select>
-                    <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[8px] opacity-50 pointer-events-none"></i>
-                </div>
+        <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+            <div class="relative flex-1">
+                <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input x-model="search" type="text" placeholder="Search by user, action, or ID" class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none">
             </div>
-
-            {{-- Reset Button --}}
-            @if(request('module') || request('action'))
-                <a href="{{ route('admin.system.activity-logs.index') }}" class="btn-secondary px-6">
-                    <i class="bi bi-arrow-counterclockwise"></i>
-                    Reset Filters
-                </a>
-            @endif
-        </form>
-    </div>
-
-    {{-- ===================== --}}
-    {{-- ACTIVITY TIMELINE --}}
-    {{-- ===================== --}}
-    <div class="glass-card overflow-hidden">
-        <div class="divide-y divide-gray-50">
-            @forelse($logs as $log)
-                <div class="p-8 flex items-start gap-6 hover:bg-emerald-50/20 transition-all group border-l-4 border-transparent hover:border-emerald-500">
-                    <div class="relative shrink-0">
-                        <div class="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-all duration-500 border border-gray-100 shadow-sm">
-                            <i class="bi 
-                                @if($log->module == 'dues') bi-receipt
-                                @elseif($log->module == 'payments') bi-cash-stack
-                                @elseif($log->module == 'reservations') bi-calendar-check
-                                @elseif($log->module == 'requests') bi-tools
-                                @elseif($log->module == 'messages') bi-chat-left-dots
-                                @else bi-journal-text @endif text-2xl"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="flex-1 min-w-0">
-                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-2">
-                            <div class="flex items-center gap-3">
-                                <span class="text-sm font-black text-gray-900 uppercase tracking-tight group-hover:text-emerald-700 transition-colors">
-                                    {{ $log->causer->name ?? ($log->causer->full_name ?? 'System') }}
-                                </span>
-                                <span class="px-3 py-1 bg-emerald-50 text-[9px] font-black text-emerald-600 rounded-full uppercase tracking-widest border border-emerald-100/50">
-                                    {{ $log->action }}
-                                </span>
-                            </div>
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                                <i class="bi bi-clock text-emerald-500"></i>
-                                {{ $log->created_at->format('M d, Y • h:i A') }}
-                            </span>
-                        </div>
-                        <p class="text-base text-gray-600 font-medium leading-relaxed">{{ $log->description }}</p>
-                        
-                        @if($log->metadata)
-                            <div class="mt-4 p-4 bg-gray-900 rounded-2xl border border-white/10 overflow-hidden shadow-inner group/meta">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Metadata Payload</span>
-                                    <i class="bi bi-braces text-emerald-500/50"></i>
-                                </div>
-                                <pre class="text-[11px] text-gray-300 font-mono overflow-x-auto custom-scrollbar-dark">{{ json_encode($log->metadata, JSON_PRETTY_PRINT) }}</pre>
-                            </div>
-                        @endif
-                    </div>
+            <div class="flex items-center gap-2">
+                <div class="relative">
+                    <button @click="toggle('action')" class="px-4 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50">All Actions <i class="bi bi-chevron-down ml-1"></i></button>
                 </div>
-            @empty
-                <div class="p-24 text-center">
-                    <div class="w-24 h-24 bg-gray-50 rounded-[32px] flex items-center justify-center mx-auto mb-6 text-gray-200 shadow-inner">
-                        <i class="bi bi-journals text-5xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-black text-gray-900 tracking-tight mb-2 uppercase">No Logs Found</h3>
-                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">The activity log is currently empty.</p>
+                <div class="relative">
+                    <button @click="toggle('module')" class="px-4 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50">All Modules <i class="bi bi-chevron-down ml-1"></i></button>
                 </div>
-            @endforelse
+                <div class="relative">
+                    <button @click="toggle('role')" class="px-4 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50">All Users <i class="bi bi-chevron-down ml-1"></i></button>
+                </div>
+                <div class="relative">
+                    <button @click="toggle('range')" class="px-4 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50">Last 7 Days <i class="bi bi-chevron-down ml-1"></i></button>
+                </div>
+                <a href="{{ route('admin.system.activity-logs.index') }}" class="px-4 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50">Clear Filters</a>
+                @can('export_logs')
+                    <a href="{{ route('admin.system.activity-logs.export', request()->query()) }}" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700">Export Logs</a>
+                @endcan
+            </div>
         </div>
     </div>
-
-    <div class="mt-8">
-        {{ $logs->links() }}
+    <div class="glass-card overflow-hidden">
+        <div class="overflow-auto">
+            <table class="min-w-full text-sm">
+                <thead class="sticky top-0 bg-gray-50 border-b border-gray-100">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Time</th>
+                        <th class="px-6 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">User</th>
+                        <th class="px-6 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Action</th>
+                        <th class="px-6 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Module</th>
+                        <th class="px-6 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Description</th>
+                        <th class="px-6 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">IP Address</th>
+                        <th class="px-6 py-3 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    @forelse($logs as $log)
+                        @php
+                            $actionMap = [
+                                'created' => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-600', 'border' => 'border-emerald-100', 'icon' => 'bi-check-circle'],
+                                'updated' => ['bg' => 'bg-blue-50', 'text' => 'text-blue-600', 'border' => 'border-blue-100', 'icon' => 'bi-pencil-fill'],
+                                'payment' => ['bg' => 'bg-yellow-50', 'text' => 'text-yellow-600', 'border' => 'border-yellow-100', 'icon' => 'bi-cash-stack'],
+                                'deleted' => ['bg' => 'bg-red-50', 'text' => 'text-red-600', 'border' => 'border-red-100', 'icon' => 'bi-trash-fill'],
+                                'warning' => ['bg' => 'bg-orange-50', 'text' => 'text-orange-600', 'border' => 'border-orange-100', 'icon' => 'bi-exclamation-triangle-fill'],
+                            ];
+                            $conf = $actionMap[$log->action] ?? $actionMap['updated'];
+                            $userName = $log->causer->name ?? ($log->causer->full_name ?? 'System');
+                            $userRole = method_exists($log->causer ?? null, 'role') ? ($log->causer->role ?? 'user') : 'user';
+                            $ip = $log->metadata['ip'] ?? '—';
+                        @endphp
+                        <tr x-show="matchesSearch('{{ strtolower($userName.' '.$log->action.' '.$log->id) }}')">
+                            <td class="px-6 py-4 text-gray-500">{{ $log->created_at->format('M d, Y • h:i A') }}</td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-gray-900 text-[#B6FF5C] flex items-center justify-center text-xs font-black">{{ strtoupper(substr($userName,0,1)) }}</div>
+                                    <div class="leading-tight">
+                                        <div class="text-sm font-black text-gray-900">{{ strtoupper($userName) }}</div>
+                                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">{{ $userRole }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border {{ $conf['bg'] }} {{ $conf['text'] }} {{ $conf['border'] }}"><i class="bi {{ $conf['icon'] }}"></i> {{ ucfirst($log->action) }}</span>
+                            </td>
+                            <td class="px-6 py-4 font-bold text-gray-900">{{ ucfirst($log->module) }}</td>
+                            <td class="px-6 py-4 text-gray-600">{{ $log->description }}</td>
+                            <td class="px-6 py-4 text-gray-500">{{ $ip }}</td>
+                            <td class="px-6 py-4 text-right">
+                                <button @click="openDetails({{ json_encode(['id'=>$log->id,'user'=>$userName,'role'=>$userRole,'action'=>$log->action,'module'=>$log->module,'description'=>$log->description,'ip'=>$ip,'time'=>$log->created_at->format('M d, Y • h:i A'),'metadata'=>$log->metadata]) }})" class="px-4 py-2 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black">View Details</button>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="px-6 py-24 text-center text-gray-400 font-bold">No logs found</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="p-4">{{ $logs->links() }}</div>
+    </div>
+    <div x-show="drawerOpen" x-cloak class="fixed inset-0 z-[100]">
+        <div class="absolute inset-0 bg-black/50" @click="drawerOpen=false"></div>
+        <div class="absolute right-0 top-0 bottom-0 w-full max-w-2xl bg-white shadow-2xl border-l border-gray-100 flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gray-900 text-[#B6FF5C] flex items-center justify-center text-sm font-black" x-text="detailsAvatar"></div>
+                    <div>
+                        <div class="text-lg font-black text-gray-900" x-text="details.user"></div>
+                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest" x-text="details.role"></div>
+                    </div>
+                </div>
+                <button @click="drawerOpen=false" class="w-10 h-10 rounded-xl bg-white border border-gray-200 text-gray-400 hover:text-gray-600 hover:bg-gray-50"><i class="bi bi-x-lg text-xs"></i></button>
+            </div>
+            <div class="p-6 space-y-6 overflow-y-auto">
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-1">
+                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Action</div>
+                        <div class="text-sm font-black text-gray-900" x-text="capitalize(details.action)"></div>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Module</div>
+                        <div class="text-sm font-black text-gray-900" x-text="capitalize(details.module)"></div>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">IP Address</div>
+                        <div class="text-sm font-black text-gray-900" x-text="details.ip"></div>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Timestamp</div>
+                        <div class="text-sm font-black text-gray-900" x-text="details.time"></div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Description</div>
+                    <div class="text-sm text-gray-700" x-text="details.description"></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" x-show="details.metadata && (details.metadata.before || details.metadata.after)">
+                    <div class="space-y-2">
+                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Before</div>
+                        <pre class="p-4 bg-gray-50 border border-gray-100 rounded-xl text-xs overflow-x-auto" x-text="formatJSON(details.metadata?.before)"></pre>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">After</div>
+                        <pre class="p-4 bg-gray-50 border border-gray-100 rounded-xl text-xs overflow-x-auto" x-text="formatJSON(details.metadata?.after)"></pre>
+                    </div>
+                </div>
+                <div class="space-y-2" x-show="details.metadata && !(details.metadata.before || details.metadata.after)">
+                    <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Metadata</div>
+                    <pre class="p-4 bg-gray-50 border border-gray-100 rounded-xl text-xs overflow-x-auto" x-text="formatJSON(details.metadata)"></pre>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-
-<style>
-.custom-scrollbar-dark::-webkit-scrollbar { width: 4px; height: 4px; }
-.custom-scrollbar-dark::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
-.custom-scrollbar-dark::-webkit-scrollbar-thumb { background: rgba(182,255,92,0.2); border-radius: 10px; }
-.custom-scrollbar-dark::-webkit-scrollbar-thumb:hover { background: rgba(182,255,92,0.4); }
-</style>
-
-    <div class="mt-8">
-        {{ $logs->links() }}
-    </div>
-</div>
+@push('scripts')
+<script>
+function activityLogs() {
+    return {
+        search: '',
+        drawerOpen: false,
+        details: {},
+        get detailsAvatar() { return (this.details.user || 'U')[0]?.toUpperCase() || 'U' },
+        matchesSearch(s) { return s.includes(this.search.toLowerCase()) },
+        openDetails(d) { this.details = d; this.drawerOpen = true },
+        formatJSON(obj) { try { return JSON.stringify(obj ?? {}, null, 2) } catch(e) { return '—' } },
+        capitalize(s) { return (s||'').charAt(0).toUpperCase()+ (s||'').slice(1) },
+        toggle() {}
+    }
+}
+</script>
+@endpush
 @endsection

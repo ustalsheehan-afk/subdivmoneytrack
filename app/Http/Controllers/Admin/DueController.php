@@ -13,6 +13,15 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DueController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:dues.view')->only(['index', 'show']);
+        $this->middleware('permission:dues.create')->only(['create', 'store']);
+        $this->middleware('permission:dues.update')->only(['edit', 'update', 'archive']);
+        $this->middleware('permission:dues.delete')->only(['destroy']);
+        $this->middleware('permission:dues.export')->only(['export']);
+    }
+
     /**
      * Display a listing of dues with advanced grouping and stats.
      */
@@ -175,95 +184,40 @@ class DueController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'amount' => 'required|numeric|min:0',
+            'amount' => 'required|numeric|min:0.01',
             'due_date' => 'required|date',
-            'type' => 'required|in:' . implode(',', [
-                Due::TYPE_MONTHLY_HOA,
-                Due::TYPE_REGULAR_FEES,
-                Due::TYPE_SPECIAL_ASSESSMENTS,
-            ]),
-            'frequency' => 'required|in:' . implode(',', [
-                Due::FREQUENCY_MONTHLY,
-                Due::FREQUENCY_ONE_TIME,
-                Due::FREQUENCY_QUARTERLY,
-            ]),
-            'billing_period_start' => 'nullable|date',
-            'billing_period_end' => 'nullable|date|after_or_equal:billing_period_start',
-            'apply_all_months' => 'nullable|boolean',
+            'type' => 'required|string',
+            'frequency' => 'required|string',
+            'billing_period_start' => 'required|date',
+            'resident_ids' => 'required|array|min:1',
+            'resident_ids.*' => 'exists:residents,id',
         ]);
 
-        $residentIds = Resident::query()->pluck('id');
+        $residentIds = collect($request->resident_ids);
         $now = now();
         $baseDueDate = Carbon::parse($validated['due_date'])->startOfDay();
+        $billingStart = Carbon::parse($validated['billing_period_start']);
+        $billingEnd = $baseDueDate->copy()->endOfMonth(); // Default end to end of month of due date
+        
+        $monthName = $baseDueDate->format('F');
+        $batchId = (string) Str::uuid();
 
-        if (empty($validated['billing_period_start'])) {
-            $validated['billing_period_start'] = Due::defaultBillingPeriodStart($baseDueDate)->toDateString();
-        }
-
-        if (empty($validated['billing_period_end'])) {
-            $validated['billing_period_end'] = Due::defaultBillingPeriodEnd($baseDueDate)->toDateString();
-        }
-
-        if ($residentIds->isEmpty()) {
-            return back()->with('error', 'No residents found to assign dues to.');
-        }
-
-        // Batch Creation Logic
-        if ($request->boolean('apply_all_months') && $validated['type'] === Due::TYPE_MONTHLY_HOA) {
-            $year = $baseDueDate->year;
-            $dayOfMonth = $baseDueDate->day;
-
-            for ($month = 1; $month <= 12; $month++) {
-                $monthStart = Carbon::create($year, $month, 1);
-                $dueDate = $monthStart->copy()->day(min($dayOfMonth, $monthStart->daysInMonth));
-
-                $billingStart = $monthStart->copy();
-                $billingEnd = $monthStart->copy()->endOfMonth();
-                $monthName = $billingEnd->format('F');
-                $batchId = (string) Str::uuid();
-
-                $this->createBatchRows(
+        $this->createBatchRows(
             $residentIds,
             $batchId,
-            $validated['title'] . ' - ' . $monthName . ' ' . $year,
-            $validated['description'] ?? null,
+            $validated['title'],
+            $validated['description'] ?? 'No description provided',
             $validated['amount'],
             $validated['type'],
             $validated['frequency'],
             $monthName,
-            $dueDate,
+            $baseDueDate,
             $billingStart,
             $billingEnd,
             $now
         );
-            }
-        } else {
-            $monthName = $baseDueDate->format('F');
-            $batchId = (string) Str::uuid();
-            $billingStart = $validated['billing_period_start']
-                ? Carbon::parse($validated['billing_period_start'])
-                : Due::defaultBillingPeriodStart($baseDueDate);
-            $billingEnd = Carbon::parse($validated['billing_period_end']);
 
-            $dueDate = $baseDueDate;
-
-            $this->createBatchRows(
-                $residentIds,
-                $batchId,
-                $validated['title'],
-                $validated['description'] ?? null,
-                $validated['amount'],
-                $validated['type'],
-                $validated['frequency'],
-                $monthName,
-                $dueDate,
-                $billingStart,
-                $billingEnd,
-                $now
-            );
-        }
-
-        return redirect()->route('admin.dues.index')->with('success', 'Dues created and assigned successfully.');
+        return redirect()->route('admin.dues.index')->with('success', 'Billing statements generated successfully for ' . $residentIds->count() . ' residents.');
     }
 
     /**

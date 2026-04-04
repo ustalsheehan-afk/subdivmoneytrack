@@ -18,6 +18,12 @@ trait LogsActivity
      */
     protected function logActivity(string $action, string $module, string $description, ?array $metadata = null)
     {
+        $metadata = $metadata ?? [];
+        if (Auth::check()) {
+            $metadata['role'] = $metadata['role'] ?? (Auth::user()->rbacRole->name ?? Auth::user()->role ?? null);
+        }
+        $metadata['ip'] = $metadata['ip'] ?? request()?->ip();
+
         ActivityLog::create([
             'causer_id' => Auth::id(),
             'causer_type' => Auth::check() ? get_class(Auth::user()) : 'System',

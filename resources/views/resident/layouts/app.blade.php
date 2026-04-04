@@ -8,29 +8,38 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <script src="https://cdn.tailwindcss.com"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 [x-cloak] { display: none !important; }
 html { scroll-behavior: smooth; }
 
+:root {
+    --bg-dark: #0D1F1C;
+    --bg-darker: #081412;
+    --brand-accent: #B6FF5C;
+    --brand-accent-glow: rgba(182, 255, 92, 0.3);
+    --text-muted: #A0AEC0;
+}
+
 body {
-    font-family: "Helvetica Neue", Arial, sans-serif;
-    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
     font-weight: 500;
     color: #1A202C;
     background: #ffffff;
     overflow-x: hidden;
 }
 
-.title, .section-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #1A202C;
+.meta {
+    font-size: 12px;
+    font-weight: 700;
+    color: #718096;
 }
 
-.meta {
-    font-size: 13px;
-    font-weight: 500;
-    color: #718096;
+.section-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #1A202C;
 }
 
 .custom-scrollbar::-webkit-scrollbar { width: 5px; }
@@ -43,9 +52,12 @@ body {
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Premium Button Style */
-    .btn-premium {
-        @apply inline-flex items-center gap-3 px-8 py-4 bg-[#081412] text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-[#0D1F1C] hover:shadow-[0_0_25px_rgba(182,255,92,0.2)] transition-all active:scale-95 border border-[#B6FF5C]/20;
+    .glass-card {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        transition: all 0.3s ease;
     }
     
     .custom-scrollbar::-webkit-scrollbar { width: 6px; }
@@ -53,20 +65,133 @@ body {
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+    .btn-premium {
+        background-color: var(--bg-darker);
+        color: var(--brand-accent) !important;
+        font-weight: 800;
+        padding: 0.75rem 1.25rem;
+        border-radius: 16px;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 1px solid rgba(182, 255, 92, 0.2);
+        text-transform: uppercase;
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        line-height: 1;
+        white-space: nowrap;
+    }
+
+    .btn-premium:hover {
+        background-color: var(--bg-dark);
+        box-shadow: 0 0 20px var(--brand-accent-glow);
+        transform: translateY(-1px);
+        color: var(--brand-accent) !important;
+    }
+
+    .btn-secondary {
+        background-color: #FFFFFF;
+        color: #4A5568 !important;
+        font-weight: 800;
+        padding: 0.75rem 1.25rem;
+        border-radius: 12px;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 1px solid #E2E8F0;
+        text-transform: uppercase;
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        line-height: 1;
+        white-space: nowrap;
+    }
+
+    .btn-secondary:hover {
+        background-color: #F7FAFC;
+        border-color: #CBD5E0;
+        transform: translateY(-1px);
+    }
+
+    .btn-danger {
+        background-color: #FEF2F2;
+        color: #B91C1C !important;
+        font-weight: 800;
+        padding: 0.75rem 1.25rem;
+        border-radius: 12px;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 1px solid #FEE2E2;
+        text-transform: uppercase;
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        line-height: 1;
+        white-space: nowrap;
+    }
+
+    .btn-danger:hover {
+        background-color: #FEE2E2;
+        transform: translateY(-1px);
+    }
+
+    .input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: #F7FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #1A202C;
+        outline: none;
+        transition: all 0.2s ease;
+    }
+
+    .input:focus {
+        background: #FFFFFF;
+        border-color: rgba(182, 255, 92, 0.8);
+        box-shadow: 0 0 0 4px rgba(182, 255, 92, 0.12);
+    }
+
+    .select {
+        width: 100%;
+        padding: 0.75rem 2.25rem 0.75rem 1rem;
+        background: #F7FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #4A5568;
+        outline: none;
+        transition: all 0.2s ease;
+        appearance: none;
+    }
+
+    .select:focus {
+        background: #FFFFFF;
+        border-color: rgba(182, 255, 92, 0.8);
+        box-shadow: 0 0 0 4px rgba(182, 255, 92, 0.12);
+    }
 </style>
 </head>
 
-<body class="flex h-screen w-full bg-white" x-data="systemNotifications" x-init="fetchNotifications(); setInterval(() => fetchNotifications(), 30000)">
+<body class="flex h-screen w-full bg-white overflow-hidden" x-data="systemNotifications" x-init="fetchNotifications(); setInterval(() => fetchNotifications(), 30000)">
 
 <!-- SIDEBAR -->
 <aside id="resident-sidebar"
-    class="fixed inset-y-0 left-0 z-50 w-72 bg-[#081412] text-white/80
-           border-r border-[#B6FF5C]/10 flex flex-col
+    class="fixed inset-y-0 left-0 z-50 w-72 bg-[var(--bg-darker)] text-white/80
+           border-r border-[rgba(182,255,92,0.10)] flex flex-col
            transition-transform duration-300 lg:translate-x-0
            -translate-x-full">
 
     <!-- SIDEBAR HEADER -->
-    <div class="h-16 px-6 border-b border-[#B6FF5C]/10 flex items-center gap-3">
+    <div class="h-16 px-6 border-b border-[rgba(182,255,92,0.10)] flex items-center gap-3">
         <div class="w-8 h-8 rounded-lg bg-[#B6FF5C] flex items-center justify-center
                     shadow-[0_0_15px_rgba(182,255,92,0.3)]">
             <i class="bi bi-houses-fill text-black"></i>
@@ -227,7 +352,7 @@ body {
         </div>
 
         <!-- LOGOUT -->
-        <div class="pt-4 mt-4 border-t border-gray-800">
+        <div class="pt-4 mt-4 border-t border-white/10">
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
                 <button type="submit" class="w-full group flex items-center gap-3.5 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-500 transition-all duration-200">
@@ -240,8 +365,8 @@ body {
     </nav>
 
     <!-- SIDEBAR FOOTER -->
-    <div class="p-4 border-t border-gray-800 bg-[#081412]">
-        <div class="flex items-center gap-3 px-3 py-3 rounded-2xl bg-[#0D1F1C] border border-[#B6FF5C]/10">
+    <div class="p-4 border-t border-white/10 bg-[var(--bg-darker)]">
+        <div class="flex items-center gap-3 px-3 py-3 rounded-2xl bg-[var(--bg-dark)] border border-[rgba(182,255,92,0.10)]">
             <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#B6FF5C] to-[#8AC941]
                         flex items-center justify-center text-xs font-bold text-black">
                 {{ strtoupper(substr(Auth::user()?->resident?->first_name ?? Auth::user()?->name ?? 'R', 0, 1)) }}
@@ -266,14 +391,14 @@ body {
 <div class="flex-1 flex flex-col min-w-0 bg-white relative">
 
     <header class="h-16 fixed top-0 right-0 left-0 lg:left-72 z-30
-                   flex items-center justify-between px-6 lg:px-10
+                   flex items-center justify-between px-4 sm:px-6 lg:px-10
                    bg-white text-[#000f22] border-b border-gray-200">
 
         <div class="flex items-center gap-4">
             <button class="lg:hidden" onclick="toggleResidentSidebar()">
                 <i class="bi bi-list text-2xl"></i>
             </button>
-            <h1 class="text-xl font-extrabold">
+            <h1 class="text-lg sm:text-xl font-extrabold tracking-tight">
                 @yield('page-title', 'Resident Portal')
             </h1>
         </div>
@@ -285,7 +410,12 @@ body {
                     <i class="bi bi-bell text-xl text-[#4B5563]"></i>
                     @php
                         $resident = Auth::user()?->resident;
-                        $unreadCount = $resident ? $resident->notifications()->where('is_read', false)->count() : 0;
+                        $unreadCount = $resident
+                            ? $resident->notifications()
+                                ->where('role', \App\Models\Notification::ROLE_RESIDENT)
+                                ->where('is_read', false)
+                                ->count()
+                            : 0;
                     @endphp
                     @if($unreadCount > 0)
                         <span class="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
@@ -317,7 +447,9 @@ body {
 
                     <div class="max-h-[400px] overflow-y-auto custom-scrollbar">
                         @php
-                            $notifications = $resident ? $resident->notifications()->latest()->take(10)->get() : collect();
+                            $notifications = $resident
+                                ? app(\App\Services\NotificationService::class)->getResidentDropdownNotifications($resident, 10)
+                                : collect();
                         @endphp
                         
                         @forelse($notifications as $notification)
@@ -325,14 +457,18 @@ body {
                            class="block p-4 hover:bg-[#F5F7FA] transition-colors border-b border-gray-50 last:border-0 {{ !$notification->is_read ? 'bg-[#F9FAFB]' : '' }}">
                             <div class="flex gap-3">
                                 <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 
-                                    @if(($notification->type ?? '') == 'payment') bg-blue-50 text-blue-500
-                                    @elseif(($notification->type ?? '') == 'request') bg-emerald-50 text-emerald-500
-                                    @elseif(($notification->type ?? '') == 'alert') bg-orange-50 text-orange-500
+                                    @if(($notification->category ?? '') == 'payment') bg-blue-50 text-blue-500
+                                    @elseif(($notification->category ?? '') == 'billing') bg-indigo-50 text-indigo-500
+                                    @elseif(($notification->category ?? '') == 'reminder') bg-amber-50 text-amber-500
+                                    @elseif(($notification->category ?? '') == 'request') bg-emerald-50 text-emerald-500
+                                    @elseif(($notification->category ?? '') == 'alert') bg-orange-50 text-orange-500
                                     @else bg-gray-50 text-gray-500 @endif">
                                     <i class="bi 
-                                        @if(($notification->type ?? '') == 'payment') bi-cash-stack
-                                        @elseif(($notification->type ?? '') == 'request') bi-tools
-                                        @elseif(($notification->type ?? '') == 'alert') bi-exclamation-triangle
+                                        @if(($notification->category ?? '') == 'payment') bi-cash-stack
+                                        @elseif(($notification->category ?? '') == 'billing') bi-receipt
+                                        @elseif(($notification->category ?? '') == 'reminder') bi-exclamation-circle
+                                        @elseif(($notification->category ?? '') == 'request') bi-tools
+                                        @elseif(($notification->category ?? '') == 'alert') bi-exclamation-triangle
                                         @else bi-bell @endif text-lg"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
@@ -369,10 +505,11 @@ body {
         </div>
     </header>
 
-    <main class="flex-1 mt-16 lg:ml-72 fade-in min-h-screen">
+    <main class="flex-1 mt-16 lg:ml-72 fade-in min-h-screen overflow-y-auto custom-scrollbar bg-[#F8F9FB]">
         {{-- Flash Messages --}}
         @if(session('success'))
-            <div class="mx-6 mt-6 lg:mx-10 bg-green-50 border-l-4 border-green-500 p-4 rounded-md shadow-sm flex items-start">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-6">
+                <div class="bg-green-50 border border-green-100 p-4 rounded-xl shadow-sm flex items-start">
                 <i class="bi bi-check-circle-fill text-green-500 mr-3 mt-0.5"></i>
                 <div>
                     <h3 class="text-sm font-medium text-green-800">Success</h3>
@@ -382,10 +519,12 @@ body {
                     <i class="bi bi-x"></i>
                 </button>
             </div>
+            </div>
         @endif
 
         @if(session('error'))
-            <div class="mx-6 mt-6 lg:mx-10 bg-red-50 border-l-4 border-red-500 p-4 rounded-md shadow-sm flex items-start">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-6">
+                <div class="bg-red-50 border border-red-100 p-4 rounded-xl shadow-sm flex items-start">
                 <i class="bi bi-exclamation-circle-fill text-red-500 mr-3 mt-0.5"></i>
                 <div>
                     <h3 class="text-sm font-medium text-red-800">Error</h3>
@@ -395,10 +534,12 @@ body {
                     <i class="bi bi-x"></i>
                 </button>
             </div>
+            </div>
         @endif
 
         @if($errors->any())
-            <div class="mx-6 mt-6 lg:mx-10 bg-red-50 border-l-4 border-red-500 p-4 rounded-md shadow-sm flex items-start">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-6">
+                <div class="bg-red-50 border border-red-100 p-4 rounded-xl shadow-sm flex items-start">
                 <i class="bi bi-exclamation-circle-fill text-red-500 mr-3 mt-0.5"></i>
                 <div>
                     <h3 class="text-sm font-medium text-red-800">There were some problems with your input</h3>
@@ -412,9 +553,12 @@ body {
                     <i class="bi bi-x"></i>
                 </button>
             </div>
+            </div>
         @endif
 
-        @yield('content')
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6">
+            @yield('content')
+        </div>
     </main>
 
 </div>

@@ -86,22 +86,24 @@
                 <div class="p-8 flex items-center justify-between hover:bg-emerald-50/20 transition-all group relative border-l-4 {{ !$notification->is_read ? 'bg-emerald-50/10 border-emerald-500' : 'border-transparent' }}">
                     <div class="flex items-center gap-8">
                         <div class="w-16 h-16 rounded-[24px] flex items-center justify-center shadow-sm shrink-0 group-hover:scale-110 transition-transform duration-500
-                            @if($notification->type == 'payment') bg-blue-50 text-blue-500
-                            @elseif($notification->type == 'request') bg-emerald-50 text-emerald-500
-                            @elseif($notification->type == 'reservation') bg-amber-50 text-amber-500
-                            @elseif($notification->type == 'alert') bg-red-50 text-red-500
+                            @if(($notification->category ?? '') == 'payment') bg-blue-50 text-blue-500
+                            @elseif(($notification->category ?? '') == 'billing') bg-indigo-50 text-indigo-500
+                            @elseif(($notification->category ?? '') == 'request') bg-emerald-50 text-emerald-500
+                            @elseif(($notification->category ?? '') == 'reservation') bg-amber-50 text-amber-500
+                            @elseif(($notification->category ?? '') == 'alert') bg-red-50 text-red-500
                             @else bg-gray-50 text-gray-500 @endif">
                             <i class="bi 
-                                @if($notification->type == 'payment') bi-cash-stack
-                                @elseif($notification->type == 'request') bi-tools
-                                @elseif($notification->type == 'reservation') bi-calendar-check
-                                @elseif($notification->type == 'alert') bi-exclamation-triangle
+                                @if(($notification->category ?? '') == 'payment') bi-cash-stack
+                                @elseif(($notification->category ?? '') == 'billing') bi-receipt
+                                @elseif(($notification->category ?? '') == 'request') bi-tools
+                                @elseif(($notification->category ?? '') == 'reservation') bi-calendar-check
+                                @elseif(($notification->category ?? '') == 'alert') bi-exclamation-triangle
                                 @else bi-bell @endif text-3xl"></i>
                         </div>
                         <div>
                             <div class="flex items-center gap-3 mb-2">
                                 <h4 class="text-lg font-black text-gray-900 group-hover:text-emerald-700 transition-colors uppercase tracking-tight">{{ $notification->title }}</h4>
-                                <span class="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-gray-100 text-gray-500 border border-gray-200">{{ $notification->type ?? 'System' }}</span>
+                                <span class="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-gray-100 text-gray-500 border border-gray-200">{{ $notification->type ?? 'SYSTEM' }}</span>
                             </div>
                             <p class="text-base text-gray-600 font-medium leading-relaxed max-w-3xl">{{ $notification->message }}</p>
                             <div class="flex items-center gap-4 mt-3">

@@ -17,6 +17,12 @@ use App\Traits\LogsActivity;
 class DuesBatchController extends Controller
 {
     use LogsActivity;
+
+    public function __construct()
+    {
+        $this->middleware('permission:dues.view');
+    }
+
     public function dashboard(Request $request)
     {
         $range = $request->get('range', 'month');
@@ -139,30 +145,16 @@ class DuesBatchController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'type' => 'required|string',
-            'amount_type' => 'required|in:standard,custom',
             'amount' => 'required|numeric|min:0.01',
             'billing_period_start' => 'required|date',
-            'due_date' => 'required|date|after_or_equal:billing_period_start',
-            'frequency' => 'required|in:one_time,monthly,quarterly',
-            'apply_to' => 'nullable|in:all,selected',
-            'resident_ids' => 'required_if:apply_to,selected|array',
+            'due_date' => 'required|date',
+            'frequency' => 'required|string',
+            'resident_ids' => 'required|array|min:1',
+            'resident_ids.*' => 'exists:residents,id',
         ]);
 
-        $applyTo = $validated['apply_to'] ?? 'selected';
-
-        // Prevent Duplicate Batch (Same type and billing period)
-        $exists = DuesBatch::where('type', $validated['type'])
-            ->whereDate('billing_period_start', $validated['billing_period_start'])
-            ->exists();
-
-        if ($exists) {
-            return back()->withInput()->with('error', 'A billing statement of this type already exists for the selected period.');
-        }
-
-        DB::transaction(function () use ($validated, $applyTo) {
-            $residentIds = $applyTo === 'all' 
-                ? Resident::where('status', 'active')->pluck('id') 
-                : $validated['resident_ids'];
+        return DB::transaction(function () use ($validated, $request) {
+            $residentIds = $validated['resident_ids'];
 
             $batch = DuesBatch::create([
                 'title' => $validated['title'],
@@ -179,7 +171,7 @@ class DuesBatchController extends Controller
             foreach ($residentIds as $residentId) {
                 Due::create([
                     'resident_id' => $residentId,
-                    'batch_id' => $batch->id,
+                    'batch_id' => (string) $batch->id,
                     'title' => $validated['title'],
                     'amount' => $validated['amount'],
                     'paid_amount' => 0,
@@ -189,6 +181,7 @@ class DuesBatchController extends Controller
                     'type' => $validated['type'],
                     'frequency' => $validated['frequency'],
                     'billing_period_start' => $validated['billing_period_start'],
+                    'billing_period_end' => Carbon::parse($validated['due_date'])->endOfMonth(),
                 ]);
 
                 // Create In-App Notification for Resident
@@ -201,9 +194,9 @@ class DuesBatchController extends Controller
                     'is_read' => false,
                 ]);
             }
-        });
 
-        return redirect()->route('admin.dues.index')->with('success', 'Dues batch created successfully.');
+            return redirect()->route('admin.dues.index')->with('success', 'Billing statement batch generated successfully for ' . count($residentIds) . ' residents.');
+        });
     }
 
     public function markAsPaid(Request $request, Due $due)
@@ -313,21 +306,38 @@ class DuesBatchController extends Controller
         
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'type' => 'required|string',
+            'amount' => 'required|numeric|min:0.01',
             'due_date' => 'required|date',
+            'frequency' => 'required|string',
         ]);
 
         DB::transaction(function() use ($batch, $validated) {
-            $batch->update($validated);
+            // Update the batch header
+            $batch->update([
+                'title' => $validated['title'],
+                'type' => $validated['type'],
+                'due_date' => $validated['due_date'],
+                'frequency' => $validated['frequency'],
+                'total_expected' => Due::where('batch_id', (string) $batch->id)->count() * $validated['amount'],
+            ]);
 
-            // Also update all linked individual dues to match the new title and due date
-            // Explicitly cast batch->id to string to avoid MySQL type conversion errors with UUIDs
+            // Update all individual dues linked to this batch
             Due::where('batch_id', (string) $batch->id)->update([
                 'title' => $validated['title'],
-                'due_date' => $validated['due_date']
+                'type' => $validated['type'],
+                'amount' => $validated['amount'],
+                'due_date' => $validated['due_date'],
+                'frequency' => $validated['frequency'],
+            ]);
+
+            $this->logActivity('updated', 'dues', 'Updated billing statement batch: ' . $batch->title, [
+                'batch_id' => $batch->id,
+                'new_amount' => $validated['amount']
             ]);
         });
 
-        return redirect()->route('admin.dues.index')->with('success', 'Billing statement updated successfully.');
+        return redirect()->route('admin.dues.index')->with('success', 'Billing statement batch updated successfully.');
     }
 
     public function destroy($id)

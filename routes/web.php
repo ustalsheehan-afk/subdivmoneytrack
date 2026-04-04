@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Auth;
 |--------------------------------------------------------------------------
 */
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\AdminLoginController;
 use App\Http\Controllers\ResidentAuthController; // Custom Resident Auth
-use App\Http\Controllers\ResidentPasswordResetController; // Custom Resident Password Reset
 use App\Http\Controllers\Auth\RegisteredUserController;
 
 /*
@@ -70,8 +70,8 @@ Route::get('/', function () {
 });
 
 // ✅ FIXED: Invitation Registration (TOKEN REQUIRED)
-Route::get('/register/{token}', [InvitationRegistrationController::class, 'show'])->name('register.invitation');
-Route::post('/register/{token}', [InvitationRegistrationController::class, 'register'])->name('register.invitation.submit');
+Route::get('/register', [InvitationRegistrationController::class, 'show'])->name('register.invitation');
+Route::post('/register', [InvitationRegistrationController::class, 'register'])->name('register.invitation.submit');
 
 Route::get('/registration-success', function() {
     return view('auth.registration-success');
@@ -99,12 +99,16 @@ Route::post('login', [LoginController::class, 'login'])->name('login.submit');
 Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 
 // Forgot Password
-Route::get('forgot-password', [ResidentPasswordResetController::class, 'showLinkRequestForm'])->name('password.request');
-Route::post('forgot-password', [ResidentPasswordResetController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::get('forgot-password', [PasswordResetController::class, 'create'])->name('password.request');
+Route::post('forgot-password', [PasswordResetController::class, 'store'])
+    ->middleware('throttle:3,10')
+    ->name('password.email');
 
 // Reset Password
-Route::get('reset-password/{token}', [ResidentPasswordResetController::class, 'showResetForm'])->name('password.reset');
-Route::post('reset-password', [ResidentPasswordResetController::class, 'reset'])->name('password.update');
+Route::get('reset-password/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');
+Route::post('reset-password', [PasswordResetController::class, 'update'])
+    ->middleware('throttle:5,10')
+    ->name('password.update');
 
 // Legacy redirects
 Route::get('admin/login', function() { return redirect()->route('login'); });
@@ -126,7 +130,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('about-board', [DashboardController::class, 'board'])->name('about.board');
 
     // System Notifications API
-    Route::get('system-notifications', [App\Http\Controllers\Admin\NotificationController::class, 'getSystemNotifications'])->name('system-notifications');
+    Route::get('system-notifications', [App\Http\Controllers\Admin\NotificationController::class, 'getSystemNotifications'])
+        ->middleware('permission:notifications.view')
+        ->name('system-notifications');
 
     // Board Members
     Route::resource('board', BoardMemberController::class);
@@ -159,12 +165,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         'destroy' => 'dues.destroy',
     ]);
 
+    // Reminders
+    Route::post('reminders/send', [DashboardController::class, 'sendReminders'])->name('reminders.send');
+
     // Messages Center (Refactored SaaS Structure)
     Route::group(['prefix' => 'messages', 'as' => 'messages.'], function() {
         Route::get('support', [App\Http\Controllers\Admin\MessageController::class, 'index'])->name('index');
         Route::get('support/{thread}', [App\Http\Controllers\Admin\MessageController::class, 'show'])->name('show');
         Route::post('support/{thread}/reply', [App\Http\Controllers\Admin\MessageController::class, 'reply'])->name('reply');
         Route::post('support/{thread}/status', [App\Http\Controllers\Admin\MessageController::class, 'updateStatus'])->name('updateStatus');
+        Route::post('support/{thread}/action', [App\Http\Controllers\Admin\MessageController::class, 'performAction'])->name('performAction');
         
         Route::get('notifications', [App\Http\Controllers\Admin\NotificationModuleController::class, 'index'])->name('notifications.index');
         Route::post('notifications/{notification}/read', [App\Http\Controllers\Admin\NotificationModuleController::class, 'markAsRead'])->name('notifications.read');
@@ -173,8 +183,23 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // System (Reports & Logs)
     Route::group(['prefix' => 'system', 'as' => 'system.'], function() {
-        Route::get('reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
-        Route::get('activity-logs', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
+        Route::get('reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])
+            ->middleware('permission:reports.view')
+            ->name('reports.index');
+
+        Route::get('activity-logs', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])
+            ->middleware('permission:logs.view')
+            ->name('activity-logs.index');
+        Route::get('activity-logs/export', [App\Http\Controllers\Admin\ActivityLogController::class, 'export'])
+            ->middleware('permission:logs.export')
+            ->name('activity-logs.export');
+
+        Route::get('roles-permissions', [App\Http\Controllers\Admin\RolesPermissionsController::class, 'index'])
+            ->middleware('permission:roles.view')
+            ->name('roles-permissions.index');
+        Route::post('roles-permissions/{role}/toggle', [App\Http\Controllers\Admin\RolesPermissionsController::class, 'toggle'])
+            ->middleware('permission:roles.update')
+            ->name('roles-permissions.toggle');
     });
 
     // Resource routes
@@ -185,6 +210,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         'requests'      => ServiceRequestController::class,
         'amenities'     => AmenityController::class,
     ]);
+
+    Route::post('residents/{resident}/update-notes', [ResidentController::class, 'updateNotes'])->name('residents.update-notes');
 
     Route::get('payments/{id}/review', [PaymentController::class, 'review'])->name('payments.review');
     Route::post('payments/review', [PaymentController::class, 'store'])->name('payments.review-post');
@@ -197,13 +224,20 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('amenity-reservations', [AdminAmenityReservationController::class, 'index'])->name('amenity-reservations.index');
     Route::get('amenity-reservations/create', [AdminAmenityReservationController::class, 'create'])->name('amenity-reservations.create');
     Route::post('amenity-reservations', [AdminAmenityReservationController::class, 'store'])->name('amenity-reservations.store');
+    Route::get('amenity-reservations/{reservation}/confirmation', [AdminAmenityReservationController::class, 'confirmation'])->name('amenity-reservations.confirmation');
+    Route::get('amenity-reservations/{amenity}/unavailable-slots', [AdminAmenityReservationController::class, 'getUnavailableSlots'])->name('amenity-reservations.unavailable-slots');
     Route::get('amenity-reservations/export', [AdminAmenityReservationController::class, 'export'])->name('amenity-reservations.export');
     Route::get('amenity-reservations/export-csv', [AdminAmenityReservationController::class, 'exportCsv'])->name('amenity-reservations.exportCsv');
     Route::get('amenity-reservations/data', [AdminAmenityReservationController::class, 'getData'])->name('amenity-reservations.data');
     Route::post('amenity-reservations/bulk-action', [AdminAmenityReservationController::class, 'bulkAction'])->name('amenity-reservations.bulk-action');
     Route::post('amenity-reservations/{reservation}/status', [AdminAmenityReservationController::class, 'updateStatus'])->name('amenity-reservations.updateStatus');
+    Route::post('amenity-reservations/{reservation}/verify-payment', [AdminAmenityReservationController::class, 'verifyPayment'])->name('amenity-reservations.verifyPayment');
+    Route::post('amenity-reservations/{reservation}/reject-payment', [AdminAmenityReservationController::class, 'rejectPayment'])->name('amenity-reservations.rejectPayment');
+    Route::get('amenity-reservations/{reservation}/receipt', [AdminAmenityReservationController::class, 'viewReceipt'])->name('amenity-reservations.receipt');
+    Route::get('amenity-reservations/{reservation}/download-receipt', [AdminAmenityReservationController::class, 'downloadReceipt'])->name('amenity-reservations.download.receipt');
     Route::post('amenity-reservations/{amenity}/toggle-maintenance', [AdminAmenityReservationController::class, 'toggleMaintenance'])->name('amenity-reservations.toggleMaintenance');
     Route::post('amenity-reservations/{reservation}/reschedule', [AdminAmenityReservationController::class, 'reschedule'])->name('amenity-reservations.reschedule');
+    Route::post('amenity-reservations/{reservation}/cancel', [AdminAmenityReservationController::class, 'cancel'])->name('amenity-reservations.cancel');
 
     // Dues custom actions
     Route::get('dues/export', [DueController::class, 'export'])->name('dues.export');
@@ -230,7 +264,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Accounts actions
     Route::post('accounts/{id}/reset', [AccountController::class, 'reset'])->name('accounts.reset');
-    Route::put('accounts/{id}/toggle', [AccountController::class, 'toggle'])->name('accounts.toggle');
+    Route::post('accounts/{id}/toggle', [AccountController::class, 'toggle'])->name('accounts.toggle');
 
     // Residents actions
     Route::post('residents/{resident}/login', [ResidentController::class, 'loginAsResident'])->name('residents.loginAs');
@@ -244,11 +278,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Service requests actions
     Route::post('requests/{id}/status', [ServiceRequestController::class, 'updateStatus'])->name('requests.updateStatus');
-
-    // Support Messages
-    Route::get('support', [App\Http\Controllers\Admin\SupportMessageController::class, 'index'])->name('support.index');
-    Route::post('support/{id}/reply', [App\Http\Controllers\Admin\SupportMessageController::class, 'reply'])->name('support.reply');
-    Route::post('support/{id}/mark-read', [App\Http\Controllers\Admin\SupportMessageController::class, 'markAsRead'])->name('support.mark-read');
 
     // Reports
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
@@ -287,14 +316,17 @@ Route::middleware(['auth', 'resident'])->prefix('resident')->name('resident.')->
     Route::get('amenities/{amenity}/unavailable-slots', [ResidentAmenityReservationController::class, 'getUnavailableSlots'])->name('amenities.unavailable-slots');
     Route::get('amenities/reservation/{reservation}/confirmation', [ResidentAmenityReservationController::class, 'confirmation'])->name('amenities.confirmation');
     Route::get('amenities/reservation/{reservation}', [ResidentAmenityReservationController::class, 'show'])->name('amenities.reservation.show');
+    Route::get('amenities/reservation/{reservation}/receipt', [ResidentAmenityReservationController::class, 'viewReceipt'])->name('amenities.reservation.receipt');
+    Route::get('amenities/reservation/{reservation}/download-receipt', [ResidentAmenityReservationController::class, 'downloadReceipt'])->name('amenities.reservation.download.receipt');
     Route::post('amenities/reservation/{reservation}/payment', [ResidentAmenityReservationController::class, 'uploadPayment'])->name('amenities.reservation.payment');
+    Route::post('amenities/reservation/{reservation}/cancel', [ResidentAmenityReservationController::class, 'cancel'])->name('amenities.reservation.cancel');
     Route::get('my-reservations', [ResidentAmenityReservationController::class, 'index'])->name('my-reservations.index');
 
     // Profile
     Route::get('profile', [ResidentProfileController::class, 'index'])->name('profile.index');
     Route::get('profile/edit', [ResidentProfileController::class, 'edit'])->name('profile.edit');
     Route::put('profile', [ResidentProfileController::class, 'update'])->name('profile.update');
-    // Messages Center (Replaces Support)
+    // Messaging System
     Route::get('messages', [App\Http\Controllers\Resident\MessageController::class, 'index'])->name('messages.index');
     Route::get('messages/create', [App\Http\Controllers\Resident\MessageController::class, 'create'])->name('messages.create');
     Route::post('messages', [App\Http\Controllers\Resident\MessageController::class, 'store'])->name('messages.store');
@@ -329,17 +361,15 @@ Route::middleware(['auth', 'resident'])->prefix('resident')->name('resident.')->
     })->name('contact');
 
     // System Notifications API
-    Route::get('system-notifications', [App\Http\Controllers\Admin\NotificationController::class, 'getSystemNotifications'])->name('system-notifications');
+    Route::get('system-notifications', [App\Http\Controllers\Admin\NotificationController::class, 'getSystemNotifications'])
+        ->middleware('permission:notifications.view')
+        ->name('system-notifications');
 
     // Announcements
     Route::get('announcements', [ResidentAnnouncementController::class, 'index'])->name('announcements.index');
     Route::get('announcements/{announcement}', [ResidentAnnouncementController::class, 'show'])->name('announcements.show');
     Route::post('announcements/{announcement}/read', [ResidentAnnouncementController::class, 'markAsRead'])->name('announcements.read');
 
-    // Support / Messages
-    Route::get('support', [App\Http\Controllers\Resident\SupportController::class, 'index'])->name('support.index');
-    Route::post('support', [App\Http\Controllers\Resident\SupportController::class, 'store'])->name('support.store');
-    Route::get('support/{id}', [App\Http\Controllers\Resident\SupportController::class, 'show'])->name('support.show');
 
     // Notifications
     Route::get('notifications/{id}', [App\Http\Controllers\Resident\NotificationController::class, 'show'])->name('notifications.show');

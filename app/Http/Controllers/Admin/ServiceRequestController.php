@@ -11,6 +11,15 @@ use App\Traits\LogsActivity;
 class ServiceRequestController extends Controller
 {
     use LogsActivity;
+
+    public function __construct()
+    {
+        $this->middleware('permission:requests.view')->only(['index', 'show']);
+        $this->middleware('permission:requests.update')->only(['update', 'updateStatus']);
+        $this->middleware('permission:requests.approve')->only(['approve']);
+        $this->middleware('permission:requests.reject')->only(['reject']);
+    }
+
     public function index(Request $request)
     {
         $requests = ServiceRequest::with('resident');

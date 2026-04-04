@@ -10,29 +10,45 @@ class AnnouncementController extends Controller
 {
     public function index(Request $request)
     {
-        // Get category filter if selected
         $category = $request->query('category');
 
-        // Build the query
-        $query = Announcement::where('status', 'active')
-            ->latest()
-            ->orderByDesc('is_pinned');
+        $baseQuery = Announcement::query();
 
-        if ($category) {
-            $query->where('category', $category);
+        $baseQuery->where('status', 'active');
+
+        if ($category && $category !== 'All') {
+            $baseQuery->where('category', $category);
         }
 
-        // Check for read status
         $user = auth()->user();
-        $announcements = $query->paginate(10);
+
+        $pinnedQuery = (clone $baseQuery)->where('is_pinned', true)
+            ->orderByDesc('date_posted')
+            ->orderByDesc('created_at');
+
+        $pinned = $pinnedQuery->get();
+
+        $announcementsQuery = (clone $baseQuery)
+            ->where(function ($q) {
+                $q->where('is_pinned', false)->orWhereNull('is_pinned');
+            })
+            ->orderByDesc('date_posted')
+            ->orderByDesc('created_at');
+
+        $announcements = $announcementsQuery->paginate(10)->withQueryString();
         
         if ($user) {
-            $announcements->each(function ($announcement) use ($user) {
-                $announcement->is_read = $announcement->readers()->where('user_id', $user->id)->exists();
-            });
+            $applyReadFlag = function ($announcement) use ($user) {
+                $announcement->is_read = $announcement->readers()
+                    ->where('user_id', $user->id)
+                    ->exists();
+            };
+
+            $pinned->each($applyReadFlag);
+            $announcements->getCollection()->each($applyReadFlag);
         }
 
-        return view('resident.announcements.index', compact('announcements'));
+        return view('resident.announcements.index', compact('announcements', 'pinned'));
     }
 
     public function markAsRead(Request $request, Announcement $announcement)

@@ -43,7 +43,7 @@ body {
 /* Left Side: Premium Visual */
 .visual-side {
     width: 40%;
-    background: linear-gradient(135deg, rgba(31, 59, 92, 0.85), rgba(15, 23, 42, 0.9)),
+    background: linear-gradient(135deg, rgba(1, 32, 13, 0.85), rgba(15, 23, 42, 0.9)),
                 url('{{ asset('bg.png') }}') center/cover no-repeat;
     color: white;
     display: flex;
@@ -184,7 +184,7 @@ body {
     border-radius: 12px;
     padding: 0 1.25rem 0 3.25rem;
     font-size: 0.95rem;
-    color: #1e293b;
+    color: #021c08;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -197,7 +197,7 @@ body {
 
 .form-control-custom:disabled {
     background: #f1f5f9;
-    color: #64748b;
+    color: #021c08;
     cursor: not-allowed;
 }
 
@@ -214,7 +214,7 @@ select.form-control-custom {
 select.form-control-custom option {
     padding: 12px;
     background: #fff;
-    color: #1e293b;
+    color: #013a17;
     font-size: 0.95rem;
 }
 
@@ -262,7 +262,7 @@ select.form-control-custom option {
 }
 
 .btn-create:hover {
-    background: #162b44;
+    background: #00220c;
     transform: translateY(-2px);
     box-shadow: 0 20px 30px -10px rgba(31, 59, 92, 0.4);
 }
@@ -326,8 +326,9 @@ select.form-control-custom option {
                 </div>
             @endif
 
-            <form action="{{ route('register.invitation.submit', $invitation->token) }}" method="POST">
+            <form action="{{ route('register.invitation.submit') }}" method="POST">
                 @csrf
+                <input type="hidden" name="token" value="{{ request('token') }}">
 
                 <!-- 1. PERSONAL INFO -->
                 <h3 class="form-section-title"><i class="bi bi-person-badge"></i> Personal Information</h3>

@@ -9,9 +9,15 @@ use Illuminate\Support\Facades\Auth;
 
 class NotificationModuleController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:notifications.view');
+    }
+
     public function index(Request $request)
     {
-        $query = Notification::where('admin_id', Auth::id());
+        $query = Notification::where('admin_id', Auth::id())
+            ->where('role', Notification::ROLE_ADMIN);
 
         if ($request->filled('type')) {
             $query->where('type', $request->type);
@@ -45,6 +51,7 @@ class NotificationModuleController extends Controller
     public function markAllAsRead()
     {
         Notification::where('admin_id', Auth::id())
+            ->where('role', Notification::ROLE_ADMIN)
             ->where('is_read', false)
             ->update(['is_read' => true]);
 

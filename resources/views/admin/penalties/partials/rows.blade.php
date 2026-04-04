@@ -42,9 +42,16 @@
 
         {{-- Reason --}}
         <td class="p-6 max-w-xs">
-            <span class="text-sm font-medium text-gray-600 block truncate" title="{{ $penalty->reason }}">
-                {{ $penalty->reason ?? '-' }}
-            </span>
+            <div class="flex items-center gap-2">
+                <span class="text-sm font-medium text-gray-600 block truncate" title="{{ $penalty->reason }}">
+                    {{ $penalty->reason ?? '-' }}
+                </span>
+                @if(str_contains($penalty->reason, 'Auto-generated'))
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-blue-50 text-blue-600 border border-blue-100">
+                        Auto
+                    </span>
+                @endif
+            </div>
         </td>
 
         {{-- Date Issued --}}

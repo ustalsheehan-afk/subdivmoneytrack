@@ -1,4 +1,4 @@
-@extends('layouts.resident')
+@extends('resident.layouts.app')
 
 @section('title', 'New Message')
 @section('page-title', 'New Message')

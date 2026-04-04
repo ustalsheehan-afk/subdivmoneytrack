@@ -3,52 +3,48 @@
 @section('title', 'Dashboard')
 
 @section('content')
-<div class="min-h-screen bg-white pb-8 text-[#1A202C]">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
-        
-        {{-- HERO SECTION --}}
-        <div class="relative h-48 sm:h-56 rounded-[20px] overflow-hidden shadow-sm bg-slate-900">
-            {{-- Background Video --}}
-            <video class="absolute inset-0 w-full h-full object-cover opacity-50" autoplay muted loop playsinline> 
-                <source src="{{ asset('videos/subdivision-hero.mp4') }}" type="video/mp4"> 
+<div class="space-y-6">
+        <div class="relative h-40 sm:h-48 lg:h-56 -mx-4 sm:-mx-6 lg:-mx-10 overflow-hidden bg-[#081412]">
+            <video class="absolute inset-0 w-full h-full object-cover opacity-50" autoplay muted loop playsinline>
+                <source src="{{ asset('videos/subdivision-hero.mp4') }}" type="video/mp4">
             </video>
-            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20"></div>
 
-            {{-- Hero Content --}}
-            <div class="relative z-10 h-full flex flex-col justify-end p-6 sm:p-10">
-                <p class="meta text-white/60 uppercase tracking-[0.2em] mb-2 font-medium">
+            <div class="relative z-10 h-full flex flex-col justify-end p-4 sm:p-6 lg:p-10">
+                <p class="text-[10px] font-black text-white/70 uppercase tracking-[0.25em] mb-2">
                     {{ now()->format('l, F j, Y') }}
                 </p>
-                <h1 class="text-2xl sm:text-4xl font-semibold text-white tracking-tight">
+                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
                     Welcome back, {{ $resident->first_name }}.
                 </h1>
-                <p class="text-[15px] text-white/70 font-medium mt-1 leading-relaxed">
-                    Your community portal for payments and updates.
+                <p class="text-sm sm:text-[13px] text-white/75 font-medium mt-1 max-w-2xl">
+                    Your community portal for payments, requests, and updates.
                 </p>
             </div>
         </div>
 
         {{-- 1. UPCOMING PAYMENT (Priority Action) --}}
         @if($summary['next_due_date'])
-        <section class="bg-[#FFFBEB] border border-[#FEF3C7] rounded-[20px] p-6 flex flex-col sm:flex-row items-center justify-between shadow-sm gap-6">
+        <section class="glass-card p-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div class="flex items-center gap-5">
-                <div class="w-12 h-12 rounded-xl bg-[#FEF3C7] flex items-center justify-center text-[#D97706] shrink-0">
-                    <i class="bi bi-clock-fill text-2xl"></i>
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700 shrink-0">
+                    <i class="bi bi-clock-fill text-xl"></i>
                 </div>
                 <div>
-                    <p class="meta text-[#B45309] uppercase tracking-widest mb-1 font-medium">Upcoming Payment</p>
-                    <h2 class="title text-[#92400E] leading-none mb-1 tracking-[0.2px] font-semibold">
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Upcoming Payment</p>
+                    <h2 class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight leading-none mb-1">
                         ₱{{ number_format($summary['next_due_amount'], 2) }}
                     </h2>
-                    <p class="text-[15px] font-medium text-[#B45309] leading-relaxed">
-                        {{ $summary['next_due_title'] }} · <span class="meta opacity-70 font-medium">Due {{ $summary['next_due_date']->format('F j, Y') }}</span>
+                    <p class="text-sm font-bold text-gray-700">
+                        {{ $summary['next_due_title'] }} <span class="text-gray-300 mx-1">•</span>
+                        <span class="text-gray-500 font-bold">Due {{ $summary['next_due_date']->format('F j, Y') }}</span>
                     </p>
-                    <p class="meta text-[#B45309]/60 mt-2 leading-relaxed font-medium">
-                        Avoid penalties by paying on time. <span class="ml-2 title text-[#92400E] tracking-[0.2px] font-semibold">₱{{ number_format($summary['outstanding_dues'], 2) }} total balance</span>
+                    <p class="text-[12px] font-bold text-gray-500 mt-2">
+                        Total balance: <span class="text-gray-900 font-black">₱{{ number_format($summary['outstanding_dues'], 2) }}</span>
                     </p>
                 </div>
             </div>
-            <a href="{{ route('resident.payments.pay', $summary['next_due_id']) }}" class="w-full sm:w-auto px-10 py-3.5 bg-[#385780] text-white meta font-semibold rounded-xl hover:bg-[#2B3A4F] transition-all shadow-lg shadow-blue-900/10 text-center tracking-widest uppercase">
+            <a href="{{ route('resident.payments.pay', $summary['next_due_id']) }}" class="btn-premium w-full lg:w-auto justify-center">
                 Pay Now
             </a>
         </section>
@@ -56,49 +52,40 @@
 
         {{-- 2. QUICK ACTIONS (Uniform Cinematic Design) --}}
         <section class="space-y-4">
-            <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] px-1">Quick Actions</h3>
+            <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-[0.25em] px-1">Quick Actions</h3>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
 
                 {{-- Pay Dues --}}
                 <a href="{{ route('resident.payments.index') }}"
-                   class="bg-white rounded-[32px] border border-gray-100 shadow-sm p-8 flex flex-col items-center justify-center text-center gap-4 group hover:border-emerald-500/30 transition-all duration-500 relative overflow-hidden">
-                    <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                   class="glass-card p-6 flex flex-col items-center justify-center text-center gap-4 group relative overflow-hidden">
                     
-                    <div class="w-16 h-16 rounded-[24px] bg-gray-50 flex items-center justify-center shrink-0 border border-gray-100 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-500 transition-all duration-500 shadow-sm relative z-10">
+                    <div class="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center shrink-0 border border-gray-100 group-hover:bg-[#081412] group-hover:text-[var(--brand-accent)] group-hover:border-[rgba(182,255,92,0.25)] transition-all duration-300 shadow-sm">
                         <i class="bi bi-credit-card text-2xl"></i>
                     </div>
                     
-                    <div class="relative z-10">
-                        <p class="text-[11px] font-black text-gray-900 uppercase tracking-widest">Pay Dues</p>
-                    </div>
+                    <p class="text-[11px] font-black text-gray-900 uppercase tracking-widest">Pay Dues</p>
                 </a>
 
                 {{-- Submit Request --}}
                 <a href="{{ route('resident.requests.create') }}"
-                   class="bg-white rounded-[32px] border border-gray-100 shadow-sm p-8 flex flex-col items-center justify-center text-center gap-4 group hover:border-emerald-500/30 transition-all duration-500 relative overflow-hidden">
-                    <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                   class="glass-card p-6 flex flex-col items-center justify-center text-center gap-4 group relative overflow-hidden">
                     
-                    <div class="w-16 h-16 rounded-[24px] bg-gray-50 flex items-center justify-center shrink-0 border border-gray-100 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-500 transition-all duration-500 shadow-sm relative z-10">
+                    <div class="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center shrink-0 border border-gray-100 group-hover:bg-[#081412] group-hover:text-[var(--brand-accent)] group-hover:border-[rgba(182,255,92,0.25)] transition-all duration-300 shadow-sm">
                         <i class="bi bi-file-earmark-text text-2xl"></i>
                     </div>
                     
-                    <div class="relative z-10">
-                        <p class="text-[11px] font-black text-gray-900 uppercase tracking-widest">Submit Request</p>
-                    </div>
+                    <p class="text-[11px] font-black text-gray-900 uppercase tracking-widest">Submit Request</p>
                 </a>
 
                 {{-- Reservations --}}
                 <a href="{{ route('resident.amenities.index') }}"
-                   class="bg-white rounded-[32px] border border-gray-100 shadow-sm p-8 flex flex-col items-center justify-center text-center gap-4 group hover:border-emerald-500/30 transition-all duration-500 relative overflow-hidden">
-                    <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                   class="glass-card p-6 flex flex-col items-center justify-center text-center gap-4 group relative overflow-hidden">
                     
-                    <div class="w-16 h-16 rounded-[24px] bg-gray-50 flex items-center justify-center shrink-0 border border-gray-100 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-500 transition-all duration-500 shadow-sm relative z-10">
+                    <div class="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center shrink-0 border border-gray-100 group-hover:bg-[#081412] group-hover:text-[var(--brand-accent)] group-hover:border-[rgba(182,255,92,0.25)] transition-all duration-300 shadow-sm">
                         <i class="bi bi-calendar-event text-2xl"></i>
                     </div>
                     
-                    <div class="relative z-10">
-                        <p class="text-[11px] font-black text-gray-900 uppercase tracking-widest">Reservations</p>
-                    </div>
+                    <p class="text-[11px] font-black text-gray-900 uppercase tracking-widest">Reservations</p>
                 </a>
 
             </div>
@@ -106,10 +93,10 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {{-- LEFT COLUMN: Recent Activity --}}
-            <div class="lg:col-span-7 bg-white rounded-[20px] p-6 border border-slate-100 shadow-sm flex flex-col">
+            <div class="lg:col-span-7 glass-card p-6 flex flex-col">
                 <div class="flex items-center justify-between mb-6">
-                    <h3 class="section-title uppercase tracking-[0.1em] flex items-center gap-2">
-                        <i class="bi bi-clock-history text-[#385780]"></i> RECENT ACTIVITY
+                    <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-[0.25em] flex items-center gap-2">
+                        <i class="bi bi-clock-history text-emerald-600"></i> Recent Activity
                     </h3>
                     <a href="#" class="meta font-normal uppercase tracking-widest hover:text-[#1F2937] transition-colors">View all <i class="bi bi-chevron-right ml-1"></i></a>
                 </div>
@@ -150,10 +137,10 @@
             {{-- RIGHT COLUMN: My Requests + Announcements --}}
             <div class="lg:col-span-5 space-y-6">
                 {{-- My Requests --}}
-                <div class="bg-white rounded-[20px] p-6 border border-slate-100 shadow-sm">
+                <div class="glass-card p-6">
                     <div class="flex items-center justify-between mb-6">
-                        <h3 class="section-title uppercase tracking-[0.1em] flex items-center gap-2">
-                            <i class="bi bi-file-earmark-text text-[#385780]"></i> MY REQUESTS
+                        <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-[0.25em] flex items-center gap-2">
+                            <i class="bi bi-file-earmark-text text-emerald-600"></i> My Requests
                         </h3>
                         <a href="{{ route('resident.requests.index') }}" class="meta font-normal uppercase tracking-widest hover:text-[#1F2937] transition-colors">All <i class="bi bi-chevron-right ml-1"></i></a>
                     </div>
@@ -189,10 +176,10 @@
                 </div>
 
                 {{-- Announcements --}}
-                <div class="bg-white rounded-[20px] p-6 border border-slate-100 shadow-sm">
+                <div class="glass-card p-6">
                     <div class="flex items-center justify-between mb-6">
-                        <h3 class="section-title uppercase tracking-[0.1em] flex items-center gap-2">
-                            <i class="bi bi-megaphone text-[#385780]"></i> ANNOUNCEMENTS
+                        <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-[0.25em] flex items-center gap-2">
+                            <i class="bi bi-megaphone text-emerald-600"></i> Announcements
                         </h3>
                         <a href="{{ route('resident.announcements.index') }}" class="meta font-normal uppercase tracking-widest hover:text-[#1F2937] transition-colors">All <i class="bi bi-chevron-right ml-1"></i></a>
                     </div>
@@ -215,10 +202,10 @@
         </div>
 
         {{-- 6. UPCOMING EVENTS --}}
-        <section class="bg-white rounded-[20px] p-6 border border-slate-100 shadow-sm">
+        <section class="glass-card p-6">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="section-title uppercase tracking-[0.1em] flex items-center gap-2">
-                    <i class="bi bi-calendar-event text-[#385780]"></i> UPCOMING EVENTS
+                <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-[0.25em] flex items-center gap-2">
+                    <i class="bi bi-calendar-event text-emerald-600"></i> Upcoming Events
                 </h3>
                 <a href="#" class="meta font-normal uppercase tracking-widest hover:text-[#1F2937] transition-colors">View calendar <i class="bi bi-chevron-right ml-1"></i></a>
             </div>
@@ -248,7 +235,6 @@
             </div>
         </section>
 
-    </div>
 </div>
 
 <style>

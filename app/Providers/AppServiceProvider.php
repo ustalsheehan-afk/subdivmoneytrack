@@ -5,6 +5,8 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Announcement;
+use App\Models\Notification;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 
 class AppServiceProvider extends ServiceProvider
@@ -45,13 +47,24 @@ class AppServiceProvider extends ServiceProvider
         // Share notifications with admin layout
         view()->composer('layouts.admin', function ($view) {
             if (auth()->check()) {
-                $notifications = \App\Models\Notification::where('admin_id', auth()->id())
-                    ->latest()
-                    ->take(10)
-                    ->get();
-                $unreadCount = \App\Models\Notification::where('admin_id', auth()->id())
-                    ->where('is_read', false)
-                    ->count();
+                // Check if the column exists to avoid SQL errors during migration/sync
+                static $hasAdminId = null;
+                if ($hasAdminId === null) {
+                    $hasAdminId = Schema::hasColumn('notifications', 'admin_id');
+                }
+
+                if ($hasAdminId) {
+                    $notifications = app(NotificationService::class)
+                        ->getAdminDropdownNotifications(auth()->user(), 10);
+                    $unreadCount = Notification::where('admin_id', auth()->id())
+                        ->where('role', Notification::ROLE_ADMIN)
+                        ->where('is_read', false)
+                        ->count();
+                } else {
+                    $notifications = collect();
+                    $unreadCount = 0;
+                }
+                
                 $view->with(compact('notifications', 'unreadCount'));
             }
         });

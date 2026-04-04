@@ -98,13 +98,13 @@
                             <div class="space-y-3">
                                 <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Penalty Type <span class="text-red-500">*</span></label>
                                 <div class="relative group/select">
-                                    <select name="penalty_type" id="penalty_type" 
+                                    <select name="type" id="type" x-model="penaltyType"
                                         class="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-sm font-medium appearance-none focus:bg-white focus:border-emerald-500 transition-all outline-none cursor-pointer" required>
-                                        <option value="general" {{ old('penalty_type')=='general'?'selected':'' }}>General Violation</option>
-                                        <option value="late_payment" {{ old('penalty_type')=='late_payment'?'selected':'' }}>Late Payment</option>
-                                        <option value="overdue" {{ old('penalty_type')=='overdue'?'selected':'' }}>Overdue Account</option>
-                                        <option value="violation" {{ old('penalty_type')=='violation'?'selected':'' }}>Rules Violation</option>
-                                        <option value="damage" {{ old('penalty_type')=='damage'?'selected':'' }}>Property Damage</option>
+                                        <option value="general">General Violation</option>
+                                        <option value="late_payment">Late Payment</option>
+                                        <option value="overdue">Overdue Account</option>
+                                        <option value="violation">Rules Violation</option>
+                                        <option value="damage">Property Damage</option>
                                     </select>
                                     <i class="bi bi-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-hover/select:text-emerald-600 transition-colors"></i>
                                 </div>
@@ -140,7 +140,7 @@
                         <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Penalty Amount <span class="text-red-500">*</span></label>
                         <div class="relative group/input max-w-md">
                             <span class="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 font-black text-lg transition-colors group-focus-within/input:text-emerald-600">₱</span>
-                            <input type="number" step="0.01" name="amount" id="amount" value="{{ old('amount') }}" 
+                            <input type="number" step="0.01" name="amount" id="amount" x-model="amount"
                                 class="w-full pl-12 pr-6 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-lg font-black focus:bg-white focus:border-emerald-500 transition-all outline-none" 
                                 placeholder="0.00" min="0.01" required>
                         </div>
@@ -234,9 +234,38 @@
             residentName: '',
             residentProperty: '',
             residentInitials: '',
+            penaltyType: '{{ old('type', 'general') }}',
+            amount: '{{ old('amount') }}',
             init() {
                 if (this.residentId) {
                     this.$nextTick(() => this.updateResidentPreview());
+                }
+                
+                // Watch penalty type to sync standard amounts
+                this.$watch('penaltyType', (newVal) => {
+                    const amounts = {
+                        'late_payment': 50.00,
+                        'overdue': 100.00,
+                        'violation': 200.00,
+                        'damage': 500.00,
+                        'general': 50.00
+                    };
+                    
+                    if (amounts[newVal]) {
+                        this.amount = amounts[newVal].toFixed(2);
+                    }
+                });
+
+                // Set initial amount if empty
+                if (!this.amount) {
+                    const initialAmounts = {
+                        'late_payment': 50.00,
+                        'overdue': 100.00,
+                        'violation': 200.00,
+                        'damage': 500.00,
+                        'general': 50.00
+                    };
+                    this.amount = initialAmounts[this.penaltyType]?.toFixed(2) || '50.00';
                 }
             },
             updateResidentPreview() {

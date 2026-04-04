@@ -246,8 +246,8 @@ aside#sidebar .bg-gradient-to-br.from-\[\#5b86b6\].to-\[\#3f6593\] {
             <div class="space-y-1">
                 @php
                     $mainLinks = [
-                        ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'bi-grid-1x2-fill', 'pattern' => 'admin.dashboard'],
-                        ['label' => 'Announcements', 'route' => 'admin.announcements.index', 'icon' => 'bi-megaphone-fill', 'pattern' => 'admin.announcements*'],
+                        ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'bi-grid-1x2-fill', 'pattern' => 'admin.dashboard', 'permission' => 'dashboard.view'],
+                        ['label' => 'Announcements', 'route' => 'admin.announcements.index', 'icon' => 'bi-megaphone-fill', 'pattern' => 'admin.announcements*', 'permission' => 'announcements.view'],
                     ];
                 @endphp
                 @foreach ($mainLinks as $link)
@@ -256,57 +256,100 @@ aside#sidebar .bg-gradient-to-br.from-\[\#5b86b6\].to-\[\#3f6593\] {
             </div>
         </div>
 
-        {{-- MESSAGES SECTION --}}
+        {{-- COMMUNICATIONS SECTION --}}
         <div>
-            <p class="px-4 text-[10px] font-bold text-[#B6FF5C] uppercase tracking-widest mb-3 opacity-60">Messages</p>
+            <p class="px-4 text-[10px] font-bold text-[#B6FF5C] uppercase tracking-widest mb-3 opacity-60">Communications</p>
             <div class="space-y-1">
                 @php
-                    $msgLinks = [
-                        ['label' => 'Resident Support', 'route' => 'admin.messages.index', 'icon' => 'bi-chat-left-text-fill', 'pattern' => 'admin.messages.index*'],
-                        ['label' => 'Notifications', 'route' => 'admin.messages.notifications.index', 'icon' => 'bi-bell-fill', 'pattern' => 'admin.messages.notifications*'],
+                    $commLinks = [
+                        ['label' => 'Resident Support', 'route' => 'admin.messages.index', 'icon' => 'bi-chat-left-text-fill', 'pattern' => 'admin.messages.index*', 'badge' => 'support', 'permission' => 'support.view'],
+                        ['label' => 'Notifications', 'route' => 'admin.messages.notifications.index', 'icon' => 'bi-bell-fill', 'pattern' => 'admin.messages.notifications*', 'permission' => 'notifications.view'],
                     ];
                 @endphp
-                @foreach ($msgLinks as $link)
+                @foreach ($commLinks as $link)
                     @include('layouts.partials.sidebar-link', ['link' => $link])
                 @endforeach
             </div>
         </div>
 
-        {{-- MANAGEMENT SECTION --}}
+        {{-- RESIDENT MANAGEMENT SECTION --}}
         <div>
-            <p class="px-4 text-[10px] font-bold text-[#B6FF5C] uppercase tracking-widest mb-3 opacity-60">Management</p>
+            <p class="px-4 text-[10px] font-bold text-[#B6FF5C] uppercase tracking-widest mb-3 opacity-60">Resident Management</p>
             <div class="space-y-1">
                 @php
-                    $mgmtLinks = [
-                        ['label' => 'Residents', 'route' => 'admin.residents.index', 'icon' => 'bi-people-fill', 'pattern' => 'admin.residents*'],
-                        ['label' => 'Invitations', 'route' => 'admin.invitations.index', 'icon' => 'bi-envelope-paper-fill', 'pattern' => 'admin.invitations*'],
-                        ['label' => 'Dues', 'route' => 'admin.dues.index', 'icon' => 'bi-receipt', 'pattern' => 'admin.dues*'],
-                        ['label' => 'Payments', 'route' => 'admin.payments.index', 'icon' => 'bi-credit-card-fill', 'pattern' => 'admin.payments*'],
-                        ['label' => 'Penalties', 'route' => 'admin.penalties.index', 'icon' => 'bi-exclamation-octagon-fill', 'pattern' => 'admin.penalties*'],
-                        ['label' => 'Requests', 'route' => 'admin.requests.index', 'icon' => 'bi-inbox-fill', 'pattern' => 'admin.requests*'],
-                        ['label' => 'Amenities', 'route' => 'admin.amenities.index', 'icon' => 'bi-building-fill', 'pattern' => 'admin.amenities*'],
-                        ['label' => 'Reservations', 'route' => 'admin.amenity-reservations.index', 'icon' => 'bi-calendar-check-fill', 'pattern' => 'admin.amenity-reservations*'],
-                        ['label' => 'Board Members', 'route' => 'admin.board.index', 'icon' => 'bi-people-fill', 'pattern' => 'admin.board*'],
+                    $residentMgmtLinks = [
+                        ['label' => 'Residents', 'route' => 'admin.residents.index', 'icon' => 'bi-people-fill', 'pattern' => 'admin.residents*', 'permission' => 'residents.view'],
+                        ['label' => 'Invitations', 'route' => 'admin.invitations.index', 'icon' => 'bi-envelope-paper-fill', 'pattern' => 'admin.invitations*', 'permission' => 'invitations.view'],
+                        ['label' => 'Board Members', 'route' => 'admin.board.index', 'icon' => 'bi-people-fill', 'pattern' => 'admin.board*', 'permission' => 'board_members.view'],
                     ];
                 @endphp
-                @foreach ($mgmtLinks as $link)
+                @foreach ($residentMgmtLinks as $link)
                     @include('layouts.partials.sidebar-link', ['link' => $link])
                 @endforeach
             </div>
         </div>
 
-        {{-- SYSTEM SECTION --}}
+        {{-- FINANCIAL MANAGEMENT SECTION --}}
         <div>
-            <p class="px-4 text-[10px] font-bold text-[#B6FF5C] uppercase tracking-widest mb-3 opacity-60">System</p>
+            <p class="px-4 text-[10px] font-bold text-[#B6FF5C] uppercase tracking-widest mb-3 opacity-60">Financial Management</p>
             <div class="space-y-1">
                 @php
-                    $sysLinks = [
-                        ['label' => 'Reports', 'route' => 'admin.system.reports.index', 'icon' => 'bi-bar-chart-fill', 'pattern' => 'admin.system.reports*'],
-                        ['label' => 'Activity Logs', 'route' => 'admin.system.activity-logs.index', 'icon' => 'bi-journal-text', 'pattern' => 'admin.system.activity-logs*'],
-                        ['label' => 'Accounts', 'route' => 'admin.accounts.index', 'icon' => 'bi-shield-lock-fill', 'pattern' => 'admin.accounts*'],
+                    $financialLinks = [
+                        ['label' => 'Dues', 'route' => 'admin.dues.index', 'icon' => 'bi-receipt', 'pattern' => 'admin.dues*', 'permission' => 'dues.view'],
+                        ['label' => 'Payments', 'route' => 'admin.payments.index', 'icon' => 'bi-credit-card-fill', 'pattern' => 'admin.payments*', 'permission' => 'payments.view'],
+                        ['label' => 'Penalties', 'route' => 'admin.penalties.index', 'icon' => 'bi-exclamation-octagon-fill', 'pattern' => 'admin.penalties*', 'permission' => 'penalties.view'],
                     ];
                 @endphp
-                @foreach ($sysLinks as $link)
+                @foreach ($financialLinks as $link)
+                    @include('layouts.partials.sidebar-link', ['link' => $link])
+                @endforeach
+            </div>
+        </div>
+
+        {{-- OPERATIONS SECTION --}}
+        <div>
+            <p class="px-4 text-[10px] font-bold text-[#B6FF5C] uppercase tracking-widest mb-3 opacity-60">Operations</p>
+            <div class="space-y-1">
+                @php
+                    $opsLinks = [
+                        ['label' => 'Requests', 'route' => 'admin.requests.index', 'icon' => 'bi-inbox-fill', 'pattern' => 'admin.requests*', 'permission' => 'requests.view'],
+                        ['label' => 'Amenities', 'route' => 'admin.amenities.index', 'icon' => 'bi-building-fill', 'pattern' => 'admin.amenities*', 'permission' => 'amenities.view'],
+                        ['label' => 'Reservations', 'route' => 'admin.amenity-reservations.index', 'icon' => 'bi-calendar-check-fill', 'pattern' => 'admin.amenity-reservations*', 'permission' => 'reservations.view'],
+                    ];
+                @endphp
+                @foreach ($opsLinks as $link)
+                    @include('layouts.partials.sidebar-link', ['link' => $link])
+                @endforeach
+            </div>
+        </div>
+
+        {{-- SYSTEM MONITORING SECTION --}}
+        <div>
+            <p class="px-4 text-[10px] font-bold text-[#B6FF5C] uppercase tracking-widest mb-3 opacity-60">System Monitoring</p>
+            <div class="space-y-1">
+                @php
+                    $monitoringLinks = [
+                        ['label' => 'Reports', 'route' => 'admin.system.reports.index', 'icon' => 'bi-bar-chart-fill', 'pattern' => 'admin.system.reports*', 'permission' => 'reports.view'],
+                        ['label' => 'Activity Logs', 'route' => 'admin.system.activity-logs.index', 'icon' => 'bi-journal-text', 'pattern' => 'admin.system.activity-logs*', 'permission' => 'logs.view'],
+                    ];
+                @endphp
+                @foreach ($monitoringLinks as $link)
+                    @include('layouts.partials.sidebar-link', ['link' => $link])
+                @endforeach
+            </div>
+        </div>
+
+        {{-- ADMINISTRATION SECTION --}}
+        <div>
+            <p class="px-4 text-[10px] font-bold text-[#B6FF5C] uppercase tracking-widest mb-3 opacity-60">Administration</p>
+            <div class="space-y-1">
+                @php
+                    $adminLinks = [
+                        ['label' => 'Roles & Permissions', 'route' => 'admin.system.roles-permissions.index', 'icon' => 'bi-shield-lock', 'pattern' => 'admin.system.roles-permissions*', 'permission' => 'roles.view'],
+                        ['label' => 'Accounts', 'route' => 'admin.accounts.index', 'icon' => 'bi-shield-lock-fill', 'pattern' => 'admin.accounts*', 'permission' => 'users.view'],
+                    ];
+                @endphp
+                @foreach ($adminLinks as $link)
                     @include('layouts.partials.sidebar-link', ['link' => $link])
                 @endforeach
             </div>
@@ -411,14 +454,16 @@ aside#sidebar .bg-gradient-to-br.from-\[\#5b86b6\].to-\[\#3f6593\] {
                                 <button type="submit" class="w-full text-left block p-4 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 {{ !$notification->is_read ? 'bg-blue-50/30' : '' }}">
                                     <div class="flex gap-3">
                                         <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 
-                                            @if($notification->type == 'payment') bg-blue-50 text-blue-500
-                                            @elseif($notification->type == 'request') bg-emerald-50 text-emerald-500
-                                            @elseif($notification->type == 'alert') bg-orange-50 text-orange-500
+                                            @if(($notification->category ?? '') == 'payment') bg-blue-50 text-blue-500
+                                            @elseif(($notification->category ?? '') == 'billing') bg-indigo-50 text-indigo-500
+                                            @elseif(($notification->category ?? '') == 'request') bg-emerald-50 text-emerald-500
+                                            @elseif(($notification->category ?? '') == 'alert') bg-orange-50 text-orange-500
                                             @else bg-gray-50 text-gray-500 @endif">
                                             <i class="bi 
-                                                @if($notification->type == 'payment') bi-cash-stack
-                                                @elseif($notification->type == 'request') bi-tools
-                                                @elseif($notification->type == 'alert') bi-exclamation-triangle
+                                                @if(($notification->category ?? '') == 'payment') bi-cash-stack
+                                                @elseif(($notification->category ?? '') == 'billing') bi-receipt
+                                                @elseif(($notification->category ?? '') == 'request') bi-tools
+                                                @elseif(($notification->category ?? '') == 'alert') bi-exclamation-triangle
                                                 @else bi-bell @endif text-lg"></i>
                                         </div>
                                         <div class="flex-1 min-w-0">
@@ -487,6 +532,21 @@ aside#sidebar .bg-gradient-to-br.from-\[\#5b86b6\].to-\[\#3f6593\] {
                         <p class="text-sm font-bold text-red-900">{{ session('error') }}</p>
                     </div>
                     <button @click="show = false" class="ml-4 text-red-400 hover:text-red-600 transition-colors">
+                        <i class="bi bi-x-lg text-xs"></i>
+                    </button>
+                </div>
+            @endif
+
+            @if(session('info'))
+                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" 
+                     class="mb-6 flex items-center p-4 bg-blue-50 border border-blue-100 rounded-2xl shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
+                    <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+                        <i class="bi bi-info-circle-fill"></i>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-bold text-blue-900">{{ session('info') }}</p>
+                    </div>
+                    <button @click="show = false" class="ml-4 text-blue-400 hover:text-blue-600 transition-colors">
                         <i class="bi bi-x-lg text-xs"></i>
                     </button>
                 </div>

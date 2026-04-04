@@ -83,6 +83,7 @@ class LiveDemoSeeder extends Seeder
                 'status' => 'approved',
                 'payment_method' => 'gcash',
                 'proof' => 'proof_demo.jpg',
+                'reference_no' => 'DEMO-' . strtoupper(uniqid()),
             ]);
 
             $due->update(['status' => 'paid']);
@@ -103,6 +104,7 @@ class LiveDemoSeeder extends Seeder
                 'date_paid' => $today->copy()->subDays(rand(2, 7))->setTime(rand(8, 17), rand(0, 59)),
                 'status' => 'approved',
                 'payment_method' => 'cash',
+                'reference_no' => 'DEMO-' . strtoupper(uniqid()),
             ]);
             $due->update(['status' => 'paid']);
         }
@@ -123,6 +125,7 @@ class LiveDemoSeeder extends Seeder
                 'date_paid' => $today->copy()->subMonth()->addDays(rand(0, 20))->setTime(rand(8, 17), rand(0, 59)),
                 'status' => 'approved',
                 'payment_method' => 'bank transfer',
+                'reference_no' => 'DEMO-' . strtoupper(uniqid()),
             ]);
             $due->update(['status' => 'paid']);
         }

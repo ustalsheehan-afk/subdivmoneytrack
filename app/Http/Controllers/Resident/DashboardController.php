@@ -26,6 +26,7 @@ class DashboardController extends Controller
         }
 
         Notification::where('resident_id', $resident->id)
+            ->where('role', Notification::ROLE_RESIDENT)
             ->where('is_read', false)
             ->update(['is_read' => true]);
 

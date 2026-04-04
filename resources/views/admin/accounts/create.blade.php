@@ -17,7 +17,7 @@
                     Create Account
                 </h1>
                 <p class="mt-2 text-gray-600 text-lg max-w-xl">
-                    Provision a new system account for a resident or administrator.
+                    Provision a new system account for administrators, staff, or auditors.
                 </p>
             </div>
 
@@ -59,27 +59,16 @@
                         <div>
                             <div class="flex items-center gap-3 mb-6">
                                 <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">1</div>
-                                <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest">Identity & Ownership</h3>
+                                <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest">Identity</h3>
                             </div>
 
                             <div class="space-y-6">
-                                {{-- Homeowner Dropdown --}}
+                                {{-- Name --}}
                                 <div class="space-y-2">
-                                    <label for="homeowner_id" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">
-                                        Select Homeowner / Resident
-                                    </label>
-                                    <div class="relative group">
-                                        <select name="homeowner_id" id="homeowner_id" required
-                                            class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none appearance-none cursor-pointer">
-                                            <option value="">-- Choose Homeowner --</option>
-                                            @foreach($homeowners as $homeowner)
-                                                <option value="{{ $homeowner->id }}" {{ old('homeowner_id') == $homeowner->id ? 'selected' : '' }}>
-                                                    {{ $homeowner->name }} ({{ $homeowner->email ?? 'No Email' }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        <i class="bi bi-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-focus-within:text-emerald-500 transition-colors"></i>
-                                    </div>
+                                    <label for="name" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Full Name</label>
+                                    <input type="text" name="name" id="name" value="{{ old('name') }}" required
+                                        class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none"
+                                        placeholder="e.g. John D. Administrator">
                                 </div>
                             </div>
                         </div>
@@ -107,6 +96,14 @@
                                         class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none"
                                         placeholder="Minimum 8 characters">
                                 </div>
+
+                                {{-- Confirm Password --}}
+                                <div class="space-y-2 md:col-span-2">
+                                    <label for="password_confirmation" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Confirm Password</label>
+                                    <input type="password" name="password_confirmation" id="password_confirmation" required
+                                        class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none"
+                                        placeholder="Repeat the password">
+                                </div>
                             </div>
                         </div>
 
@@ -120,15 +117,27 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {{-- Role Selector --}}
                                 <div class="space-y-2">
-                                    <label for="role" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">System Role</label>
+                                    <label for="role_id" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Role</label>
                                     <div class="relative group">
-                                        <select name="role" id="role" required
+                                        <select name="role_id" id="role_id" required
                                             class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none appearance-none cursor-pointer">
-                                            <option value="resident" {{ old('role') == 'resident' ? 'selected' : '' }}>Resident (Limited Access)</option>
-                                            <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Administrator (Full Access)</option>
+                                            @foreach($roles as $role)
+                                                @if($role->name === 'super_admin')
+                                                    @can('system_settings')
+                                                        <option value="{{ $role->id }}" {{ (string) old('role_id') === (string) $role->id ? 'selected' : '' }}>
+                                                            {{ strtoupper(str_replace('_',' ', $role->name)) }}
+                                                        </option>
+                                                    @endcan
+                                                @else
+                                                    <option value="{{ $role->id }}" {{ (string) old('role_id') === (string) $role->id ? 'selected' : '' }}>
+                                                        {{ strtoupper(str_replace('_',' ', $role->name)) }}
+                                                    </option>
+                                                @endif
+                                            @endforeach
                                         </select>
                                         <i class="bi bi-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-focus-within:text-emerald-500 transition-colors"></i>
                                     </div>
+                                    <p class="text-[10px] font-bold text-gray-400 mt-2 ml-1">User Role determines access level</p>
                                 </div>
 
                                 {{-- Status (Active Toggle) --}}

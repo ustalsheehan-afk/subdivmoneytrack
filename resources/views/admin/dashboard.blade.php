@@ -42,20 +42,39 @@
         <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] px-1">Quick Actions</h2>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             @php
+                $quickActionRoute = function (string $preferred, ?string $fallback = null) {
+                    if (\Illuminate\Support\Facades\Route::has($preferred)) {
+                        return route($preferred);
+                    }
+
+                    if ($fallback && \Illuminate\Support\Facades\Route::has($fallback)) {
+                        return route($fallback);
+                    }
+
+                    return '#';
+                };
+
                 $quickActions = [
-                    ['label' => 'Add Resident', 'icon' => 'bi-person-plus-fill', 'route' => route('admin.residents.index')],
-                    ['label' => 'Announcement', 'icon' => 'bi-megaphone-fill', 'route' => route('admin.announcements.index')],
-                    ['label' => 'Record Payment', 'icon' => 'bi-credit-card-fill', 'route' => route('admin.payments.index')],
-                    ['label' => 'Create Dues', 'icon' => 'bi-receipt', 'route' => route('admin.dues.index')],
-                    ['label' => 'Review Requests', 'icon' => 'bi-clipboard-check-fill', 'route' => route('admin.requests.index')],
-                    ['label' => 'Reserve Amenity', 'icon' => 'bi-calendar-check-fill', 'route' => route('admin.amenity-reservations.index')],
+                    ['label' => 'Add Resident', 'icon' => 'bi-person-plus-fill', 'route' => $quickActionRoute('admin.invitations.index', 'admin.residents.index')],
+                    ['label' => 'Announcement', 'icon' => 'bi-megaphone-fill', 'route' => $quickActionRoute('admin.announcements.create', 'admin.announcements.index')],
+                    ['label' => 'Record Payment', 'icon' => 'bi-credit-card-fill', 'route' => $quickActionRoute('admin.dues.index', 'admin.payments.index')],
+                    ['label' => 'Create Dues', 'icon' => 'bi-receipt', 'route' => $quickActionRoute('admin.dues.create', 'admin.dues.index')],
+                    ['label' => 'Review Requests', 'icon' => 'bi-clipboard-check-fill', 'route' => $quickActionRoute('admin.requests.index')],
+                    ['label' => 'Reserve Amenity', 'icon' => 'bi-calendar-check-fill', 'route' => $quickActionRoute('admin.amenity-reservations.index')],
                 ];
             @endphp
 
             @foreach($quickActions as $action)
-                <a href="{{ $action['route'] }}" class="glass-card p-5 flex flex-col items-center justify-center text-center gap-3 group hover:border-emerald-500/30 transition-all duration-300 relative">
+                <a href="{{ $action['route'] }}"
+                   @if($action['route'] === '#') aria-disabled="true" @endif
+                   class="glass-card p-5 flex flex-col items-center justify-center text-center gap-3 group hover:border-emerald-500/30 transition-all duration-300 relative {{ $action['route'] === '#' ? 'pointer-events-none opacity-60' : '' }}">
                     <div class="w-12 h-12 rounded-[16px] bg-gray-50 flex items-center justify-center shrink-0 border border-gray-100 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-500 transition-all duration-300 shadow-sm relative z-10">
                         <i class="bi {{ $action['icon'] }} text-xl"></i>
+                        @if($action['label'] === 'Record Payment' && $summaryData['pendingPayments'] > 0)
+                            <span class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center border border-white shadow-sm">{{ $summaryData['pendingPayments'] }}</span>
+                        @elseif($action['label'] === 'Review Requests' && isset($recentRequests))
+                            <span class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center border border-white shadow-sm">{{ $recentRequests->count() }}</span>
+                        @endif
                     </div>
                     <div class="relative z-10">
                         <p class="text-[10px] font-black text-gray-900 uppercase tracking-widest">{{ $action['label'] }}</p>
@@ -71,23 +90,46 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         @php
             $stats = [
-                ['label' => 'Total Residents', 'value' => $summaryData['totalResidents'], 'icon' => 'bi-people-fill', 'link' => route('admin.residents.index'), 'trend' => 'Community size', 'accent' => 'border-t-emerald-500'],
-                ['label' => 'Dues Collected', 'value' => '₱' . number_format($summaryData['totalDuesCollected'], 2), 'icon' => 'bi-wallet2', 'link' => route('admin.dues.index'), 'trend' => 'Total revenue', 'accent' => 'border-t-emerald-600'],
-                ['label' => 'Pending Payments', 'value' => $summaryData['pendingPayments'], 'icon' => 'bi-hourglass-split', 'link' => route('admin.payments.index'), 'trend' => 'Action required', 'accent' => 'border-t-amber-400'],
-                ['label' => 'Total Penalties', 'value' => '₱' . number_format($summaryData['totalPenalties'], 2), 'icon' => 'bi-exclamation-triangle-fill', 'link' => route('admin.penalties.index'), 'trend' => 'Outstanding fees', 'accent' => 'border-t-red-400'],
+            ['label' => 'Total Residents', 'value' => $summaryData['totalResidents'], 'icon' => 'bi-people-fill', 'link' => route('admin.residents.index'), 'accent' => 'border-t-emerald-500'],
+            ['label' => 'Total Paid', 'value' => '₱' . number_format($summaryData['totalDuesCollected'], 2), 'icon' => 'bi-wallet2', 'link' => route('admin.payments.index', ['status' => 'paid']), 'accent' => 'border-t-emerald-600'],
+            ['label' => 'Outstanding Dues', 'value' => $summaryData['pendingPayments'], 'icon' => 'bi-hourglass-split', 'link' => route('admin.dues.index', ['status' => 'unpaid']), 'accent' => 'border-t-amber-400'],
+            ['label' => 'Unpaid Penalties', 'value' => '₱' . number_format($summaryData['totalPenalties'], 2), 'icon' => 'bi-exclamation-triangle-fill', 'link' => route('admin.penalties.index'), 'accent' => 'border-t-red-400'],
             ];
         @endphp
 
-        @foreach($stats as $stat)
-            <a href="{{ $stat['link'] }}" class="glass-card p-6 group relative overflow-hidden {{ $stat['accent'] }} border-t-2">
+        @foreach($stats as $index => $stat)
+            @php
+                $iconBgColor = match($stat['accent']) {
+                    'border-t-emerald-500' => 'bg-emerald-50 text-emerald-600',
+                    'border-t-emerald-600' => 'bg-emerald-50 text-emerald-600',
+                    'border-t-amber-400' => 'bg-amber-50 text-amber-600',
+                    'border-t-red-400' => 'bg-red-50 text-red-600',
+                    default => 'bg-gray-50 text-gray-600'
+                };
+                
+                // Get the dynamic indicator from the controller
+                $indicatorKey = match($index) {
+                    0 => 'residents',
+                    1 => 'collection',
+                    2 => 'pending_payments',
+                    3 => 'penalties',
+                    default => ''
+                };
+                
+                $indicator = $indicators[$indicatorKey] ?? '';
+            @endphp
+            <a href="{{ $stat['link'] }}" class="glass-card p-6 group relative overflow-hidden {{ $stat['accent'] }} border-t-2 hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer">
+                <i class="bi bi-arrow-right-short absolute top-4 right-4 text-xs opacity-50 group-hover:opacity-100 transition-opacity"></i>
                 <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">{{ $stat['label'] }}</p>
-                        <h3 class="text-2xl font-black text-gray-900 tracking-tight">{{ $stat['value'] }}</h3>
-                        <p class="text-[10px] text-gray-600 mt-2 font-medium">{{ $stat['trend'] }}</p>
+                    <div class="flex-1">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 opacity-75">{{ $stat['label'] }}</p>
+                        <h3 class="text-3xl font-bold text-gray-900 mb-2 tracking-tight">{{ $stat['value'] }}</h3>
+                        @if($indicator)
+                            <p class="text-xs font-medium text-gray-600 opacity-80">{{ $indicator }}</p>
+                        @endif
                     </div>
-                    <div class="w-11 h-11 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-700 text-lg shadow-inner group-hover:bg-emerald-600 group-hover:text-white transition-all duration-500">
-                        <i class="bi {{ $stat['icon'] }}"></i>
+                    <div class="w-10 h-10 rounded-lg {{ $iconBgColor }} flex items-center justify-center shrink-0 ml-4 group-hover:scale-110 transition-transform duration-300">
+                        <i class="bi {{ $stat['icon'] }} text-sm"></i>
                     </div>
                 </div>
             </a>
@@ -124,10 +166,17 @@
             <div class="p-8 flex flex-col md:flex-row items-center gap-12 flex-1">
                 <div class="flex-1 space-y-6">
                     <div>
-                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Total Collected</p>
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-4xl font-black text-gray-900 tracking-tighter">₱{{ number_format($collected) }}</span>
-                            <span class="text-sm text-gray-600 font-medium">/ ₱{{ number_format($totalExpected) }}</span>
+                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Collection Status</p>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-3xl font-black text-gray-900 tracking-tighter">₱{{ number_format($collected) }}</span>
+                                    <span class="text-xs text-emerald-600 font-bold">Collected</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs font-medium text-gray-600">
+                                <span>Total Expected: ₱{{ number_format($totalExpected) }}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -182,8 +231,8 @@
                 </div>
             </div>
 
-            <div class="p-6 flex-1 overflow-y-auto custom-scrollbar max-h-[400px]">
-                <div class="space-y-4">
+            <div class="p-6 flex-1 flex flex-col">
+                <div class="space-y-4 flex-1 overflow-y-auto custom-scrollbar max-h-[400px]">
                     @forelse($upcomingDues as $due)
                         @php
                             $dueDate = \Carbon\Carbon::parse($due->due_date);
@@ -226,11 +275,18 @@
                         </div>
                     @endforelse
                 </div>
+                <div class="flex gap-2 pt-4 border-t border-gray-100 mt-auto">
+                    <form action="{{ route('admin.reminders.send') }}" method="POST" class="flex-1">
+                        @csrf
+                        <button type="submit" class="w-full px-3 py-2 text-center text-[9px] font-black text-white uppercase tracking-widest bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg transition-all duration-200 disabled:opacity-50" onclick="this.disabled = true; this.form.submit();">
+                            Send Reminder
+                        </button>
+                    </form>
+                    <a href="{{ route('admin.dues.index') }}" class="flex-1 px-3 py-2 text-center text-[9px] font-black text-emerald-600 uppercase tracking-widest border border-emerald-200 hover:bg-emerald-50 rounded-lg transition-colors">
+                        View Calendar
+                    </a>
+                </div>
             </div>
-            
-            <a href="{{ route('admin.dues.index') }}" class="p-4 text-center border-t border-gray-100 text-[10px] font-black text-emerald-600 uppercase tracking-widest hover:bg-gray-50 transition-colors">
-                View Billing Calendar
-            </a>
         </div>
     </div>
 
