@@ -11,6 +11,7 @@ use App\Models\Resident;
 use App\Models\Penalty;
 use App\Services\SmsService;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -24,7 +25,7 @@ class PaymentController extends Controller
     {
         $this->middleware('permission:payments.view')->only(['index', 'show', 'review', 'receipt', 'downloadReceipt', 'getData', 'getDuesByResident']);
         $this->middleware('permission:payments.record')->only(['create', 'store', 'confirm', 'approve']);
-        $this->middleware('permission:payments.update')->only(['edit', 'update', 'bulkAction', 'updateStatus', 'reject']);
+        $this->middleware('permission:payments.update')->only(['edit', 'update', 'bulkAction', 'bulkApprovePayments', 'updateStatus', 'reject']);
         $this->middleware('permission:payments.delete')->only(['destroy']);
         $this->middleware('permission:payments.export')->only([]);
     }
@@ -113,20 +114,40 @@ class PaymentController extends Controller
             return back()->with('error', 'No payments selected.');
         }
 
-        $count = count($ids);
-
         switch ($action) {
             case 'approve':
-                Payment::whereIn('id', $ids)->update(['status' => self::STATUS_APPROVED]);
-                // Trigger logic for each (penalties/dues) - simplified for bulk, 
-                // ideally iterate if logic is complex, but update is faster.
-                // For correctness with handlePenaltyAndMarkDue, we might need iteration:
-                foreach(Payment::whereIn('id', $ids)->get() as $payment) {
-                    $this->handlePenaltyAndMarkDue($payment);
+                $approvedCount = 0;
+
+                DB::transaction(function () use ($ids, &$approvedCount) {
+                    $payments = Payment::with(['due', 'resident', 'penalty'])
+                        ->whereIn('id', $ids)
+                        ->where('status', self::STATUS_PENDING)
+                        ->lockForUpdate()
+                        ->get();
+
+                    foreach ($payments as $payment) {
+                        $payment->update([
+                            'status' => self::STATUS_APPROVED,
+                            'date_paid' => $payment->date_paid ?? now(),
+                        ]);
+
+                        if ($payment->due) {
+                            $payment->due->refresh();
+                        }
+
+                        $this->handlePenaltyAndMarkDue($payment->fresh(['due', 'resident', 'penalty']));
+                        $approvedCount++;
+                    }
+                });
+
+                if ($approvedCount === 0) {
+                    return back()->with('error', 'No pending payments were selected.');
                 }
-                return back()->with('success', "{$count} payments approved successfully.");
+
+                return back()->with('success', "{$approvedCount} payments approved successfully.");
             
             case 'reject':
+                $count = count($ids);
                 Payment::whereIn('id', $ids)->update(['status' => self::STATUS_REJECTED]);
                 foreach(Payment::whereIn('id', $ids)->get() as $payment) {
                     $payment->due->markPaidIfFullyCollected();
@@ -134,6 +155,7 @@ class PaymentController extends Controller
                 return back()->with('success', "{$count} payments rejected successfully.");
 
             case 'export':
+                $count = count($ids);
                 // Minimal CSV Export logic
                 $filename = "payments_export_" . date('Ymd_His') . ".csv";
                 $headers = [
@@ -169,12 +191,52 @@ class PaymentController extends Controller
                 return response()->stream($callback, 200, $headers);
 
             case 'delete':
+                 $count = count($ids);
                  Payment::destroy($ids);
                  return back()->with('success', "{$count} payments deleted successfully.");
 
             default:
                 return back()->with('error', 'Invalid action.');
         }
+    }
+
+    public function bulkApprovePayments(Request $request)
+    {
+        $ids = $request->input('ids', []);
+
+        if (empty($ids)) {
+            return back()->with('error', 'No payments selected.');
+        }
+
+        $approvedCount = 0;
+
+        DB::transaction(function () use ($ids, &$approvedCount) {
+            $payments = Payment::with(['due', 'resident', 'penalty'])
+                ->whereIn('id', $ids)
+                ->where('status', self::STATUS_PENDING)
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($payments as $payment) {
+                $payment->update([
+                    'status' => self::STATUS_APPROVED,
+                    'date_paid' => $payment->date_paid ?? now(),
+                ]);
+
+                if ($payment->due) {
+                    $payment->due->refresh();
+                }
+
+                $this->handlePenaltyAndMarkDue($payment->fresh(['due', 'resident', 'penalty']));
+                $approvedCount++;
+            }
+        });
+
+        if ($approvedCount === 0) {
+            return back()->with('error', 'No pending payments were selected.');
+        }
+
+        return back()->with('success', "{$approvedCount} payments approved successfully.");
     }
 
     // ==============================

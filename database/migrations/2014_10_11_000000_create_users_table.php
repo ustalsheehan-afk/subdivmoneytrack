@@ -13,6 +13,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
+            $table->rememberToken();
             $table->string('role')->default('admin'); // 👈 useful if you want role distinction
             $table->timestamps();
         });

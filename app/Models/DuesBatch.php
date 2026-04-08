@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Payment;
 
 class DuesBatch extends Model
 {
@@ -48,13 +49,36 @@ class DuesBatch extends Model
 
     public function getCollectedAmountAttribute()
     {
-        return (float) $this->dues()->sum('paid_amount');
+        if ($this->relationLoaded('residentDues')) {
+            return (float) $this->residentDues->sum(fn (Due $due) => $due->total_paid);
+        }
+
+        if ($this->relationLoaded('dues')) {
+            return (float) $this->dues->sum(fn (Due $due) => $due->total_paid);
+        }
+
+        return (float) $this->payments()
+            ->where('payments.status', Payment::STATUS_APPROVED)
+            ->sum('payments.amount');
     }
 
     public function getProgressAttribute()
     {
         if ($this->total_expected <= 0) return 0;
         return ($this->collected_amount / $this->total_expected) * 100;
+    }
+
+    public function getResidentStatusCountsAttribute(): array
+    {
+        $dues = $this->relationLoaded('residentDues')
+            ? $this->residentDues
+            : $this->residentDues()->with('payments')->get();
+
+        return [
+            'paid' => $dues->where('dynamic_status', Due::STATUS_PAID)->count(),
+            'partial' => $dues->where('dynamic_status', 'partial')->count(),
+            'unpaid' => $dues->where('dynamic_status', Due::STATUS_UNPAID)->count(),
+        ];
     }
 
     public function getStatusLabelAttribute()

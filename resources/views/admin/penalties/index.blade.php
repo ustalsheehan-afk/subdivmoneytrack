@@ -4,7 +4,7 @@
 @section('page-title', 'Penalties Management')
 
 @section('content')
-<div class="space-y-8 animate-fade-in">
+<div class="space-y-8 animate-fade-in" x-data="penaltiesBulkApproval()" x-cloak>
 
     {{-- ===================== --}}
     {{-- HEADER SECTION --}}
@@ -110,6 +110,35 @@
 
         {{-- Filters & Toggles --}}
         <div class="flex flex-wrap items-center gap-3">
+            <button type="button"
+                    x-show="hasPendingRows && !penaltySelectionMode"
+                    x-transition.opacity.duration.150ms
+                    @click="enableSelectionMode()"
+                    class="h-11 px-4 inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest text-gray-600 transition-all hover:border-emerald-500/30 hover:bg-gray-50">
+                <i class="bi bi-check2-square text-emerald-600"></i>
+                Select
+            </button>
+
+            <div x-show="penaltySelectionMode"
+                 x-transition.opacity.duration.150ms
+                 class="flex items-center gap-2">
+                <button type="button"
+                        @click="clearSelection()"
+                        class="h-11 px-4 inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50">
+                    <i class="bi bi-x-lg"></i>
+                    Cancel Selection
+                </button>
+
+                <button type="button"
+                        x-show="hasPendingSelection"
+                        x-transition.opacity.duration.150ms
+                        @click="submitApproval()"
+                        class="h-11 px-4 inline-flex items-center gap-2 rounded-xl bg-gray-900 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+                        :disabled="!hasPendingSelection">
+                    <i class="bi bi-check2-all"></i>
+                    Approve Selected
+                </button>
+            </div>
             
             {{-- Status Filter --}}
             <div class="relative group/filter">
@@ -161,6 +190,25 @@
         </div>
     </div>
 
+    <div x-show="penaltySelectionMode && hasPendingSelection"
+         x-transition.opacity.duration.200ms
+         class="fixed bottom-6 left-1/2 z-40 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2">
+        <div class="rounded-2xl border border-emerald-100 bg-white/95 px-5 py-4 shadow-2xl shadow-emerald-500/10 backdrop-blur">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p class="text-sm font-black tracking-tight text-gray-900">
+                    <span x-text="selectedCount"></span> selected
+                </p>
+                <div class="flex items-center gap-2">
+                    <button type="button"
+                            @click="clearSelection()"
+                            class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- ===================== --}}
     {{-- TABLE CONTAINER --}}
     {{-- ===================== --}}
@@ -169,6 +217,13 @@
             <table class="w-full text-left border-collapse">
                 <thead class="bg-gray-50/50 border-b border-gray-100">
                     <tr>
+                        <th class="p-5 w-14 text-center">
+                            <input type="checkbox"
+                                   x-show="penaltySelectionMode && hasPendingRows"
+                                   x-model="selectAll"
+                                   @change="toggleSelectAll($event.target.checked)"
+                                   class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500/20">
+                        </th>
                         <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Resident</th>
                         <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Violation Type</th>
                         <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Reason</th>
@@ -181,6 +236,16 @@
                 <tbody class="divide-y divide-gray-50">
                     @forelse($penalties as $penalty)
                     <tr class="hover:bg-emerald-50/30 transition-all duration-300 group border-l-4 border-transparent hover:border-emerald-500">
+                        <td class="p-5 text-center">
+                            @if($penalty->status === 'pending')
+                                <input type="checkbox"
+                                       x-show="penaltySelectionMode"
+                                       value="{{ $penalty->id }}"
+                                       x-model="selectedPenalties"
+                                       @change="syncSelectAll()"
+                                       class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500/20">
+                            @endif
+                        </td>
                         <td class="p-5">
                             <div class="flex items-center gap-4">
                                 <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xs border border-emerald-100 shadow-sm">
@@ -242,7 +307,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="p-20 text-center">
+                        <td colspan="8" class="p-20 text-center">
                             <div class="w-20 h-20 rounded-3xl bg-gray-50 flex items-center justify-center mx-auto mb-6 text-gray-200">
                                 <i class="bi bi-exclamation-octagon text-4xl"></i>
                             </div>
@@ -264,7 +329,63 @@
 
 </div>
 
+<form id="bulkPenaltyApproveForm" action="{{ route('admin.penalties.bulkApprove') }}" method="POST" class="hidden">
+    @csrf
+    <div id="bulkPenaltyIds"></div>
+</form>
+
 <script>
+    function penaltiesBulkApproval() {
+        return {
+            penaltySelectionMode: false,
+            selectedPenalties: [],
+            pendingIds: @json($penalties->getCollection()->filter(fn ($penalty) => $penalty->status === 'pending')->pluck('id')->values()),
+            selectAll: false,
+            get hasPendingRows() {
+                return this.pendingIds.length > 0;
+            },
+            get selectedCount() {
+                return this.selectedPenalties.length;
+            },
+            get hasPendingSelection() {
+                return this.selectedCount > 0;
+            },
+            enableSelectionMode() {
+                this.penaltySelectionMode = true;
+            },
+            toggleSelectAll(checked) {
+                this.selectedPenalties = checked ? [...this.pendingIds] : [];
+            },
+            syncSelectAll() {
+                this.selectAll = this.pendingIds.length > 0 && this.selectedPenalties.length === this.pendingIds.length;
+            },
+            clearSelection() {
+                this.selectedPenalties = [];
+                this.selectAll = false;
+                this.penaltySelectionMode = false;
+            },
+            submitApproval() {
+                if (!this.hasPendingSelection) return;
+
+                const confirmed = confirm(`Approve ${this.selectedCount} selected penalt${this.selectedCount > 1 ? 'ies' : 'y'}?`);
+                if (!confirmed) return;
+
+                const idsContainer = document.getElementById('bulkPenaltyIds');
+                idsContainer.innerHTML = '';
+
+                this.selectedPenalties.forEach(id => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'ids[]';
+                    input.value = id;
+                    idsContainer.appendChild(input);
+                });
+
+                document.getElementById('bulkPenaltyApproveForm').submit();
+            }
+        }
+    }
+
     function toggleDropdown(id) {
         const dropdown = document.getElementById(id);
         const allDropdowns = ['statusDropdown', 'typeDropdown', 'blockLotDropdown'];

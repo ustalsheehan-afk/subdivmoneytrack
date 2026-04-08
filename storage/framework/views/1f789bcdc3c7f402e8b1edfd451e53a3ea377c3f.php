@@ -71,15 +71,15 @@
                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Resident Status</p>
                 <div class="flex items-center justify-between">
                     <div class="text-center px-4">
-                        <div class="text-2xl font-black text-emerald-600"><?php echo e($batch->residentDues->where('status', 'paid')->count()); ?></div>
+                        <div class="text-2xl font-black text-emerald-600"><?php echo e($batch->resident_status_counts['paid']); ?></div>
                         <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">Paid</div>
                     </div>
                     <div class="text-center px-4 border-x border-gray-100">
-                        <div class="text-2xl font-black text-amber-500"><?php echo e($batch->residentDues->where('status', 'partial')->count()); ?></div>
+                        <div class="text-2xl font-black text-amber-500"><?php echo e($batch->resident_status_counts['partial']); ?></div>
                         <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">Partial</div>
                     </div>
                     <div class="text-center px-4">
-                        <div class="text-2xl font-black text-red-500"><?php echo e($batch->residentDues->where('status', 'unpaid')->count()); ?></div>
+                        <div class="text-2xl font-black text-red-500"><?php echo e($batch->resident_status_counts['unpaid']); ?></div>
                         <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">Unpaid</div>
                     </div>
                 </div>

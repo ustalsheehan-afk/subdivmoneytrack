@@ -217,7 +217,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('payments/review', [PaymentController::class, 'store'])->name('payments.review-post');
     Route::resource('payments', PaymentController::class)->names('payments');
     Route::post('payments/confirm', [PaymentController::class, 'confirm'])->name('payments.confirm');
-    Route::get('payments/{id}/receipt', [PaymentController::class, 'receipt'])->name('payments.receipt');
+    Route::get('payments/{id}/receipt', [PaymentController::class, 'receipt'])->name('payments.view.receipt');
 
     // Amenity Reservations
     Route::get('dummy-reservation', [DummyReservationController::class, 'index'])->name('dummy-reservation');
@@ -251,10 +251,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Penalties bulk actions
     Route::post('penalties/bulk-destroy', [PenaltyController::class, 'bulkDestroy'])->name('penalties.bulkDestroy');
+    Route::post('penalties/bulk-approve', [PenaltyController::class, 'bulkApprovePenalties'])->name('penalties.bulkApprove');
     Route::get('penalties/{penalty}/data', [PenaltyController::class, 'getData'])->name('penalties.data');
 
     // Payments custom actions
     Route::post('payments/bulk-action', [PaymentController::class, 'bulkAction'])->name('payments.bulkAction');
+    Route::post('payments/bulk-approve', [PaymentController::class, 'bulkApprovePayments'])->name('payments.bulkApprove');
     Route::get('residents/{resident}/dues', [PaymentController::class, 'getDuesByResident'])->name('payments.getDuesByResident');
     Route::post('payments/{payment}/approve', [PaymentController::class, 'approve'])->name('payments.approve');
     Route::post('payments/{payment}/reject', [PaymentController::class, 'reject'])->name('payments.reject');

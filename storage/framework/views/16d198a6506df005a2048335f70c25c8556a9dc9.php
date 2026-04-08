@@ -2,7 +2,7 @@
 <?php $__env->startSection('page-title', 'Payments History'); ?>
 
 <?php $__env->startSection('content'); ?>
-<div class="space-y-8 animate-fade-in">
+<div class="space-y-8 animate-fade-in" x-data="paymentsBulkApproval()" x-cloak>
 
     
     
@@ -110,6 +110,35 @@
 
         
         <div class="flex flex-wrap items-center gap-3">
+            <button type="button"
+                    x-show="hasPendingRows && !selectionMode"
+                    x-transition.opacity.duration.150ms
+                    @click="enableSelectionMode()"
+                    class="h-11 px-4 inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest text-gray-600 transition-all hover:border-emerald-500/30 hover:bg-gray-50">
+                <i class="bi bi-check2-square text-emerald-600"></i>
+                Select
+            </button>
+
+            <div x-show="selectionMode"
+                 x-transition.opacity.duration.150ms
+                 class="flex items-center gap-2">
+                <button type="button"
+                        @click="clearSelection()"
+                        class="h-11 px-4 inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50">
+                    <i class="bi bi-x-lg"></i>
+                    Cancel Selection
+                </button>
+
+                <button type="button"
+                        x-show="hasPendingSelection"
+                        x-transition.opacity.duration.150ms
+                        @click="submitApproval()"
+                        class="h-11 px-4 inline-flex items-center gap-2 rounded-xl bg-gray-900 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+                        :disabled="!hasPendingSelection">
+                    <i class="bi bi-check2-all"></i>
+                    Approve Selected
+                </button>
+            </div>
             
             
             <div class="relative group/filter">
@@ -180,6 +209,13 @@
             <table class="w-full text-left border-collapse">
                 <thead class="bg-gray-50/50 border-b border-gray-100">
                     <tr>
+                        <th class="p-5 w-14 text-center">
+                            <input type="checkbox"
+                                   x-show="selectionMode && hasPendingRows"
+                                   x-model="selectAll"
+                                    @change="toggleSelectAll($event.target.checked)"
+                                   class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500/20">
+                        </th>
                         <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Resident</th>
                         <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Reference</th>
                         <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Method</th>
@@ -191,7 +227,18 @@
                 </thead>
                 <tbody class="divide-y divide-gray-50">
                     <?php $__empty_1 = true; $__currentLoopData = $payments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $payment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                    <tr class="hover:bg-emerald-50/30 transition-all duration-300 group border-l-4 border-transparent hover:border-emerald-500 h-[80px]">
+                    <tr class="hover:bg-emerald-50/30 transition-all duration-300 group border-l-4 border-transparent hover:border-emerald-500">
+                        <td class="p-5 text-center align-middle">
+                            <div x-show="selectionMode">
+                                <?php if($payment->status === 'pending'): ?>
+                                    <input type="checkbox"
+                                           value="<?php echo e($payment->id); ?>"
+                                           x-model="selectedItems"
+                                           @change="syncSelectAll()"
+                                           class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500/20">
+                                <?php endif; ?>
+                            </div>
+                        </td>
                         <td class="p-5 align-middle">
                             <div class="flex items-center gap-4">
                                 <div class="w-11 h-11 shrink-0 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xs border border-emerald-100 shadow-sm">
@@ -260,7 +307,7 @@
                     </tr>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr>
-                        <td colspan="7" class="p-20 text-center">
+                        <td colspan="8" class="p-20 text-center">
                             <div class="w-20 h-20 rounded-3xl bg-gray-50 flex items-center justify-center mx-auto mb-6 text-gray-200">
                                 <i class="bi bi-cash-stack text-4xl"></i>
                             </div>
@@ -293,14 +340,64 @@
 
 </div>
 
-
-<form id="bulkActionForm" action="<?php echo e(route('admin.payments.bulkAction')); ?>" method="POST" class="hidden">
+<form id="bulkPaymentApproveForm" action="<?php echo e(route('admin.payments.bulkAction')); ?>" method="POST" class="hidden">
     <?php echo csrf_field(); ?>
-    <input type="hidden" name="action" id="bulkActionInput">
-    <div id="bulkActionIds"></div>
+    <input type="hidden" name="action" value="approve">
+    <div id="bulkPaymentIds"></div>
 </form>
 
 <script>
+    function paymentsBulkApproval() {
+        return {
+            selectionMode: false,
+            selectedItems: [],
+            pendingIds: <?php echo json_encode($payments->getCollection()->filter(fn ($p) => $p->status === 'pending')->pluck('id')->values(), 15, 512) ?>,
+            selectAll: false,
+            get hasPendingRows() {
+                return this.pendingIds.length > 0;
+            },
+            get selectedCount() {
+                return this.selectedItems.length;
+            },
+            get hasPendingSelection() {
+                return this.selectedCount > 0;
+            },
+            enableSelectionMode() {
+                this.selectionMode = true;
+            },
+            toggleSelectAll(checked) {
+                this.selectedItems = checked ? [...this.pendingIds] : [];
+            },
+            syncSelectAll() {
+                this.selectAll = this.pendingIds.length > 0 && this.selectedItems.length === this.pendingIds.length;
+            },
+            clearSelection() {
+                this.selectedItems = [];
+                this.selectAll = false;
+                this.selectionMode = false;
+            },
+            submitApproval() {
+                if (!this.hasPendingSelection) return;
+
+                const confirmed = confirm(`Approve ${this.selectedCount} selected payment${this.selectedCount > 1 ? 's' : ''}?`);
+                if (!confirmed) return;
+
+                const idsContainer = document.getElementById('bulkPaymentIds');
+                idsContainer.innerHTML = '';
+
+                this.selectedItems.forEach(id => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'ids[]';
+                    input.value = id;
+                    idsContainer.appendChild(input);
+                });
+
+                document.getElementById('bulkPaymentApproveForm').submit();
+            }
+        }
+    }
+
     function toggleDropdown(id) {
         const dropdown = document.getElementById(id);
         const allDropdowns = ['statusDropdown', 'methodDropdown'];

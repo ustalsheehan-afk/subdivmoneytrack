@@ -37,16 +37,18 @@ class DuesBatchController extends Controller
             $endDate = now()->endOfYear();
         }
 
-        $batches = DuesBatch::whereBetween('billing_period_start', [$startDate, $endDate])->get();
+        $batches = DuesBatch::with(['dues.payments' => function ($query) {
+            $query->where('status', Payment::STATUS_APPROVED);
+        }])->whereBetween('billing_period_start', [$startDate, $endDate])->get();
         
         $totalActiveDues = DuesBatch::count();
         $totalExpected = DuesBatch::sum('total_expected');
-        $totalCollected = Due::where('status', 'paid')->sum('amount');
+        $totalCollected = $batches->sum->collected_amount;
         $pendingCollection = $totalExpected - $totalCollected;
 
         // Month-over-Month Growth (Sample logic)
-        $lastMonthCollected = Due::where('status', 'paid')
-            ->whereBetween('created_at', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()])
+        $lastMonthCollected = Payment::where('status', Payment::STATUS_APPROVED)
+            ->whereBetween('date_paid', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()])
             ->sum('amount');
         $growth = $lastMonthCollected > 0 ? (($totalCollected - $lastMonthCollected) / $lastMonthCollected) * 100 : 0;
 
@@ -90,7 +92,11 @@ class DuesBatchController extends Controller
             default: $query->orderBy('billing_period_start', 'desc'); break;
         }
 
-        $batches = $query->get();
+        $batches = $query
+            ->with(['dues.payments' => function ($paymentQuery) {
+                $paymentQuery->where('status', Payment::STATUS_APPROVED);
+            }])
+            ->get();
 
         // 4. GROUPING BY MONTH
         $groupedDues = $batches->groupBy(function($batch) {
@@ -100,10 +106,7 @@ class DuesBatchController extends Controller
         // 5. YEAR STATS
         $yearStats = [
             'total_expected' => DuesBatch::whereYear('billing_period_start', $year)->sum('total_expected'),
-            'total_collected' => Due::where('status', 'paid')
-                ->whereHas('batch', function($q) use ($year) {
-                    $q->whereYear('billing_period_start', $year);
-                })->sum('amount'),
+            'total_collected' => $batches->sum->collected_amount,
             'collection_rate' => 0
         ];
 
@@ -115,8 +118,14 @@ class DuesBatchController extends Controller
         $currentDate = now();
         $lastMonthDate = now()->subMonth();
         
-        $currentMonthTotal = Due::where('status', 'paid')->whereMonth('created_at', $currentDate->month)->whereYear('created_at', $currentDate->year)->sum('amount');
-        $lastMonthTotal = Due::where('status', 'paid')->whereMonth('created_at', $lastMonthDate->month)->whereYear('created_at', $lastMonthDate->year)->sum('amount');
+        $currentMonthTotal = Payment::where('status', Payment::STATUS_APPROVED)
+            ->whereMonth('date_paid', $currentDate->month)
+            ->whereYear('date_paid', $currentDate->year)
+            ->sum('amount');
+        $lastMonthTotal = Payment::where('status', Payment::STATUS_APPROVED)
+            ->whereMonth('date_paid', $lastMonthDate->month)
+            ->whereYear('date_paid', $lastMonthDate->year)
+            ->sum('amount');
         
         $monthComparison = [
             'current_month' => $currentDate->format('F'),
@@ -285,9 +294,7 @@ class DuesBatchController extends Controller
     public function show($id)
     {
         $batch = DuesBatch::with(['residentDues' => function($query) {
-            $query->with(['resident', 'payments' => function($p) {
-                $p->where('status', Payment::STATUS_APPROVED);
-            }]);
+            $query->with(['resident', 'payments']);
         }])->findOrFail($id);
         
         return view('admin.dues.show', compact('batch'));

@@ -1,0 +1,95 @@
+<div class="h-full flex flex-col bg-white shadow-xl">
+    
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+        <h2 class="text-lg font-bold text-gray-800">Request Details</h2>
+        <button onclick="closeRequestDrawer()" class="text-gray-400 hover:text-gray-600 transition-colors">
+            <i class="bi bi-x-lg text-lg"></i>
+        </button>
+    </div>
+
+    
+    <div class="flex-1 overflow-y-auto p-6 space-y-6">
+        
+        
+        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+             <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black text-lg shadow-sm">
+                <?php echo e(substr($request->resident?->first_name ?? '?', 0, 1)); ?><?php echo e(substr($request->resident?->last_name ?? '?', 0, 1)); ?>
+
+            </div>
+            <div>
+                <h3 class="font-bold text-gray-900 text-lg"><?php echo e($request->resident?->full_name ?? 'Unknown'); ?></h3>
+                <p class="text-sm text-gray-500">Block <?php echo e($request->resident?->block ?? '-'); ?> Lot <?php echo e($request->resident?->lot ?? '-'); ?></p>
+                <p class="text-sm text-gray-500"><?php echo e($request->resident?->contact_number ?? ''); ?></p>
+            </div>
+        </div>
+
+        
+        <div class="grid grid-cols-2 gap-4">
+            <div class="p-4 rounded-xl border border-gray-100 bg-white shadow-sm">
+                <p class="text-xs font-medium text-gray-500 uppercase mb-1">Status</p>
+                <?php
+                    $statusClass = match($request->status) {
+                        'pending' => 'bg-gray-50 text-gray-700 border-gray-200',
+                        'in progress' => 'bg-blue-50 text-blue-700 border-blue-200',
+                        'completed' => 'bg-green-50 text-green-700 border-green-200',
+                        'rejected' => 'bg-red-50 text-red-700 border-red-200',
+                        default => 'bg-gray-50 text-gray-700 border-gray-200',
+                    };
+                ?>
+                <span class="px-2.5 py-1 rounded-full text-sm font-semibold border <?php echo e($statusClass); ?>">
+                    <?php echo e(ucfirst($request->status)); ?>
+
+                </span>
+            </div>
+            <div class="p-4 rounded-xl border border-gray-100 bg-white shadow-sm">
+                <p class="text-xs font-medium text-gray-500 uppercase mb-1">Priority</p>
+                 <?php
+                    $priorityClass = match($request->priority) {
+                        'High' => 'text-red-700',
+                        'Medium' => 'text-yellow-700',
+                        default => 'text-green-700',
+                    };
+                ?>
+                <p class="text-lg font-bold <?php echo e($priorityClass); ?>"><?php echo e($request->priority); ?></p>
+            </div>
+        </div>
+
+        
+        <div class="space-y-4">
+            <h4 class="text-sm font-bold text-gray-900 uppercase tracking-wide border-b border-gray-100 pb-2">Request Information</h4>
+            
+            <div class="space-y-4 text-sm">
+                <div>
+                    <p class="text-gray-500 mb-1">Type</p>
+                    <p class="font-medium text-gray-900 text-lg"><?php echo e($request->type); ?></p>
+                </div>
+                <div>
+                    <p class="text-gray-500 mb-1">Date Requested</p>
+                    <p class="font-medium text-gray-900"><?php echo e($request->created_at->format('F d, Y h:i A')); ?></p>
+                </div>
+                <div>
+                    <p class="text-gray-500 mb-1">Description</p>
+                    <p class="font-medium text-gray-900 bg-gray-50 p-4 rounded-lg border border-gray-100 whitespace-pre-wrap"><?php echo e($request->description); ?></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-4 border-t border-gray-100">
+             <h4 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">Update Status</h4>
+             <form action="<?php echo e(route('admin.requests.updateStatus', $request->id)); ?>" method="POST" class="space-y-3">
+                <?php echo csrf_field(); ?>
+                <select name="status" class="admin-form-select">
+                    <option value="pending" <?php echo e($request->status == 'pending' ? 'selected' : ''); ?>>Pending</option>
+                    <option value="in progress" <?php echo e($request->status == 'in progress' ? 'selected' : ''); ?>>In Progress</option>
+                    <option value="completed" <?php echo e($request->status == 'completed' ? 'selected' : ''); ?>>Completed</option>
+                    <option value="rejected" <?php echo e($request->status == 'rejected' ? 'selected' : ''); ?>>Rejected</option>
+                </select>
+                <button type="submit" class="admin-btn-primary w-full">
+                    Update Status
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+<?php /**PATH C:\Users\Sheehan\subdivision-dues-system-final\resources\views\admin\requests\partials\drawer.blade.php ENDPATH**/ ?>

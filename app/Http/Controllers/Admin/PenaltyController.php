@@ -8,6 +8,7 @@ use App\Models\Penalty;
 use App\Models\Resident;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 use App\Traits\LogsActivity;
@@ -20,7 +21,7 @@ class PenaltyController extends Controller
     {
         $this->middleware('permission:penalties.view')->only(['index', 'getData']);
         $this->middleware('permission:penalties.create')->only(['store', 'create']);
-        $this->middleware('permission:penalties.update')->only(['edit', 'update']);
+        $this->middleware('permission:penalties.update')->only(['edit', 'update', 'bulkApprovePenalties']);
         $this->middleware('permission:penalties.delete')->only(['destroy', 'bulkDestroy']);
     }
 
@@ -244,6 +245,47 @@ class PenaltyController extends Controller
                              ->with('success', count($ids) . ' penalties deleted successfully.');
         }
         return redirect()->back()->with('error', 'No penalties selected.');
+    }
+
+    public function bulkApprovePenalties(Request $request)
+    {
+        $ids = $request->input('ids', []);
+
+        if (empty($ids)) {
+            return back()->with('error', 'No penalties selected.');
+        }
+
+        $approvedCount = 0;
+
+        DB::transaction(function () use ($ids, &$approvedCount) {
+            $penalties = Penalty::with('resident')
+                ->whereIn('id', $ids)
+                ->where('status', Penalty::STATUS_PENDING)
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($penalties as $penalty) {
+                $penalty->update(['status' => Penalty::STATUS_PAID]);
+
+                $this->logActivity(
+                    'approved',
+                    'penalties',
+                    'Approved penalty of ₱' . number_format($penalty->amount, 2) . ' for ' . ($penalty->resident->full_name ?? 'Unknown Resident'),
+                    [
+                        'penalty_id' => $penalty->id,
+                        'resident_id' => $penalty->resident_id,
+                    ]
+                );
+
+                $approvedCount++;
+            }
+        });
+
+        if ($approvedCount === 0) {
+            return back()->with('error', 'No pending penalties were selected.');
+        }
+
+        return back()->with('success', "{$approvedCount} penalties approved successfully.");
     }
 
     /**

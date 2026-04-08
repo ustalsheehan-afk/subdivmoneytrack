@@ -104,7 +104,15 @@ class Due extends Model
      */
     public function getTotalPaidAttribute()
     {
-        return (float) $this->payments()->where('status', Payment::STATUS_APPROVED)->sum('amount');
+        if ($this->relationLoaded('payments')) {
+            return (float) $this->payments
+                ->where('status', Payment::STATUS_APPROVED)
+                ->sum('amount');
+        }
+
+        return (float) $this->payments()
+            ->where('status', Payment::STATUS_APPROVED)
+            ->sum('amount');
     }
 
     /**
@@ -120,17 +128,7 @@ class Due extends Model
      */
     public function getDynamicStatusAttribute()
     {
-        $paid = $this->total_paid;
-        
-        if ($paid <= 0) {
-            return self::STATUS_UNPAID;
-        }
-        
-        if ($paid < (float) $this->amount) {
-            return 'partial';
-        }
-        
-        return self::STATUS_PAID;
+        return $this->resolvePaymentStatus();
     }
 
     /**
@@ -192,9 +190,7 @@ class Due extends Model
      */
     public function totalCollected(): float
     {
-        return (float) $this->payments()
-            ->where('status', 'approved')
-            ->sum('amount');
+        return $this->total_paid;
     }
 
     /**
@@ -215,7 +211,7 @@ class Due extends Model
      */
     public function getOutstandingAttribute(): float
     {
-        return max(0, $this->amount - $this->totalCollected());
+        return max(0, (float) $this->amount - $this->total_paid);
     }
 
     /**
@@ -223,9 +219,25 @@ class Due extends Model
      */
     public function getIsOverdueAttribute(): bool
     {
-        return $this->status !== self::STATUS_PAID
+        return $this->dynamic_status !== self::STATUS_PAID
             && $this->billing_period_end instanceof Carbon
             && $this->billing_period_end->isPast();
+    }
+
+    public function resolvePaymentStatus(): string
+    {
+        $totalPaid = $this->total_paid;
+        $totalDue = (float) $this->amount;
+
+        if ($totalPaid <= 0) {
+            return self::STATUS_UNPAID;
+        }
+
+        if ($totalPaid < $totalDue) {
+            return 'partial';
+        }
+
+        return self::STATUS_PAID;
     }
 
     /* =========================
