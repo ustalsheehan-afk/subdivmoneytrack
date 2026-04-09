@@ -36,9 +36,13 @@ class SmsService
             return ['success' => false, 'error' => 'API Token missing'];
         }
 
-        // Prepare payload for PhilSMS - add apikey to payload
+        // Convert local PH format (09xxx) to international format (639xxx)
+        if (str_starts_with($recipient, '0')) {
+            $recipient = '63' . substr($recipient, 1);
+        }
+
+        // Prepare payload for PhilSMS - exactly as per API docs
         $data = [
-            "apikey" => $this->apiToken,
             "recipient" => $recipient,
             "sender_id" => $this->senderId,
             "type" => "plain",
