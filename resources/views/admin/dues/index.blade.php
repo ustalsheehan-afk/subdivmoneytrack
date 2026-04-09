@@ -28,7 +28,7 @@
                     <i class="bi bi-chat-left-text"></i>
                     SMS Templates
                 </a>
-                <button type="submit" form="duesSmsSelectedForm" class="btn-secondary" onclick="return confirm('Send dues SMS to selected batches only?')">
+                <button type="button" class="btn-secondary" onclick="submitSelectedDuesSms()">
                     <i class="bi bi-check2-square"></i>
                     Send Selected SMS
                 </button>
@@ -107,9 +107,6 @@
     {{-- ===================== --}}
     {{-- MONTHLY BATCH CARDS --}}
     {{-- ===================== --}}
-    <form id="duesSmsSelectedForm" method="POST" action="{{ route('admin.dues.sendSmsReminders') }}">
-        @csrf
-        <input type="hidden" name="scope" value="all_unpaid">
     <div class="space-y-8">
         @forelse($groupedDues as $monthYear => $batches)
             <div class="glass-card overflow-hidden flex flex-col" 
@@ -171,7 +168,7 @@
                                 <tr class="hover:bg-emerald-50/30 transition-all duration-300 group border-l-4 border-transparent hover:border-emerald-500"
                                     x-show="'{{ strtolower($batch->title . ' ' . $batch->description) }}'.includes(search.toLowerCase())">
                                     <td class="p-5 text-center">
-                                        <input type="checkbox" name="batch_ids[]" value="{{ $batch->id }}" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500/20">
+                                        <input type="checkbox" value="{{ $batch->id }}" class="dues-batch-checkbox rounded border-gray-300 text-emerald-600 focus:ring-emerald-500/20">
                                     </td>
                                     <td class="p-5">
                                         <span class="text-sm font-bold text-gray-600">{{ $dueDate->format('M d, Y') }}</span>
@@ -229,8 +226,13 @@
             </div>
         @endforelse
     </div>
-    </form>
 </div>
+
+<form id="duesSmsSelectedForm" method="POST" action="{{ route('admin.dues.sendSmsReminders') }}" class="hidden">
+    @csrf
+    <input type="hidden" name="scope" value="all_unpaid">
+    <div id="duesSmsBatchIds"></div>
+</form>
 
 <style>
     .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -238,4 +240,33 @@
     .custom-scrollbar::-webkit-scrollbar-track { background-color: transparent; }
     [x-cloak] { display: none !important; }
 </style>
+
+<script>
+    function submitSelectedDuesSms() {
+        const selected = Array.from(document.querySelectorAll('.dues-batch-checkbox:checked'));
+
+        if (selected.length === 0) {
+            alert('Please select at least one billing batch.');
+            return;
+        }
+
+        const confirmed = confirm(`Send dues SMS to ${selected.length} selected batch${selected.length > 1 ? 'es' : ''}?`);
+        if (!confirmed) {
+            return;
+        }
+
+        const container = document.getElementById('duesSmsBatchIds');
+        container.innerHTML = '';
+
+        selected.forEach((checkbox) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'batch_ids[]';
+            input.value = checkbox.value;
+            container.appendChild(input);
+        });
+
+        document.getElementById('duesSmsSelectedForm').submit();
+    }
+</script>
 @endsection
