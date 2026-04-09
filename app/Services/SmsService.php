@@ -68,15 +68,19 @@ class SmsService
             "message" => $message
         ];
 
-        $configuredSenderId = Str::limit($this->senderId, 11, '');
-        if ($configuredSenderId !== '') {
-            $data['sender_id'] = $configuredSenderId;
+        // NOTE: Do NOT include sender_id by default.
+        // Let PhilSMS use the account's registered sender ID.
+        // Only include sender_id if an approved custom one is explicitly set
+        // and it's not the default.
+        if ($this->senderId !== '' && $this->senderId !== 'PhilSMS') {
+            $data['sender_id'] = Str::limit($this->senderId, 11, '');
         }
 
         Log::info("Sending SMS via PhilSMS", [
             'recipient' => $recipient,
             'url' => $this->apiUrl,
-            'sender_id' => $data['sender_id'] ?? null,
+            'sender_id' => $data['sender_id'] ?? '(using account default)',
+            'message_preview' => Str::limit($message, 50),
         ]);
 
         [$response, $httpCode, $error] = $this->executeRequest($data, $this->apiToken);
@@ -138,7 +142,12 @@ class SmsService
             || ($apiStatus !== 'success' && $successFlag === false && str_contains($messageText, 'error'))
             || str_contains($messageText, 'unauthenticated')
         ) {
-            Log::error("PhilSMS API Error ($httpCode): " . $response, ['recipient' => $recipient]);
+            Log::error("PhilSMS API Error ($httpCode): " . $response, [
+                'recipient' => $recipient,
+                'api_url' => $this->apiUrl,
+                'api_token_set' => !empty($this->apiToken),
+                'decoded_response' => $decodedResponse,
+            ]);
             return array_merge($decodedResponse ?? [], [
                 'success' => false,
                 'http_code' => $httpCode,

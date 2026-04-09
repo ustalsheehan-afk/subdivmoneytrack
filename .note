@@ -1,15 +1,16 @@
-step 1
-open ssh
 ssh -p 65002 u174002700@145.79.25.197
-password:Ustal!123  
-​after open
+# password: Ustal!123
+
 cd domains/subdivmoneytrack.site/public_html
-​if you see your domain and public_html
-next
+
+# Pull latest code with correct PhilSMS token
 git pull origin main
-next
+# Clear all caches
 php artisan config:clear
 php artisan cache:clear
 php artisan route:clear
 php artisan view:clear
-php artisan route:cache.
+
+# Rebuild caches
+php artisan config:cache
+php artisan route:cache
