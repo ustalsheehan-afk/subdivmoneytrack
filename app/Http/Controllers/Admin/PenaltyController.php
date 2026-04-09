@@ -393,6 +393,7 @@ class PenaltyController extends Controller
 
         $sent = 0;
         $failed = 0;
+        $lastError = null;
 
         foreach ($penalties as $penalty) {
             $resident = $penalty->resident;
@@ -415,9 +416,20 @@ class PenaltyController extends Controller
                 $sent++;
             } else {
                 $failed++;
+                $lastError = (string) ($result['error'] ?? $result['message'] ?? 'Unknown SMS provider error');
             }
         }
 
-        return back()->with('success', "Penalty SMS process finished. Sent: {$sent}, Failed: {$failed}.");
+        $summary = "Penalty SMS process finished. Sent: {$sent}, Failed: {$failed}.";
+
+        if ($failed > 0 && $lastError) {
+            $summary .= " Last provider error: {$lastError}.";
+        }
+
+        if ($sent === 0 && $failed > 0) {
+            return back()->with('error', $summary);
+        }
+
+        return back()->with('success', $summary);
     }
 }

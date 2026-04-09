@@ -410,6 +410,7 @@ class DuesBatchController extends Controller
 
         $sent = 0;
         $failed = 0;
+        $lastError = null;
 
         foreach ($dues as $due) {
             $resident = $due->resident;
@@ -433,9 +434,20 @@ class DuesBatchController extends Controller
                 $sent++;
             } else {
                 $failed++;
+                $lastError = (string) ($result['error'] ?? $result['message'] ?? 'Unknown SMS provider error');
             }
         }
 
-        return back()->with('success', "Dues SMS process finished. Sent: {$sent}, Failed: {$failed}.");
+        $summary = "Dues SMS process finished. Sent: {$sent}, Failed: {$failed}.";
+
+        if ($failed > 0 && $lastError) {
+            $summary .= " Last provider error: {$lastError}.";
+        }
+
+        if ($sent === 0 && $failed > 0) {
+            return back()->with('error', $summary);
+        }
+
+        return back()->with('success', $summary);
     }
 }
