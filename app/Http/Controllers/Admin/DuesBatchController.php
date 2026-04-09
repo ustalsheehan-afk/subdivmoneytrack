@@ -370,6 +370,12 @@ class DuesBatchController extends Controller
 
     public function sendSmsReminders(Request $request, SmsService $smsService, SmsTemplateService $templateService)
     {
+        $validated = $request->validate([
+            'scope' => 'nullable|string|in:due_soon,overdue,all_unpaid',
+            'batch_ids' => 'nullable|array',
+            'batch_ids.*' => 'integer|exists:dues_batches,id',
+        ]);
+
         $scope = (string) $request->input('scope', 'due_soon');
 
         $query = Due::with('resident')
@@ -386,6 +392,10 @@ class DuesBatchController extends Controller
             // Keep full unpaid set.
         } else {
             $query->whereDate('due_date', '<=', now()->addDays(7)->toDateString());
+        }
+
+        if (!empty($validated['batch_ids'])) {
+            $query->whereIn('batch_id', array_map('strval', $validated['batch_ids']));
         }
 
         if ($request->filled('batch_id')) {

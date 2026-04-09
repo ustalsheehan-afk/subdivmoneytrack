@@ -122,7 +122,7 @@
         {{-- Filters & Toggles --}}
         <div class="flex flex-wrap items-center gap-3">
             <button type="button"
-                    x-show="hasPendingRows && !penaltySelectionMode"
+                    x-show="hasSelectableRows && !penaltySelectionMode"
                     x-transition.opacity.duration.150ms
                     @click="enableSelectionMode()"
                     class="h-11 px-4 inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest text-gray-600 transition-all hover:border-emerald-500/30 hover:bg-gray-50">
@@ -141,11 +141,21 @@
                 </button>
 
                 <button type="button"
-                        x-show="hasPendingSelection"
+                        x-show="hasSelection"
+                        x-transition.opacity.duration.150ms
+                        @click="submitSmsNotices()"
+                        class="h-11 px-4 inline-flex items-center gap-2 rounded-xl bg-blue-600 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        :disabled="!hasSelection">
+                    <i class="bi bi-send"></i>
+                    Send SMS Selected
+                </button>
+
+                <button type="button"
+                        x-show="hasSelection"
                         x-transition.opacity.duration.150ms
                         @click="submitApproval()"
                         class="h-11 px-4 inline-flex items-center gap-2 rounded-xl bg-gray-900 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
-                        :disabled="!hasPendingSelection">
+                        :disabled="!hasSelection">
                     <i class="bi bi-check2-all"></i>
                     Approve Selected
                 </button>
@@ -230,7 +240,7 @@
                     <tr>
                         <th class="p-5 w-14 text-center">
                             <input type="checkbox"
-                                   x-show="penaltySelectionMode && hasPendingRows"
+                                x-show="penaltySelectionMode && hasSelectableRows"
                                    x-model="selectAll"
                                    @change="toggleSelectAll($event.target.checked)"
                                    class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500/20">
@@ -248,7 +258,7 @@
                     @forelse($penalties as $penalty)
                     <tr class="hover:bg-emerald-50/30 transition-all duration-300 group border-l-4 border-transparent hover:border-emerald-500">
                         <td class="p-5 text-center">
-                            @if($penalty->status === 'pending')
+                            @if(in_array($penalty->status, ['pending', 'unpaid']))
                                 <input type="checkbox"
                                        x-show="penaltySelectionMode"
                                        value="{{ $penalty->id }}"
@@ -345,46 +355,77 @@
     <div id="bulkPenaltyIds"></div>
 </form>
 
+<form id="bulkPenaltySmsForm" action="{{ route('admin.penalties.sendSmsNotices') }}" method="POST" class="hidden">
+    @csrf
+    <div id="bulkPenaltySmsIds"></div>
+</form>
+
 <script>
     function penaltiesBulkApproval() {
         return {
             penaltySelectionMode: false,
             selectedPenalties: [],
             pendingIds: @json($penalties->getCollection()->filter(fn ($penalty) => $penalty->status === 'pending')->pluck('id')->values()),
+            selectableIds: @json($penalties->getCollection()->filter(fn ($penalty) => in_array($penalty->status, ['pending', 'unpaid']))->pluck('id')->values()),
             selectAll: false,
-            get hasPendingRows() {
-                return this.pendingIds.length > 0;
+            get hasSelectableRows() {
+                return this.selectableIds.length > 0;
             },
             get selectedCount() {
                 return this.selectedPenalties.length;
             },
-            get hasPendingSelection() {
+            get hasSelection() {
                 return this.selectedCount > 0;
             },
             enableSelectionMode() {
                 this.penaltySelectionMode = true;
             },
             toggleSelectAll(checked) {
-                this.selectedPenalties = checked ? [...this.pendingIds] : [];
+                this.selectedPenalties = checked ? [...this.selectableIds] : [];
             },
             syncSelectAll() {
-                this.selectAll = this.pendingIds.length > 0 && this.selectedPenalties.length === this.pendingIds.length;
+                this.selectAll = this.selectableIds.length > 0 && this.selectedPenalties.length === this.selectableIds.length;
             },
             clearSelection() {
                 this.selectedPenalties = [];
                 this.selectAll = false;
                 this.penaltySelectionMode = false;
             },
-            submitApproval() {
-                if (!this.hasPendingSelection) return;
+            submitSmsNotices() {
+                if (!this.hasSelection) return;
 
-                const confirmed = confirm(`Approve ${this.selectedCount} selected penalt${this.selectedCount > 1 ? 'ies' : 'y'}?`);
+                const confirmed = confirm(`Send SMS notice to ${this.selectedCount} selected penalt${this.selectedCount > 1 ? 'ies' : 'y'}?`);
+                if (!confirmed) return;
+
+                const idsContainer = document.getElementById('bulkPenaltySmsIds');
+                idsContainer.innerHTML = '';
+
+                this.selectedPenalties.forEach(id => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'selected_penalty_ids[]';
+                    input.value = id;
+                    idsContainer.appendChild(input);
+                });
+
+                document.getElementById('bulkPenaltySmsForm').submit();
+            },
+            submitApproval() {
+                if (!this.hasSelection) return;
+
+                const pendingSelected = this.selectedPenalties.filter(id => this.pendingIds.includes(id));
+                if (pendingSelected.length === 0) {
+                    alert('No pending penalties selected for approval.');
+                    return;
+                }
+
+                const confirmed = confirm(`Approve ${pendingSelected.length} selected pending penalt${pendingSelected.length > 1 ? 'ies' : 'y'}?`);
                 if (!confirmed) return;
 
                 const idsContainer = document.getElementById('bulkPenaltyIds');
                 idsContainer.innerHTML = '';
 
-                this.selectedPenalties.forEach(id => {
+                pendingSelected.forEach(id => {
                     const input = document.createElement('input');
                     input.type = 'hidden';
                     input.name = 'ids[]';

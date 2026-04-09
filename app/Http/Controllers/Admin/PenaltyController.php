@@ -368,14 +368,24 @@ class PenaltyController extends Controller
 
     public function sendSmsNotices(Request $request, SmsService $smsService, SmsTemplateService $templateService)
     {
+        $validated = $request->validate([
+            'selected_penalty_ids' => 'nullable|array',
+            'selected_penalty_ids.*' => 'integer|exists:penalties,id',
+        ]);
+
         $penalties = Penalty::with('resident')
             ->whereIn('status', ['pending', 'unpaid'])
             ->whereHas('resident', function ($residentQuery) {
                 $residentQuery
                     ->whereNotNull('contact_number')
                     ->where('contact_number', '!=', '');
-            })
-            ->get();
+            });
+
+        if (!empty($validated['selected_penalty_ids'])) {
+            $penalties->whereIn('id', $validated['selected_penalty_ids']);
+        }
+
+        $penalties = $penalties->get();
 
         if ($penalties->isEmpty()) {
             return back()->with('error', 'No unpaid/pending penalties with contact numbers found for SMS notices.');

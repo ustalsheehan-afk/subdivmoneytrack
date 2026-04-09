@@ -28,6 +28,10 @@
                     <i class="bi bi-chat-left-text"></i>
                     SMS Templates
                 </a>
+                <button type="submit" form="duesSmsSelectedForm" class="btn-secondary" onclick="return confirm('Send dues SMS to selected batches only?')">
+                    <i class="bi bi-check2-square"></i>
+                    Send Selected SMS
+                </button>
                 <form method="POST" action="{{ route('admin.dues.sendSmsReminders') }}">
                     @csrf
                     <input type="hidden" name="scope" value="due_soon">
@@ -103,6 +107,9 @@
     {{-- ===================== --}}
     {{-- MONTHLY BATCH CARDS --}}
     {{-- ===================== --}}
+    <form id="duesSmsSelectedForm" method="POST" action="{{ route('admin.dues.sendSmsReminders') }}">
+        @csrf
+        <input type="hidden" name="scope" value="all_unpaid">
     <div class="space-y-8">
         @forelse($groupedDues as $monthYear => $batches)
             <div class="glass-card overflow-hidden flex flex-col" 
@@ -136,6 +143,9 @@
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-gray-50/50 border-b border-gray-100">
                             <tr>
+                                <th class="p-5 text-center">
+                                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select</span>
+                                </th>
                                 <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</th>
                                 <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Description</th>
                                 <th class="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Type</th>
@@ -160,6 +170,9 @@
                                 @endphp
                                 <tr class="hover:bg-emerald-50/30 transition-all duration-300 group border-l-4 border-transparent hover:border-emerald-500"
                                     x-show="'{{ strtolower($batch->title . ' ' . $batch->description) }}'.includes(search.toLowerCase())">
+                                    <td class="p-5 text-center">
+                                        <input type="checkbox" name="batch_ids[]" value="{{ $batch->id }}" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500/20">
+                                    </td>
                                     <td class="p-5">
                                         <span class="text-sm font-bold text-gray-600">{{ $dueDate->format('M d, Y') }}</span>
                                     </td>
@@ -216,6 +229,7 @@
             </div>
         @endforelse
     </div>
+    </form>
 </div>
 
 <style>
