@@ -197,7 +197,7 @@ class InvitationController extends Controller
                 'sms_error' => $smsError,
             ]);
 
-            return redirect()->route('admin.invitations.index')->with('success', 'Invitation created and email sent successfully.');
+            return redirect()->route('admin.invitations.index')->with('success', 'Invitation created and email sent successfully. SMS delivery failed due to PhilSMS authentication.');
         }
 
         if (($emailAttempted && !$emailSuccess) || ($smsAttempted && !$smsSuccess)) {
@@ -207,7 +207,7 @@ class InvitationController extends Controller
                     'sms_error' => $smsError,
                 ]);
 
-                return redirect()->route('admin.invitations.index')->with('success', 'Invitation created and email sent successfully.');
+                return redirect()->route('admin.invitations.index')->with('success', 'Invitation created and email sent successfully. SMS delivery failed.');
             }
 
             $failedChannels = [];
