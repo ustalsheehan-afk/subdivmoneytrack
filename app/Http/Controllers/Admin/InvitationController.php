@@ -197,14 +197,20 @@ class InvitationController extends Controller
 
             if ($smsAttempted && !$smsSuccess) {
                 $smsError = trim((string) ($delivery['sms']['error'] ?? ''));
-                $failedChannels[] = $smsError !== '' ? "SMS failed ({$smsError})" : 'SMS failed';
+                // If it's the "Sender ID" error, it's usually an account configuration issue on PhilSMS side
+                if (str_contains(strtolower($smsError), 'sender id') && str_contains(strtolower($smsError), 'authorized')) {
+                    $failedChannels[] = 'SMS skipped (PhilSMS Sender ID not configured)';
+                } else {
+                    $failedChannels[] = $smsError !== '' ? "SMS failed ({$smsError})" : 'SMS failed';
+                }
             }
 
-            $message = 'Invitation created, but delivery issues: ' . implode(' | ', $failedChannels);
+            $message = 'Invitation created successfully!';
+            $message .= " Notification details: " . implode(' | ', $failedChannels);
             $message .= ". Registration link: {$registrationLink}";
 
-            // If email succeeded but SMS failed, we consider it a "success" but with a warning
-            if ($emailSuccess || (!$emailAttempted && $smsAttempted)) {
+            // If email succeeded, it's a success
+            if ($emailSuccess) {
                 return redirect()->route('admin.invitations.index')->with('success', $message);
             }
 
@@ -254,7 +260,12 @@ class InvitationController extends Controller
 
         if ($smsAttempted && !$smsSuccess) {
             $smsError = trim((string) ($delivery['sms']['error'] ?? ''));
-            $errors[] = $smsError !== '' ? "SMS failed ({$smsError})" : 'SMS failed';
+            // If it's the "Sender ID" error, it's usually an account configuration issue on PhilSMS side
+            if (str_contains(strtolower($smsError), 'sender id') && str_contains(strtolower($smsError), 'authorized')) {
+                $errors[] = 'SMS skipped (PhilSMS Sender ID not configured)';
+            } else {
+                $errors[] = $smsError !== '' ? "SMS failed ({$smsError})" : 'SMS failed';
+            }
         }
 
         $success = empty($errors) || $emailSuccess; // Consider success if at least email worked

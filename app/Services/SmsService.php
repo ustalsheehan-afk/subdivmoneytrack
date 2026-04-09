@@ -68,9 +68,9 @@ class SmsService
             "message" => $message
         ];
 
-        // Include sender_id if configured and NOT the default "PhilSMS"
-        // If PHILSMS_SENDER is not provided, set to empty, or set to "PhilSMS", it won't be sent.
-        if ($this->senderId !== '' && strtolower($this->senderId) !== 'philsms') {
+        // Include sender_id if configured. 
+        // Some accounts MUST send "PhilSMS" if no custom sender ID is set.
+        if ($this->senderId !== '') {
             $data['sender_id'] = Str::limit($this->senderId, 11, '');
         }
 
