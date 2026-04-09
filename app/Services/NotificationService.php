@@ -32,14 +32,20 @@ class NotificationService
      */
     public function sendInvitation(Invitation $invitation, string $registrationLink)
     {
-        // 1. Dispatch Email Job
+        $sendAsync = (bool) env('INVITATION_NOTIFICATIONS_ASYNC', false);
+
+        // 1. Email
         if ($invitation->email) {
-            SendInvitationEmail::dispatch($invitation, $registrationLink);
+            $sendAsync
+                ? SendInvitationEmail::dispatch($invitation, $registrationLink)
+                : SendInvitationEmail::dispatchSync($invitation, $registrationLink);
         }
 
-        // 2. Dispatch SMS Job
+        // 2. SMS
         if ($invitation->phone) {
-            SendInvitationSMS::dispatch($invitation, $registrationLink);
+            $sendAsync
+                ? SendInvitationSMS::dispatch($invitation, $registrationLink)
+                : SendInvitationSMS::dispatchSync($invitation, $registrationLink);
         }
 
         // 3. Update last sent timestamp

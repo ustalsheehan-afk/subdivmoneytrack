@@ -8,6 +8,7 @@ use App\Models\Resident;
 use App\Models\Invitation;
 use App\Services\NotificationService;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class InvitationController extends Controller
@@ -84,7 +85,7 @@ class InvitationController extends Controller
      */
     public function store(Request $request)
     {
-        \Log::info('Invitation store called', ['email' => $request->email, 'resident_id' => $request->resident_id]);
+        Log::info('Invitation store called', ['email' => $request->email, 'resident_id' => $request->resident_id]);
         $baseRules = [
             'email' => 'required|email|unique:users,email',
             'phone' => 'nullable|string|max:20',
@@ -151,7 +152,7 @@ class InvitationController extends Controller
                 'last_sent_at' => Carbon::now(),
             ]);
             $invitation = $existing;
-            \Log::info('Invitation updated for existing email', ['email' => $payload['email'], 'token' => $token]);
+            Log::info('Invitation updated for existing email', ['email' => $payload['email'], 'token' => $token]);
         } else {
             $invitation = Invitation::create([
                 'resident_id' => $payload['resident_id'],
@@ -164,11 +165,11 @@ class InvitationController extends Controller
                 'expires_at' => $expiresAt,
                 'last_sent_at' => Carbon::now(),
             ]);
-            \Log::info('New invitation created', ['email' => $payload['email'], 'token' => $token]);
+            Log::info('New invitation created', ['email' => $payload['email'], 'token' => $token]);
         }
 
         if (!$invitation->exists) {
-            \Log::error('Invitation creation failed', ['payload' => $payload]);
+            Log::error('Invitation creation failed', ['payload' => $payload]);
             return redirect()->route('admin.invitations.index')->with('error', 'Failed to create invitation record.');
         }
 
@@ -177,7 +178,7 @@ class InvitationController extends Controller
         $registrationLink = route('register.invitation', ['token' => $invitation->token]);
         $notificationService->sendInvitation($invitation, $registrationLink);
         
-        \Log::info('Invitation notification dispatched', ['invitation_id' => $invitation->id]);
+        Log::info('Invitation notification dispatched', ['invitation_id' => $invitation->id]);
 
         return redirect()->route('admin.invitations.index')->with('success', 'Invitation created and notification sent successfully.');
     }
@@ -204,7 +205,7 @@ class InvitationController extends Controller
         $registrationLink = route('register.invitation', ['token' => $invitation->token]);
         $notificationService->sendInvitation($invitation, $registrationLink);
         
-        \Log::info('Invitation re-sent', ['invitation_id' => $invitation->id]);
+        Log::info('Invitation re-sent', ['invitation_id' => $invitation->id]);
 
         return response()->json([
             'success' => true,

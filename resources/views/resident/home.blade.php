@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="space-y-6">
-        <div class="relative h-40 sm:h-48 lg:h-56 -mx-4 sm:-mx-6 lg:-mx-10 overflow-hidden bg-[#081412]">
+        <div class="relative h-40 sm:h-48 lg:h-56 overflow-hidden bg-[#081412] rounded-[1.5rem]">
             <video class="absolute inset-0 w-full h-full object-cover opacity-50" autoplay muted loop playsinline>
                 <source src="{{ asset('videos/subdivision-hero.mp4') }}" type="video/mp4">
             </video>
@@ -146,7 +146,7 @@
                     </div>
                     <div class="space-y-5">
                         @forelse($recentRequests->take(3) as $request)
-                        <div class="flex items-center justify-between group">
+                        <a href="{{ route('resident.requests.show', $request->id) }}" class="flex items-center justify-between group no-underline rounded-3xl bg-white border border-gray-100 p-4 hover:bg-slate-50 transition-all duration-200">
                             <div class="flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-slate-100 transition-colors">
                                     <i class="bi bi-tools text-base"></i>
@@ -168,7 +168,7 @@
                             <span class="px-2.5 py-1 rounded-full text-[12px] font-semibold uppercase tracking-widest border {{ $statusInfo['cls'] }}">
                                 {{ $statusInfo['label'] }}
                             </span>
-                        </div>
+                        </a>
                         @empty
                         <p class="meta font-normal">No requests found.</p>
                         @endforelse
@@ -185,14 +185,21 @@
                     </div>
                     <div class="space-y-5">
                         @forelse($recentAnnouncements->take(2) as $announcement)
-                        <div class="space-y-2">
+                        @php
+                            $isUrgent = in_array(strtolower($announcement->priority ?? ''), ['urgent', 'high']) || strtolower($announcement->category) === 'emergency';
+                        @endphp
+                        <a href="{{ route('resident.announcements.show', $announcement->id) }}" class="block space-y-2 rounded-3xl bg-white border border-gray-100 p-4 hover:bg-slate-50 transition-all duration-200 no-underline">
                             <div class="flex justify-between items-start">
-                                <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-600 text-[12px] font-semibold uppercase tracking-widest border border-rose-100">URGENT</span>
-                                <span class="meta font-normal">Today</span>
+                                @if($isUrgent)
+                                    <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-600 text-[12px] font-semibold uppercase tracking-widest border border-rose-100">URGENT</span>
+                                @else
+                                    <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[11px] font-semibold uppercase tracking-widest border border-slate-200">{{ strtoupper($announcement->category ?? 'Update') }}</span>
+                                @endif
+                                <span class="meta font-normal">{{ $announcement->date_posted?->format('M d, Y') ?? 'Today' }}</span>
                             </div>
                             <p class="text-[15px] font-semibold text-[#1F2937] leading-relaxed">{{ $announcement->title }}</p>
                             <p class="text-[14px] text-[#4B5563] line-clamp-2 leading-relaxed font-normal">{{ strip_tags($announcement->content) }}</p>
-                        </div>
+                        </a>
                         @empty
                         <p class="meta font-normal">No announcements found.</p>
                         @endforelse
@@ -207,26 +214,37 @@
                 <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-[0.25em] flex items-center gap-2">
                     <i class="bi bi-calendar-event text-emerald-600"></i> Upcoming Events
                 </h3>
-                <a href="#" class="meta font-normal uppercase tracking-widest hover:text-[#1F2937] transition-colors">View calendar <i class="bi bi-chevron-right ml-1"></i></a>
+                <a href="{{ route('resident.events.index') }}" class="meta font-normal uppercase tracking-widest hover:text-[#1F2937] transition-colors">View calendar <i class="bi bi-chevron-right ml-1"></i></a>
             </div>
             
             <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
                 @forelse($upcomingEvents->take(3) as $event)
+                @php $eventDate = \Carbon\Carbon::parse($event['date']); @endphp
                 <div class="p-4 flex gap-4 items-start first:pl-0 last:pr-0 group">
                     <div class="w-10 h-12 rounded-lg bg-slate-50 border border-slate-100 flex flex-col items-center justify-center shrink-0 group-hover:bg-slate-100 transition-colors">
-                        <span class="text-[12px] font-semibold meta uppercase leading-none mb-1">{{ $event->date_posted->format('M') }}</span>
-                        <span class="text-lg font-semibold text-[#1F2937] leading-none">{{ $event->date_posted->format('d') }}</span>
+                        <span class="text-[12px] font-semibold meta uppercase leading-none mb-1">{{ $eventDate->format('M') }}</span>
+                        <span class="text-lg font-semibold text-[#1F2937] leading-none">{{ $eventDate->format('d') }}</span>
                     </div>
                     <div class="space-y-3">
                         <div>
-                            <p class="meta font-normal uppercase tracking-widest mb-1">TOMORROW</p>
-                            <h4 class="text-[15px] font-semibold text-[#1F2937] tracking-tight leading-tight">{{ $event->title }}</h4>
+                            <p class="meta font-normal uppercase tracking-widest mb-1">{{ $eventDate->diffForHumans() }}</p>
+                            <h4 class="text-[15px] font-semibold text-[#1F2937] tracking-tight leading-tight">{{ $event['title'] }}</h4>
                         </div>
-                        <div class="flex items-center gap-1.5 meta">
-                            <i class="bi bi-geo-alt text-[13px]"></i>
-                            <p class="text-[13px] font-normal">Function Hall, 2F</p>
+                        <div class="flex flex-col gap-2 text-sm text-gray-500">
+                            <div class="flex items-center gap-1.5">
+                                <i class="bi bi-clock text-[13px]"></i>
+                                <p class="font-medium">{{ $event['time'] }}</p>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <i class="bi bi-geo-alt text-[13px]"></i>
+                                <p class="font-medium">{{ $event['location'] }}</p>
+                            </div>
                         </div>
-                        <button class="px-5 py-1.5 border border-slate-200 text-[#1F2937] text-[13px] font-semibold rounded-lg hover:bg-slate-50 transition-all uppercase tracking-widest">RSVP</button>
+                        <div class="pt-2">
+                            <a href="{{ route('resident.events.index') }}" class="inline-flex items-center gap-2 px-5 py-2 border border-slate-200 text-[#1F2937] text-[13px] font-semibold rounded-lg hover:bg-slate-50 transition-all uppercase tracking-widest">
+                                View
+                            </a>
+                        </div>
                     </div>
                 </div>
                 @empty

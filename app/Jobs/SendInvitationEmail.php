@@ -40,20 +40,30 @@ class SendInvitationEmail implements ShouldQueue
     public function handle()
     {
         $platformName = config('app.name', 'Subdivision Dues System');
-        $name = $this->invitation->name;
+        $name = trim(implode(' ', array_filter([
+            $this->invitation->first_name,
+            $this->invitation->last_name,
+        ])));
         $email = $this->invitation->email;
         $link = $this->link;
 
         $subject = "You're invited to register";
-        $message = "Hello {$name},\n\nYou have been invited to register for {$platformName}.\n\nClick the link below to complete your registration:\n\n{$link}\n\nThis invitation will expire in 7 days.\n\nIf you did not expect this invitation, please ignore this message.";
+        $greetingName = $name !== '' ? $name : 'there';
+        $message = "Hello {$greetingName},\n\nYou have been invited to register for {$platformName}.\n\nClick the link below to complete your registration:\n\n{$link}\n\nThis invitation will expire in 7 days.\n\nIf you did not expect this invitation, please ignore this message.";
 
         try {
-            // Actual mail sending would go here:
-            // Mail::raw($message, function($m) use ($email, $subject) {
-            //     $m->to($email)->subject($subject);
-            // });
+            if (!$email) {
+                Log::warning("Skipping invitation email for invitation {$this->invitation->id}: No email address");
+                return;
+            }
 
-            Log::info("Email sent to {$email}: [{$subject}] {$message}");
+            Mail::raw($message, function ($m) use ($email, $subject) {
+                $m->to($email)->subject($subject);
+            });
+
+            Log::info("Invitation email sent to {$email}", [
+                'invitation_id' => $this->invitation->id,
+            ]);
             
             $this->invitation->update([
                 'email_status' => Invitation::DELIVERY_SENT

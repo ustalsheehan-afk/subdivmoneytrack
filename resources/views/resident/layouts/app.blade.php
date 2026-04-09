@@ -181,7 +181,7 @@ body {
 </style>
 </head>
 
-<body class="flex h-screen w-full bg-white overflow-hidden" x-data="systemNotifications" x-init="fetchNotifications(); setInterval(() => fetchNotifications(), 30000)">
+<body class="flex h-screen w-full bg-white overflow-x-hidden" x-data="systemNotifications" x-init="fetchNotifications(); setInterval(() => fetchNotifications(), 30000)">
 
 <!-- SIDEBAR -->
 <aside id="resident-sidebar"
@@ -196,7 +196,10 @@ body {
                     shadow-[0_0_15px_rgba(182,255,92,0.3)]">
             <i class="bi bi-houses-fill text-black"></i>
         </div>
-        <span class="text-lg font-black tracking-tight text-white uppercase">Vistabellas</span>
+        <div class="flex flex-col leading-tight">
+            <span class="text-base font-black tracking-tight text-white uppercase">Vista Bellas</span>
+            <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/80">Resident Portal</span>
+        </div>
     </div>
 
     <!-- SIDEBAR CONTENT -->
@@ -399,7 +402,7 @@ body {
                 <i class="bi bi-list text-2xl"></i>
             </button>
             <h1 class="text-lg sm:text-xl font-extrabold tracking-tight">
-                @yield('page-title', 'Resident Portal')
+                @yield('page-title', 'Home')
             </h1>
         </div>
 
@@ -505,7 +508,7 @@ body {
         </div>
     </header>
 
-    <main class="flex-1 mt-16 lg:ml-72 fade-in min-h-screen overflow-y-auto custom-scrollbar bg-[#F8F9FB]">
+    <main class="flex-1 mt-16 lg:ml-72 fade-in h-[calc(100vh-4rem)] overflow-y-auto custom-scrollbar bg-[#F8F9FB]">
         {{-- Flash Messages --}}
         @if(session('success'))
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-6">

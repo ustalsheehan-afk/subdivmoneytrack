@@ -49,6 +49,7 @@ use App\Http\Controllers\Resident\PenaltyController as ResidentPenaltyController
 use App\Http\Controllers\Resident\AmenityController as ResidentAmenityController;
 use App\Http\Controllers\Resident\AmenityReservationController as ResidentAmenityReservationController;
 use Illuminate\Support\Facades\View;
+use Carbon\Carbon;
 
 /*
 |--------------------------------------------------------------------------
@@ -372,6 +373,8 @@ Route::middleware(['auth', 'resident'])->prefix('resident')->name('resident.')->
     Route::get('announcements/{announcement}', [ResidentAnnouncementController::class, 'show'])->name('announcements.show');
     Route::post('announcements/{announcement}/read', [ResidentAnnouncementController::class, 'markAsRead'])->name('announcements.read');
 
+    // Upcoming Events
+    Route::get('events', [ResidentDashboardController::class, 'events'])->name('events.index');
 
     // Notifications
     Route::get('notifications/{id}', [App\Http\Controllers\Resident\NotificationController::class, 'show'])->name('notifications.show');

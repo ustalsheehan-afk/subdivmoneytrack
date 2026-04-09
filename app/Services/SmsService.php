@@ -75,6 +75,7 @@ class SmsService
         curl_setopt($ch, CURLOPT_URL, $this->apiUrl);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
@@ -98,16 +99,21 @@ class SmsService
 
         $decodedResponse = json_decode($response, true);
         
-        Log::info("PhilSMS Response", ['httpCode' => $httpCode, 'response' => $decodedResponse, 'recipient' => $recipient]);
+        Log::info("PhilSMS Response", [
+            'httpCode' => $httpCode,
+            'response' => $decodedResponse,
+            'recipient' => $recipient,
+            'raw' => $decodedResponse === null ? Str::limit((string) $response, 500) : null,
+        ]);
 
-        $status = strtolower($decodedResponse['status'] ?? '') === 'success';
+        $apiStatus = strtolower((string) ($decodedResponse['status'] ?? ''));
         $successFlag = ($decodedResponse['success'] ?? null) === true;
-        $messageText = strtolower($decodedResponse['message'] ?? '');
+        $messageText = strtolower((string) ($decodedResponse['message'] ?? ''));
 
         if (
             $httpCode >= 400
-            || $status === 'error'
-            || ($status === false && $successFlag === false && str_contains($messageText, 'error'))
+            || $apiStatus === 'error'
+            || ($apiStatus !== 'success' && $successFlag === false && str_contains($messageText, 'error'))
             || str_contains($messageText, 'unauthenticated')
         ) {
             Log::error("PhilSMS API Error ($httpCode): " . $response, ['recipient' => $recipient]);
@@ -117,7 +123,7 @@ class SmsService
             ]);
         }
 
-        if ($status || $successFlag || $messageText === 'ok' || $messageText === 'success') {
+        if ($apiStatus === 'success' || $successFlag || $messageText === 'ok' || $messageText === 'success') {
             Log::info("SMS sent successfully to $recipient", ['response' => $decodedResponse]);
             return array_merge($decodedResponse ?? [], [
                 'success' => true,
