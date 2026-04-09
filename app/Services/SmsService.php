@@ -34,11 +34,9 @@ class SmsService
             ?: env('PHILSMS_URL')
             ?: 'https://app.philsms.com/api/v3/sms/send'
         ));
-        $this->senderId = trim((string) (
-            config('services.philsms.sender_id')
-            ?: env('PHILSMS_SENDER')
-            ?: 'PhilSMS'
-        ));
+        // WARNING: Do NOT use PHILSMS_SENDER unless it's whitelisted in your PhilSMS account.
+        // PhilSMS API works best when sender_id is NOT included (uses account default).
+        $this->senderId = '';
     }
 
     /**
