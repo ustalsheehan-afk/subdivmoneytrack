@@ -64,15 +64,19 @@ class SmsService
 
         $data = [
             "recipient" => $recipient,
-            "sender_id" => Str::limit($this->senderId, 11, ''),
             "type" => "plain",
             "message" => $message
         ];
 
+        $configuredSenderId = Str::limit($this->senderId, 11, '');
+        if ($configuredSenderId !== '') {
+            $data['sender_id'] = $configuredSenderId;
+        }
+
         Log::info("Sending SMS via PhilSMS", [
             'recipient' => $recipient,
             'url' => $this->apiUrl,
-            'sender_id' => $data['sender_id'],
+            'sender_id' => $data['sender_id'] ?? null,
         ]);
 
         [$response, $httpCode, $error] = $this->executeRequest($data, $this->apiToken);
@@ -88,6 +92,25 @@ class SmsService
         ) {
             Log::warning('PhilSMS token rejected, retrying with PHILSMS_API_KEY.');
             [$response, $httpCode, $error] = $this->executeRequest($data, $this->apiKey);
+            $decodedResponse = json_decode((string) $response, true);
+            $messageText = strtolower((string) ($decodedResponse['message'] ?? ''));
+        }
+
+        if (
+            $error === ''
+            && isset($data['sender_id'])
+            && str_contains($messageText, 'sender id')
+            && str_contains($messageText, 'not authorized')
+        ) {
+            Log::warning('PhilSMS sender_id is not authorized. Retrying without sender_id.', [
+                'sender_id' => $data['sender_id'],
+                'recipient' => $recipient,
+            ]);
+
+            $fallbackData = $data;
+            unset($fallbackData['sender_id']);
+
+            [$response, $httpCode, $error] = $this->executeRequest($fallbackData, $this->apiToken);
             $decodedResponse = json_decode((string) $response, true);
             $messageText = strtolower((string) ($decodedResponse['message'] ?? ''));
         }
