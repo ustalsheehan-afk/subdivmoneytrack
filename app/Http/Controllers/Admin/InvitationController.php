@@ -200,7 +200,15 @@ class InvitationController extends Controller
                 $failedChannels[] = $smsError !== '' ? "SMS failed ({$smsError})" : 'SMS failed';
             }
 
-            return redirect()->route('admin.invitations.index')->with('error', 'Invitation created, but delivery issue: ' . implode(' | ', $failedChannels));
+            $message = 'Invitation created, but delivery issues: ' . implode(' | ', $failedChannels);
+            $message .= ". Registration link: {$registrationLink}";
+
+            // If email succeeded but SMS failed, we consider it a "success" but with a warning
+            if ($emailSuccess || (!$emailAttempted && $smsAttempted)) {
+                return redirect()->route('admin.invitations.index')->with('success', $message);
+            }
+
+            return redirect()->route('admin.invitations.index')->with('error', $message);
         }
 
         return redirect()->route('admin.invitations.index')->with('success', 'Invitation created and notification sent successfully.');
@@ -233,21 +241,28 @@ class InvitationController extends Controller
             'delivery' => $delivery,
         ]);
 
+        $emailSuccess = (bool) ($delivery['email']['success'] ?? false);
+        $smsSuccess = (bool) ($delivery['sms']['success'] ?? false);
+        $emailAttempted = (bool) ($delivery['email']['attempted'] ?? false);
+        $smsAttempted = (bool) ($delivery['sms']['attempted'] ?? false);
+
         $errors = [];
 
-        if (($delivery['email']['attempted'] ?? false) && !($delivery['email']['success'] ?? false)) {
+        if ($emailAttempted && !$emailSuccess) {
             $errors[] = 'Email failed';
         }
 
-        if (($delivery['sms']['attempted'] ?? false) && !($delivery['sms']['success'] ?? false)) {
+        if ($smsAttempted && !$smsSuccess) {
             $smsError = trim((string) ($delivery['sms']['error'] ?? ''));
             $errors[] = $smsError !== '' ? "SMS failed ({$smsError})" : 'SMS failed';
         }
 
+        $success = empty($errors) || $emailSuccess; // Consider success if at least email worked
+
         return response()->json([
-            'success' => empty($errors),
+            'success' => $success,
             'link' => route('register.invitation', ['token' => $invitation->token]),
-            'message' => empty($errors) ? 'Invitation resent.' : ('Invitation resent with delivery issues: ' . implode(' | ', $errors))
+            'message' => empty($errors) ? 'Invitation resent.' : ('Invitation resent with issues: ' . implode(' | ', $errors))
         ]);
     }
 
