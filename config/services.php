@@ -38,4 +38,14 @@ return [
         'sender_id' => env('PHILSMS_SENDER'),
     ],
 
+    'sms' => [
+        'provider' => env('SMS_PROVIDER', 'philsms'),
+    ],
+
+    'semaphore' => [
+        'api_key' => env('SEMAPHORE_API_KEY'),
+        'url' => env('SEMAPHORE_URL', 'https://api.semaphore.co/api/v4/messages'),
+        'sender_name' => env('SEMAPHORE_SENDER_NAME'),
+    ],
+
 ];

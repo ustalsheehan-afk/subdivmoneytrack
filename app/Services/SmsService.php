@@ -11,13 +11,23 @@ use Illuminate\Support\Str;
  */
 class SmsService
 {
+    protected $provider;
     protected $apiToken;
     protected $apiKey;
     protected $apiUrl;
     protected $senderId;
+    protected $semaphoreApiKey;
+    protected $semaphoreUrl;
+    protected $semaphoreSenderName;
 
     public function __construct()
     {
+        $this->provider = strtolower(trim((string) (
+            config('services.sms.provider')
+            ?: env('SMS_PROVIDER')
+            ?: 'philsms'
+        )));
+
         // Prefer config values so cached config and env stay in sync.
         $this->apiToken = trim((string) (
             config('services.philsms.token')
@@ -39,6 +49,22 @@ class SmsService
             ?: env('PHILSMS_SENDER')
             ?: ''
         ));
+
+        $this->semaphoreApiKey = trim((string) (
+            config('services.semaphore.api_key')
+            ?: env('SEMAPHORE_API_KEY')
+            ?: ''
+        ));
+        $this->semaphoreUrl = trim((string) (
+            config('services.semaphore.url')
+            ?: env('SEMAPHORE_URL')
+            ?: 'https://api.semaphore.co/api/v4/messages'
+        ));
+        $this->semaphoreSenderName = trim((string) (
+            config('services.semaphore.sender_name')
+            ?: env('SEMAPHORE_SENDER_NAME')
+            ?: ''
+        ));
     }
 
     /**
@@ -50,6 +76,10 @@ class SmsService
      */
     public function send(string $recipient, string $message)
     {
+        if ($this->provider === 'semaphore') {
+            return $this->sendViaSemaphore($recipient, $message);
+        }
+
         if (empty($this->apiToken)) {
             Log::error("PhilSMS API Token is not configured.");
             return ['success' => false, 'error' => 'API Token missing'];
@@ -217,6 +247,83 @@ class SmsService
         ]);
     }
 
+    private function sendViaSemaphore(string $recipient, string $message): array
+    {
+        if (empty($this->semaphoreApiKey)) {
+            Log::error('Semaphore API key is not configured.');
+            return ['success' => false, 'error' => 'Semaphore API key missing'];
+        }
+
+        $normalized = $this->normalizeRecipient($recipient);
+        if ($normalized === null) {
+            Log::error('Semaphore recipient format is invalid.', ['recipient' => $recipient]);
+            return ['success' => false, 'error' => 'Invalid recipient number'];
+        }
+
+        $semaphoreNumber = $this->toLocalMobile($normalized);
+        $data = [
+            'apikey' => $this->semaphoreApiKey,
+            'number' => $semaphoreNumber,
+            'message' => $message,
+        ];
+
+        if ($this->semaphoreSenderName !== '') {
+            $data['sendername'] = Str::limit($this->semaphoreSenderName, 11, '');
+        }
+
+        Log::info('Sending SMS via Semaphore', [
+            'recipient' => $semaphoreNumber,
+            'url' => $this->semaphoreUrl,
+            'sender_name' => $data['sendername'] ?? '(default)',
+            'message_preview' => Str::limit($message, 50),
+        ]);
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $this->semaphoreUrl);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($error !== '') {
+            Log::error('Semaphore cURL error: ' . $error, ['recipient' => $semaphoreNumber]);
+            return ['success' => false, 'error' => $error];
+        }
+
+        $decoded = json_decode((string) $response, true);
+        Log::info('Semaphore response', [
+            'httpCode' => $httpCode,
+            'response' => $decoded,
+            'recipient' => $semaphoreNumber,
+            'raw' => $decoded === null ? Str::limit((string) $response, 500) : null,
+        ]);
+
+        $first = is_array($decoded) && isset($decoded[0]) && is_array($decoded[0]) ? $decoded[0] : null;
+        $apiError = is_array($decoded) ? ($decoded['error'] ?? null) : null;
+
+        if ($httpCode >= 400 || $apiError || !$first || empty($first['message_id'])) {
+            $messageText = is_string($apiError) ? $apiError : ((string) ($first['status'] ?? 'SMS send failed'));
+            return [
+                'success' => false,
+                'error' => $messageText,
+                'http_code' => $httpCode,
+                'response' => $decoded,
+            ];
+        }
+
+        return [
+            'success' => true,
+            'http_code' => $httpCode,
+            'message_id' => $first['message_id'] ?? null,
+            'response' => $decoded,
+        ];
+    }
+
     private function executeRequest(array $data, string $token, ?string $url = null): array
     {
         $ch = curl_init();
@@ -265,5 +372,14 @@ class SmsService
         }
 
         return null;
+    }
+
+    private function toLocalMobile(string $recipient): string
+    {
+        if (str_starts_with($recipient, '63') && strlen($recipient) === 12) {
+            return '0' . substr($recipient, 2);
+        }
+
+        return $recipient;
     }
 }

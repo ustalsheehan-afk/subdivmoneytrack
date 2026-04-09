@@ -33,6 +33,7 @@ class NotificationService
     public function sendInvitation(Invitation $invitation, string $registrationLink): array
     {
         $sendAsync = (bool) env('INVITATION_NOTIFICATIONS_ASYNC', false);
+        $smsEnabled = (bool) env('INVITATION_SMS_ENABLED', true);
         $results = [
             'email' => [
                 'attempted' => false,
@@ -61,7 +62,7 @@ class NotificationService
         }
 
         // 2. SMS
-        if ($invitation->phone) {
+        if ($invitation->phone && $smsEnabled) {
             $results['sms']['attempted'] = true;
 
             if ($sendAsync) {
@@ -72,6 +73,8 @@ class NotificationService
                 $results['sms']['success'] = (bool) ($smsResult['success'] ?? false);
                 $results['sms']['error'] = $smsResult['error'] ?? null;
             }
+        } elseif ($invitation->phone && !$smsEnabled) {
+            $results['sms']['error'] = 'SMS temporarily disabled by configuration.';
         }
 
         // 3. Update last sent timestamp
