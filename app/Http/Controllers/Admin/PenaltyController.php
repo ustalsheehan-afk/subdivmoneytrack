@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\Penalty;
 use App\Models\Resident;
 use App\Models\Payment;
+use App\Services\SmsService;
+use App\Services\SmsTemplateService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -362,5 +364,50 @@ class PenaltyController extends Controller
         $penalties = $penalties->orderByDesc('date_issued')->paginate(10);
 
         return view('admin.penalties.timeline', compact('resident', 'penalties'));
+    }
+
+    public function sendSmsNotices(Request $request, SmsService $smsService, SmsTemplateService $templateService)
+    {
+        $penalties = Penalty::with('resident')
+            ->whereIn('status', ['pending', 'unpaid'])
+            ->whereHas('resident', function ($residentQuery) {
+                $residentQuery
+                    ->whereNotNull('contact_number')
+                    ->where('contact_number', '!=', '');
+            })
+            ->get();
+
+        if ($penalties->isEmpty()) {
+            return back()->with('error', 'No unpaid/pending penalties with contact numbers found for SMS notices.');
+        }
+
+        $sent = 0;
+        $failed = 0;
+
+        foreach ($penalties as $penalty) {
+            $resident = $penalty->resident;
+
+            if (!$resident || empty($resident->contact_number)) {
+                $failed++;
+                continue;
+            }
+
+            $message = $templateService->render('penalty_notice', [
+                'resident_name' => $resident->full_name,
+                'amount' => number_format((float) $penalty->amount, 2),
+                'penalty_reason' => $penalty->reason ?: 'a recorded violation',
+                'payment_link' => rtrim((string) config('app.url'), '/') . '/resident/payments',
+            ]);
+
+            $result = $smsService->send((string) $resident->contact_number, $message);
+
+            if ((bool) ($result['success'] ?? false)) {
+                $sent++;
+            } else {
+                $failed++;
+            }
+        }
+
+        return back()->with('success', "Penalty SMS process finished. Sent: {$sent}, Failed: {$failed}.");
     }
 }

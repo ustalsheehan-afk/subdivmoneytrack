@@ -8,6 +8,8 @@ use App\Models\Due;
 use App\Models\Resident;
 use App\Models\Payment;
 use App\Models\Admin;
+use App\Services\SmsService;
+use App\Services\SmsTemplateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -364,5 +366,66 @@ class DuesBatchController extends Controller
         } catch (\Exception $e) {
             return redirect()->route('admin.dues.index')->with('error', 'Failed to delete batch: ' . $e->getMessage());
         }
+    }
+
+    public function sendSmsReminders(Request $request, SmsService $smsService, SmsTemplateService $templateService)
+    {
+        $scope = (string) $request->input('scope', 'due_soon');
+
+        $query = Due::with('resident')
+            ->whereIn('status', [Due::STATUS_UNPAID, Due::STATUS_PENDING])
+            ->whereHas('resident', function ($residentQuery) {
+                $residentQuery
+                    ->whereNotNull('contact_number')
+                    ->where('contact_number', '!=', '');
+            });
+
+        if ($scope === 'overdue') {
+            $query->whereDate('due_date', '<', now()->toDateString());
+        } elseif ($scope === 'all_unpaid') {
+            // Keep full unpaid set.
+        } else {
+            $query->whereDate('due_date', '<=', now()->addDays(7)->toDateString());
+        }
+
+        if ($request->filled('batch_id')) {
+            $query->where('batch_id', (string) $request->input('batch_id'));
+        }
+
+        $dues = $query->get();
+
+        if ($dues->isEmpty()) {
+            return back()->with('error', 'No eligible dues with contact numbers found for SMS reminders.');
+        }
+
+        $sent = 0;
+        $failed = 0;
+
+        foreach ($dues as $due) {
+            $resident = $due->resident;
+
+            if (!$resident || empty($resident->contact_number)) {
+                $failed++;
+                continue;
+            }
+
+            $message = $templateService->render('dues_reminder', [
+                'resident_name' => $resident->full_name,
+                'due_title' => $due->title,
+                'amount' => number_format((float) $due->amount, 2),
+                'due_date' => optional($due->due_date)->format('M d, Y') ?? 'N/A',
+                'payment_link' => rtrim((string) config('app.url'), '/') . '/resident/payments',
+            ]);
+
+            $result = $smsService->send((string) $resident->contact_number, $message);
+
+            if ((bool) ($result['success'] ?? false)) {
+                $sent++;
+            } else {
+                $failed++;
+            }
+        }
+
+        return back()->with('success', "Dues SMS process finished. Sent: {$sent}, Failed: {$failed}.");
     }
 }

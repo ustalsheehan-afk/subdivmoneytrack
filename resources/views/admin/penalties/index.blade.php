@@ -24,6 +24,17 @@
             </div>
 
             <div class="flex items-center gap-3">
+                <a href="{{ route('admin.smsTemplates.index') }}" class="btn-secondary">
+                    <i class="bi bi-chat-left-text"></i>
+                    SMS Templates
+                </a>
+                <form method="POST" action="{{ route('admin.penalties.sendSmsNotices') }}">
+                    @csrf
+                    <button type="submit" class="btn-secondary" onclick="return confirm('Send penalty SMS notices to residents with pending/unpaid penalties?')">
+                        <i class="bi bi-send"></i>
+                        Send Penalty SMS
+                    </button>
+                </form>
                 <a href="{{ route('admin.penalties.create') }}" class="btn-premium">
                     <i class="bi bi-plus-lg"></i>
                     Record Penalty

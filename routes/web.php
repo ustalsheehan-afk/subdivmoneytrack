@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\DueController;
 use App\Http\Controllers\Admin\DuesBatchController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\PenaltyController;
+use App\Http\Controllers\Admin\SmsTemplateController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\AccountController;
@@ -156,6 +157,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Dues actions (New Batched System)
     Route::get('dues/dashboard', [DuesBatchController::class, 'dashboard'])->name('dues.dashboard');
     Route::post('dues/{due}/pay', [DuesBatchController::class, 'markAsPaid'])->name('dues.markAsPaid');
+    Route::post('dues/send-sms-reminders', [DuesBatchController::class, 'sendSmsReminders'])->name('dues.sendSmsReminders');
     Route::resource('dues', DuesBatchController::class)->names([
         'index' => 'dues.index',
         'create' => 'dues.create',
@@ -253,7 +255,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Penalties bulk actions
     Route::post('penalties/bulk-destroy', [PenaltyController::class, 'bulkDestroy'])->name('penalties.bulkDestroy');
     Route::post('penalties/bulk-approve', [PenaltyController::class, 'bulkApprovePenalties'])->name('penalties.bulkApprove');
+    Route::post('penalties/send-sms-notices', [PenaltyController::class, 'sendSmsNotices'])->name('penalties.sendSmsNotices');
     Route::get('penalties/{penalty}/data', [PenaltyController::class, 'getData'])->name('penalties.data');
+
+    Route::get('notifications/sms-templates', [SmsTemplateController::class, 'index'])->name('smsTemplates.index');
+    Route::post('notifications/sms-templates', [SmsTemplateController::class, 'update'])->name('smsTemplates.update');
 
     // Payments custom actions
     Route::post('payments/bulk-action', [PaymentController::class, 'bulkAction'])->name('payments.bulkAction');

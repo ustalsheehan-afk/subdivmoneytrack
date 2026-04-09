@@ -24,6 +24,18 @@
             </div>
 
             <div class="flex items-center gap-3">
+                <a href="{{ route('admin.smsTemplates.index') }}" class="btn-secondary">
+                    <i class="bi bi-chat-left-text"></i>
+                    SMS Templates
+                </a>
+                <form method="POST" action="{{ route('admin.dues.sendSmsReminders') }}">
+                    @csrf
+                    <input type="hidden" name="scope" value="due_soon">
+                    <button type="submit" class="btn-secondary" onclick="return confirm('Send dues reminder SMS to residents with due-soon unpaid dues?')">
+                        <i class="bi bi-send"></i>
+                        Send Dues SMS
+                    </button>
+                </form>
                 <a href="{{ route('admin.dues.dashboard') }}" class="btn-secondary">
                     <i class="bi bi-graph-up-arrow"></i>
                     Financial Overview
