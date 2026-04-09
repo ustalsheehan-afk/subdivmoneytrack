@@ -34,9 +34,11 @@ class SmsService
             ?: env('PHILSMS_URL')
             ?: 'https://app.philsms.com/api/v3/sms/send'
         ));
-        // WARNING: Do NOT use PHILSMS_SENDER unless it's whitelisted in your PhilSMS account.
-        // PhilSMS API works best when sender_id is NOT included (uses account default).
-        $this->senderId = '';
+        $this->senderId = trim((string) (
+            config('services.philsms.sender_id')
+            ?: env('PHILSMS_SENDER')
+            ?: ''
+        ));
     }
 
     /**
@@ -66,11 +68,9 @@ class SmsService
             "message" => $message
         ];
 
-        // NOTE: Do NOT include sender_id by default.
-        // Let PhilSMS use the account's registered sender ID.
-        // Only include sender_id if an approved custom one is explicitly set
-        // and it's not the default.
-        if ($this->senderId !== '' && $this->senderId !== 'PhilSMS') {
+        // Include sender_id if configured. 
+        // If PHILSMS_SENDER is not provided or set to empty, it won't be sent.
+        if ($this->senderId !== '') {
             $data['sender_id'] = Str::limit($this->senderId, 11, '');
         }
 
