@@ -50,7 +50,7 @@ class PasswordResetController extends Controller
             );
 
             try {
-                Mail::to($email)->send(new PasswordResetLinkMail(
+                Mail::to($user->email)->send(new PasswordResetLinkMail(
                     user: $user,
                     resetUrl: route('password.reset', [
                         'token' => $plainToken,
@@ -69,6 +69,11 @@ class PasswordResetController extends Controller
                     'email' => $email,
                     'error' => $e->getMessage(),
                 ]);
+
+                DB::table('password_resets')->where('email', $email)->delete();
+
+                return back()->withInput($request->only('email'))
+                    ->withErrors(['email' => 'We could not send the password reset email right now. Please try again later.']);
             }
         } else {
             logger()->info('Password reset requested for unknown email.', [
