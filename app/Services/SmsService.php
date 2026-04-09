@@ -10,13 +10,16 @@ use Illuminate\Support\Facades\Log;
  */
 class SmsService
 {
-    protected $apiKey;
-    protected $apiUrl = "https://dashboard.philsms.com/api/v3/sms/send";
+    protected $apiToken;
+    protected $apiUrl;
+    protected $senderId;
 
     public function __construct()
     {
-        // Get API key from .env
-        $this->apiKey = config('services.philsms.key') ?? env('PHILSMS_API_KEY');
+        // Get credentials from .env
+        $this->apiToken = env('PHILSMS_API_TOKEN');
+        $this->apiUrl = env('PHILSMS_URL', 'https://app.philsms.com/api/v3/sms/send');
+        $this->senderId = env('PHILSMS_SENDER', 'PhilSMS');
     }
 
     /**
@@ -28,17 +31,21 @@ class SmsService
      */
     public function send(string $recipient, string $message)
     {
-        if (empty($this->apiKey)) {
-            Log::error("PhilSMS API Key is not configured.");
-            return ['error' => 'API Key missing'];
+        if (empty($this->apiToken)) {
+            Log::error("PhilSMS API Token is not configured.");
+            return ['success' => false, 'error' => 'API Token missing'];
         }
 
+        // Prepare payload for PhilSMS - add apikey to payload
         $data = [
+            "apikey" => $this->apiToken,
             "recipient" => $recipient,
-            "sender_id" => "PhilSMS", // Default sender ID
-            "type"      => "plain",
-            "message"   => $message
+            "sender_id" => $this->senderId,
+            "type" => "plain",
+            "message" => $message
         ];
+
+        Log::info("Sending SMS via PhilSMS", ['recipient' => $recipient, 'url' => $this->apiUrl]);
 
         $ch = curl_init();
         
@@ -47,7 +54,6 @@ class SmsService
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            "Authorization: Bearer " . $this->apiKey,
             "Content-Type: application/json",
             "Accept: application/json"
         ]);
@@ -61,16 +67,20 @@ class SmsService
 
         // Handle errors or log response
         if ($error) {
-            Log::error("PhilSMS cURL Error: " . $error);
-            return ['error' => $error];
+            Log::error("PhilSMS cURL Error: " . $error, ['recipient' => $recipient]);
+            return ['success' => false, 'error' => $error];
         }
 
         $decodedResponse = json_decode($response, true);
         
-        if ($httpCode >= 400) {
-            Log::error("PhilSMS API Error ($httpCode): " . $response);
+        Log::info("PhilSMS Response", ['httpCode' => $httpCode, 'response' => $decodedResponse, 'recipient' => $recipient]);
+        
+        if ($httpCode >= 400 || ($decodedResponse && !empty($decodedResponse['status']) && $decodedResponse['status'] === 'error')) {
+            Log::error("PhilSMS API Error ($httpCode): " . $response, ['recipient' => $recipient]);
+            return array_merge($decodedResponse ?? [], ['success' => false]);
         }
 
-        return $decodedResponse;
+        Log::info("SMS sent successfully to $recipient", ['response' => $decodedResponse]);
+        return array_merge($decodedResponse ?? [], ['success' => true]);
     }
 }

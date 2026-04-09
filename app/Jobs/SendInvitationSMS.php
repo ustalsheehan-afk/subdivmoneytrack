@@ -10,6 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
 use App\Models\Invitation;
+use App\Services\SmsService;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -42,17 +43,33 @@ class SendInvitationSMS implements ShouldQueue
         $phone = $this->invitation->phone;
         $link = $this->link;
 
+        // Build SMS message
         $message = "{$platformName} invitation. Register here: {$link} This link expires in 7 days.";
 
         try {
-            // Actual SMS sending would go here (e.g. Twilio, Chikka, etc.)
-            Log::info("SMS sent to {$phone}: {$message}");
-            
-            $this->invitation->update([
-                'sms_status' => Invitation::DELIVERY_SENT
-            ]);
+            // Skip if no phone number
+            if (!$phone) {
+                Log::warning("Skipping SMS for invitation {$this->invitation->id}: No phone number");
+                return;
+            }
+
+            // Send SMS via PhilSMS
+            $smsService = new SmsService();
+            $response = $smsService->send($phone, $message);
+
+            if (!empty($response['success']) || !empty($response['error']) === false) {
+                $this->invitation->update([
+                    'sms_status' => Invitation::DELIVERY_SENT
+                ]);
+                Log::info("SMS sent to {$phone}", ['response' => $response]);
+            } else {
+                $this->invitation->update([
+                    'sms_status' => Invitation::DELIVERY_FAILED
+                ]);
+                Log::error("SMS delivery failed for {$phone}", ['response' => $response]);
+            }
         } catch (Throwable $e) {
-            Log::error("Failed to send invitation SMS to {$phone}: " . $e->getMessage());
+            Log::error("Exception sending SMS to {$phone}: " . $e->getMessage());
             
             $this->invitation->update([
                 'sms_status' => Invitation::DELIVERY_FAILED

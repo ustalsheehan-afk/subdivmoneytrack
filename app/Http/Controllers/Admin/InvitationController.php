@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Resident;
 use App\Models\Invitation;
+use App\Services\NotificationService;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -171,7 +172,14 @@ class InvitationController extends Controller
             return redirect()->route('admin.invitations.index')->with('error', 'Failed to create invitation record.');
         }
 
-        return redirect()->route('admin.invitations.index')->with('success', 'Invitation created successfully.');
+        // Send invitation via Email and SMS
+        $notificationService = new NotificationService();
+        $registrationLink = route('register.invitation', ['token' => $invitation->token]);
+        $notificationService->sendInvitation($invitation, $registrationLink);
+        
+        \Log::info('Invitation notification dispatched', ['invitation_id' => $invitation->id]);
+
+        return redirect()->route('admin.invitations.index')->with('success', 'Invitation created and notification sent successfully.');
     }
 
     /**
@@ -190,6 +198,13 @@ class InvitationController extends Controller
         }
 
         $invitation->update(['last_sent_at' => Carbon::now()]);
+
+        // Send invitation via Email and SMS
+        $notificationService = new NotificationService();
+        $registrationLink = route('register.invitation', ['token' => $invitation->token]);
+        $notificationService->sendInvitation($invitation, $registrationLink);
+        
+        \Log::info('Invitation re-sent', ['invitation_id' => $invitation->id]);
 
         return response()->json([
             'success' => true,
