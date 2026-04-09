@@ -57,7 +57,9 @@ class SendInvitationSMS implements ShouldQueue
             $smsService = new SmsService();
             $response = $smsService->send($phone, $message);
 
-            if (!empty($response['success']) || !empty($response['error']) === false) {
+            $success = !empty($response['success']) || strtolower($response['status'] ?? '') === 'success';
+
+            if ($success) {
                 $this->invitation->update([
                     'sms_status' => Invitation::DELIVERY_SENT
                 ]);

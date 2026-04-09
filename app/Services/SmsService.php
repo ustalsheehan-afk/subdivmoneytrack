@@ -17,8 +17,8 @@ class SmsService
     public function __construct()
     {
         // Get credentials from .env
-        $this->apiToken = env('PHILSMS_API_TOKEN');
-        $this->apiUrl = env('PHILSMS_URL', 'https://app.philsms.com/api/v3/sms/send');
+        $this->apiToken = trim((string) env('PHILSMS_API_TOKEN'));
+        $this->apiUrl = env('PHILSMS_URL', 'https://dashboard.philsms.com/api/v3/sms/send');
         $this->senderId = env('PHILSMS_SENDER', 'PhilSMS');
     }
 
@@ -54,6 +54,7 @@ class SmsService
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer " . $this->apiToken,
             "Content-Type: application/json",
             "Accept: application/json"
         ]);
@@ -74,13 +75,22 @@ class SmsService
         $decodedResponse = json_decode($response, true);
         
         Log::info("PhilSMS Response", ['httpCode' => $httpCode, 'response' => $decodedResponse, 'recipient' => $recipient]);
-        
-        if ($httpCode >= 400 || ($decodedResponse && !empty($decodedResponse['status']) && $decodedResponse['status'] === 'error')) {
+
+        $status = strtolower($decodedResponse['status'] ?? '') === 'success';
+        $successFlag = ($decodedResponse['success'] ?? null) === true;
+        $messageText = strtolower($decodedResponse['message'] ?? '');
+
+        if ($httpCode >= 400 || $status === false && $successFlag === false && str_contains($messageText, 'error')) {
             Log::error("PhilSMS API Error ($httpCode): " . $response, ['recipient' => $recipient]);
             return array_merge($decodedResponse ?? [], ['success' => false]);
         }
 
-        Log::info("SMS sent successfully to $recipient", ['response' => $decodedResponse]);
-        return array_merge($decodedResponse ?? [], ['success' => true]);
+        if ($status || $successFlag || $messageText === 'ok' || $messageText === 'success') {
+            Log::info("SMS sent successfully to $recipient", ['response' => $decodedResponse]);
+            return array_merge($decodedResponse ?? [], ['success' => true]);
+        }
+
+        Log::warning("PhilSMS API returned unknown response, treating as failure", ['response' => $decodedResponse, 'recipient' => $recipient]);
+        return array_merge($decodedResponse ?? [], ['success' => false]);
     }
 }
