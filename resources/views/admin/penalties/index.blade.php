@@ -211,7 +211,7 @@
         </div>
     </div>
 
-    <div x-show="penaltySelectionMode && hasPendingSelection"
+    <div x-show="hasSelection"
          x-transition.opacity.duration.200ms
          class="fixed bottom-6 left-1/2 z-40 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2">
         <div class="rounded-2xl border border-emerald-100 bg-white/95 px-5 py-4 shadow-2xl shadow-emerald-500/10 backdrop-blur">
@@ -363,7 +363,7 @@
 <script>
     function penaltiesBulkApproval() {
         return {
-            penaltySelectionMode: false,
+            penaltySelectionMode: true,
             selectedPenalties: [],
             pendingIds: @json($penalties->getCollection()->filter(fn ($penalty) => $penalty->status === 'pending')->pluck('id')->values()),
             selectableIds: @json($penalties->getCollection()->filter(fn ($penalty) => in_array($penalty->status, ['pending', 'unpaid']))->pluck('id')->values()),
@@ -389,7 +389,7 @@
             clearSelection() {
                 this.selectedPenalties = [];
                 this.selectAll = false;
-                this.penaltySelectionMode = false;
+                this.penaltySelectionMode = true;
             },
             submitSmsNotices() {
                 if (!this.hasSelection) return;
