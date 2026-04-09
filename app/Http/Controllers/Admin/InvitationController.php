@@ -201,6 +201,15 @@ class InvitationController extends Controller
         }
 
         if (($emailAttempted && !$emailSuccess) || ($smsAttempted && !$smsSuccess)) {
+            if ($emailSuccess) {
+                Log::warning('Invitation SMS failed but email succeeded', [
+                    'invitation_id' => $invitation->id,
+                    'sms_error' => $smsError,
+                ]);
+
+                return redirect()->route('admin.invitations.index')->with('success', 'Invitation created and email sent successfully.');
+            }
+
             $failedChannels = [];
 
             if ($emailAttempted && !$emailSuccess) {
@@ -287,6 +296,14 @@ class InvitationController extends Controller
         }
 
         $success = empty($errors) || $emailSuccess; // Consider success if at least email worked
+
+        if ($emailSuccess && !$smsSuccess) {
+            return response()->json([
+                'success' => true,
+                'link' => route('register.invitation', ['token' => $invitation->token]),
+                'message' => 'Invitation resent by email successfully.'
+            ]);
+        }
 
         return response()->json([
             'success' => $success,
