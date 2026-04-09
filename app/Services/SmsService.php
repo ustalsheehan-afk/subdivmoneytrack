@@ -82,7 +82,10 @@ class SmsService
             'message_preview' => Str::limit($message, 50),
         ]);
 
-        [$response, $httpCode, $error] = $this->executeRequest($data, $this->apiToken);
+        $activeToken = $this->apiToken;
+        $requestUrl = $this->apiUrl;
+
+        [$response, $httpCode, $error] = $this->executeRequest($data, $activeToken, $requestUrl);
 
         $decodedResponse = json_decode((string) $response, true);
         $messageText = strtolower((string) ($decodedResponse['message'] ?? ''));
@@ -94,7 +97,8 @@ class SmsService
             && $this->apiKey !== $this->apiToken
         ) {
             Log::warning('PhilSMS token rejected, retrying with PHILSMS_API_KEY.');
-            [$response, $httpCode, $error] = $this->executeRequest($data, $this->apiKey);
+            $activeToken = $this->apiKey;
+            [$response, $httpCode, $error] = $this->executeRequest($data, $activeToken, $requestUrl);
             $decodedResponse = json_decode((string) $response, true);
             $messageText = strtolower((string) ($decodedResponse['message'] ?? ''));
         }
@@ -116,21 +120,44 @@ class SmsService
             $fallbackData = $data;
             unset($fallbackData['sender_id']);
 
-            [$response, $httpCode, $error] = $this->executeRequest($fallbackData, $this->apiToken);
+            [$response, $httpCode, $error] = $this->executeRequest($fallbackData, $activeToken, $requestUrl);
             $decodedResponse = json_decode((string) $response, true);
             $messageText = strtolower((string) ($decodedResponse['message'] ?? ''));
         }
 
         if ($error === '' && str_contains($messageText, 'unauthenticated')) {
-            $fallbackUrl = str_replace('app.philsms.com', 'api.philsms.com', $this->apiUrl);
-            if ($fallbackUrl !== $this->apiUrl) {
+            $fallbackUrl = null;
+
+            if (str_contains($requestUrl, 'app.philsms.com')) {
+                $fallbackUrl = str_replace('app.philsms.com', 'api.philsms.com', $requestUrl);
+            } elseif (str_contains($requestUrl, 'api.philsms.com')) {
+                $fallbackUrl = str_replace('api.philsms.com', 'app.philsms.com', $requestUrl);
+            }
+
+            if ($fallbackUrl && $fallbackUrl !== $requestUrl) {
                 Log::warning('PhilSMS Unauthenticated, retrying with alternative URL.', [
-                    'original_url' => $this->apiUrl,
+                    'original_url' => $requestUrl,
                     'fallback_url' => $fallbackUrl
                 ]);
-                [$response, $httpCode, $error] = $this->executeRequest($data, $this->apiToken);
+
+                [$response, $httpCode, $error] = $this->executeRequest($data, $activeToken, $fallbackUrl);
+                $requestUrl = $fallbackUrl;
+
                 $decodedResponse = json_decode((string) $response, true);
                 $messageText = strtolower((string) ($decodedResponse['message'] ?? ''));
+
+                if (
+                    $error === ''
+                    && str_contains($messageText, 'unauthenticated')
+                    && $this->apiKey !== ''
+                    && $activeToken !== $this->apiKey
+                ) {
+                    Log::warning('PhilSMS alternative URL still unauthenticated, retrying with PHILSMS_API_KEY.');
+                    $activeToken = $this->apiKey;
+                    [$response, $httpCode, $error] = $this->executeRequest($data, $activeToken, $requestUrl);
+                    $decodedResponse = json_decode((string) $response, true);
+                    $messageText = strtolower((string) ($decodedResponse['message'] ?? ''));
+                }
             }
         }
 
@@ -144,6 +171,7 @@ class SmsService
             'httpCode' => $httpCode,
             'response' => $decodedResponse,
             'recipient' => $recipient,
+            'request_url' => $requestUrl,
             'raw' => $decodedResponse === null ? Str::limit((string) $response, 500) : null,
         ]);
 
@@ -159,7 +187,7 @@ class SmsService
         ) {
             Log::error("PhilSMS API Error ($httpCode): " . $response, [
                 'recipient' => $recipient,
-                'api_url' => $this->apiUrl,
+                'api_url' => $requestUrl,
                 'api_token_set' => !empty($this->apiToken),
                 'decoded_response' => $decodedResponse,
             ]);
@@ -184,11 +212,13 @@ class SmsService
         ]);
     }
 
-    private function executeRequest(array $data, string $token): array
+    private function executeRequest(array $data, string $token, ?string $url = null): array
     {
         $ch = curl_init();
 
-        curl_setopt($ch, CURLOPT_URL, $this->apiUrl);
+        $effectiveUrl = $url ?: $this->apiUrl;
+
+        curl_setopt($ch, CURLOPT_URL, $effectiveUrl);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);

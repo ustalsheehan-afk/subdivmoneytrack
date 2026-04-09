@@ -187,6 +187,18 @@ class InvitationController extends Controller
         $emailSuccess = (bool) ($delivery['email']['success'] ?? false);
         $smsAttempted = (bool) ($delivery['sms']['attempted'] ?? false);
         $smsSuccess = (bool) ($delivery['sms']['success'] ?? false);
+        $smsError = trim((string) ($delivery['sms']['error'] ?? ''));
+        $smsIsAuthIssue = $smsAttempted && !$smsSuccess && str_contains(strtolower($smsError), 'unauthenticated');
+
+        // If email worked, don't block the invitation flow on temporary SMS provider auth issues.
+        if ($emailSuccess && $smsIsAuthIssue) {
+            Log::warning('Invitation SMS skipped due provider authentication issue', [
+                'invitation_id' => $invitation->id,
+                'sms_error' => $smsError,
+            ]);
+
+            return redirect()->route('admin.invitations.index')->with('success', 'Invitation created and email sent successfully.');
+        }
 
         if (($emailAttempted && !$emailSuccess) || ($smsAttempted && !$smsSuccess)) {
             $failedChannels = [];
@@ -196,7 +208,6 @@ class InvitationController extends Controller
             }
 
             if ($smsAttempted && !$smsSuccess) {
-                $smsError = trim((string) ($delivery['sms']['error'] ?? ''));
                 // If it's the "Sender ID" error, it's usually an account configuration issue on PhilSMS side
                 if (str_contains(strtolower($smsError), 'sender id') && str_contains(strtolower($smsError), 'authorized')) {
                     $failedChannels[] = 'SMS skipped (PhilSMS Sender ID not configured)';
@@ -251,6 +262,8 @@ class InvitationController extends Controller
         $smsSuccess = (bool) ($delivery['sms']['success'] ?? false);
         $emailAttempted = (bool) ($delivery['email']['attempted'] ?? false);
         $smsAttempted = (bool) ($delivery['sms']['attempted'] ?? false);
+        $smsError = trim((string) ($delivery['sms']['error'] ?? ''));
+        $smsIsAuthIssue = $smsAttempted && !$smsSuccess && str_contains(strtolower($smsError), 'unauthenticated');
 
         $errors = [];
 
@@ -259,10 +272,15 @@ class InvitationController extends Controller
         }
 
         if ($smsAttempted && !$smsSuccess) {
-            $smsError = trim((string) ($delivery['sms']['error'] ?? ''));
             // If it's the "Sender ID" error, it's usually an account configuration issue on PhilSMS side
             if (str_contains(strtolower($smsError), 'sender id') && str_contains(strtolower($smsError), 'authorized')) {
                 $errors[] = 'SMS skipped (PhilSMS Sender ID not configured)';
+            } elseif ($smsIsAuthIssue && $emailSuccess) {
+                // Email already delivered; keep resend successful and avoid noisy auth failure messaging.
+                Log::warning('Resend SMS skipped due provider authentication issue', [
+                    'invitation_id' => $invitation->id,
+                    'sms_error' => $smsError,
+                ]);
             } else {
                 $errors[] = $smsError !== '' ? "SMS failed ({$smsError})" : 'SMS failed';
             }
