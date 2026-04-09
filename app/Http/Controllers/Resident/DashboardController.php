@@ -11,6 +11,7 @@ use App\Models\Due;
 use App\Models\Penalty;
 use App\Models\Notification;
 use App\Models\BoardMember;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -78,13 +79,8 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Upcoming Events (filtered from announcements with 'Event' category)
-        $upcomingEvents = Announcement::where('status', 'active')
-            ->where('category', 'Event')
-            ->where('date_posted', '>=', now()->startOfDay())
-            ->orderBy('date_posted')
-            ->take(5)
-            ->get();
+        // Upcoming Events (use event announcements when available; otherwise fallback to seeded sample events)
+        $upcomingEvents = $this->getUpcomingEvents();
 
         // Recent Requests
         $recentRequests = ServiceRequest::where('resident_id', $resident->id)
@@ -165,6 +161,66 @@ class DashboardController extends Controller
             'activeRequestsCount',
             'activityTimeline'
         ));
+    }
+
+    private function getUpcomingEvents()
+    {
+        $eventAnnouncements = Announcement::where('status', 'active')
+            ->where('category', 'Event')
+            ->where('date_posted', '>=', now()->startOfDay())
+            ->orderBy('date_posted')
+            ->get();
+
+        if ($eventAnnouncements->isNotEmpty()) {
+            return $eventAnnouncements->map(function ($announcement, $index) {
+                return [
+                    'id' => $announcement->id,
+                    'title' => $announcement->title,
+                    'date' => $announcement->date_posted,
+                    'time' => $announcement->date_posted->format('g:i A'),
+                    'location' => 'Clubhouse',
+                ];
+            });
+        }
+
+        return collect([
+            [
+                'id' => 1,
+                'title' => 'Community Meeting',
+                'date' => Carbon::parse('2026-04-15'),
+                'time' => '6:00 PM',
+                'location' => 'Clubhouse',
+            ],
+            [
+                'id' => 2,
+                'title' => 'Garage Sale',
+                'date' => Carbon::parse('2026-04-20'),
+                'time' => '8:00 AM',
+                'location' => 'Main Street',
+            ],
+        ]);
+    }
+
+    public function events()
+    {
+        $events = collect([
+            [
+                'id' => 1,
+                'title' => 'Community Meeting',
+                'date' => Carbon::parse('2026-04-15'),
+                'time' => '6:00 PM',
+                'location' => 'Clubhouse',
+            ],
+            [
+                'id' => 2,
+                'title' => 'Garage Sale',
+                'date' => Carbon::parse('2026-04-20'),
+                'time' => '8:00 AM',
+                'location' => 'Main Street',
+            ],
+        ])->sortBy('date')->values();
+
+        return view('resident.events.index', compact('events'));
     }
 
     public function board()

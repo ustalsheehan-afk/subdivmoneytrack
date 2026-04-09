@@ -68,7 +68,10 @@ class SendInvitationSMS implements ShouldQueue
                 $this->invitation->update([
                     'sms_status' => Invitation::DELIVERY_FAILED
                 ]);
-                Log::error("SMS delivery failed for {$phone}", ['response' => $response]);
+                Log::error("SMS delivery failed for {$phone}", [
+                    'response' => $response,
+                    'invitation_id' => $this->invitation->id,
+                ]);
             }
         } catch (Throwable $e) {
             Log::error("Exception sending SMS to {$phone}: " . $e->getMessage());

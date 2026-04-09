@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * PhilSMS Service Provider
@@ -16,10 +17,23 @@ class SmsService
 
     public function __construct()
     {
-        // Get credentials from .env
-        $this->apiToken = trim((string) env('PHILSMS_API_TOKEN'));
-        $this->apiUrl = env('PHILSMS_URL', 'https://dashboard.philsms.com/api/v3/sms/send');
-        $this->senderId = env('PHILSMS_SENDER', 'PhilSMS');
+        // Prefer config values so cached config and env stay in sync.
+        $this->apiToken = trim((string) (
+            config('services.philsms.token')
+            ?: config('services.philsms.key')
+            ?: env('PHILSMS_API_TOKEN')
+            ?: env('PHILSMS_API_KEY')
+        ));
+        $this->apiUrl = trim((string) (
+            config('services.philsms.url')
+            ?: env('PHILSMS_URL')
+            ?: 'https://app.philsms.com/api/v3/sms/send'
+        ));
+        $this->senderId = trim((string) (
+            config('services.philsms.sender_id')
+            ?: env('PHILSMS_SENDER')
+            ?: 'PhilSMS'
+        ));
     }
 
     /**
@@ -36,26 +50,32 @@ class SmsService
             return ['success' => false, 'error' => 'API Token missing'];
         }
 
-        // Convert local PH format (09xxx) to international format (639xxx)
-        if (str_starts_with($recipient, '0')) {
-            $recipient = '63' . substr($recipient, 1);
+        $recipient = $this->normalizeRecipient($recipient);
+
+        if ($recipient === null) {
+            Log::error('PhilSMS recipient format is invalid.', ['recipient' => $recipient]);
+            return ['success' => false, 'error' => 'Invalid recipient number'];
         }
 
-        // Prepare payload for PhilSMS - exactly as per API docs
         $data = [
             "recipient" => $recipient,
-            "sender_id" => $this->senderId,
+            "sender_id" => Str::limit($this->senderId, 11, ''),
             "type" => "plain",
             "message" => $message
         ];
 
-        Log::info("Sending SMS via PhilSMS", ['recipient' => $recipient, 'url' => $this->apiUrl]);
+        Log::info("Sending SMS via PhilSMS", [
+            'recipient' => $recipient,
+            'url' => $this->apiUrl,
+            'sender_id' => $data['sender_id'],
+        ]);
 
         $ch = curl_init();
         
         curl_setopt($ch, CURLOPT_URL, $this->apiUrl);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             "Authorization: Bearer " . $this->apiToken,
@@ -84,17 +104,54 @@ class SmsService
         $successFlag = ($decodedResponse['success'] ?? null) === true;
         $messageText = strtolower($decodedResponse['message'] ?? '');
 
-        if ($httpCode >= 400 || $status === false && $successFlag === false && str_contains($messageText, 'error')) {
+        if (
+            $httpCode >= 400
+            || $status === 'error'
+            || ($status === false && $successFlag === false && str_contains($messageText, 'error'))
+            || str_contains($messageText, 'unauthenticated')
+        ) {
             Log::error("PhilSMS API Error ($httpCode): " . $response, ['recipient' => $recipient]);
-            return array_merge($decodedResponse ?? [], ['success' => false]);
+            return array_merge($decodedResponse ?? [], [
+                'success' => false,
+                'http_code' => $httpCode,
+            ]);
         }
 
         if ($status || $successFlag || $messageText === 'ok' || $messageText === 'success') {
             Log::info("SMS sent successfully to $recipient", ['response' => $decodedResponse]);
-            return array_merge($decodedResponse ?? [], ['success' => true]);
+            return array_merge($decodedResponse ?? [], [
+                'success' => true,
+                'http_code' => $httpCode,
+            ]);
         }
 
         Log::warning("PhilSMS API returned unknown response, treating as failure", ['response' => $decodedResponse, 'recipient' => $recipient]);
-        return array_merge($decodedResponse ?? [], ['success' => false]);
+        return array_merge($decodedResponse ?? [], [
+            'success' => false,
+            'http_code' => $httpCode,
+        ]);
+    }
+
+    private function normalizeRecipient(string $recipient): ?string
+    {
+        $normalized = preg_replace('/\D+/', '', trim($recipient));
+
+        if (!$normalized) {
+            return null;
+        }
+
+        if (str_starts_with($normalized, '0') && strlen($normalized) === 11) {
+            return '63' . substr($normalized, 1);
+        }
+
+        if (str_starts_with($normalized, '63') && strlen($normalized) === 12) {
+            return $normalized;
+        }
+
+        if (str_starts_with($normalized, '9') && strlen($normalized) === 10) {
+            return '63' . $normalized;
+        }
+
+        return null;
     }
 }
