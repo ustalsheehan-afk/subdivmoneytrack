@@ -1,5 +1,23 @@
 <IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
     RewriteEngine On
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Redirect trailing slashes when the target is not a directory.
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Route app requests through Laravel front controller.
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
 
     # Block direct access to hidden and sensitive project files if the project root is ever exposed.
     RewriteRule (^|/)(\.|\.env|artisan|composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|tailwind\.config\.js|webpack\.mix\.js|backup\.sql|debug_storage\.php|setup_jan2026\.php) - [F,L,NC]
