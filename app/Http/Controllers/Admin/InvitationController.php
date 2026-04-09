@@ -207,7 +207,18 @@ class InvitationController extends Controller
                     'sms_error' => $smsError,
                 ]);
 
-                return redirect()->route('admin.invitations.index')->with('success', 'Invitation created and email sent successfully. SMS delivery failed.');
+                $smsReason = 'SMS delivery failed.';
+                $normalizedSmsError = strtolower($smsError);
+
+                if (str_contains($normalizedSmsError, 'sender id') && str_contains($normalizedSmsError, 'authorized')) {
+                    $smsReason = 'SMS delivery failed: PhilSMS Sender ID is not authorized on your account.';
+                } elseif (str_contains($normalizedSmsError, 'unauthenticated')) {
+                    $smsReason = 'SMS delivery failed: PhilSMS API token authentication failed.';
+                } elseif ($smsError !== '') {
+                    $smsReason = "SMS delivery failed: {$smsError}";
+                }
+
+                return redirect()->route('admin.invitations.index')->with('success', "Invitation created and email sent successfully. {$smsReason}");
             }
 
             $failedChannels = [];

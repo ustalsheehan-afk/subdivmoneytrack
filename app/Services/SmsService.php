@@ -32,7 +32,7 @@ class SmsService
         $this->apiUrl = trim((string) (
             config('services.philsms.url')
             ?: env('PHILSMS_URL')
-            ?: 'https://app.philsms.com/api/v3/sms/send'
+            ?: 'https://dashboard.philsms.com/api/v3/sms/send'
         ));
         $this->senderId = trim((string) (
             config('services.philsms.sender_id')
@@ -126,23 +126,24 @@ class SmsService
         }
 
         if ($error === '' && str_contains($messageText, 'unauthenticated')) {
-            $fallbackUrl = null;
+            $candidateUrls = array_values(array_unique([
+                $requestUrl,
+                'https://dashboard.philsms.com/api/v3/sms/send',
+                'https://app.philsms.com/api/v3/sms/send',
+            ]));
 
-            if (str_contains($requestUrl, 'app.philsms.com')) {
-                $fallbackUrl = str_replace('app.philsms.com', 'api.philsms.com', $requestUrl);
-            } elseif (str_contains($requestUrl, 'api.philsms.com')) {
-                $fallbackUrl = str_replace('api.philsms.com', 'app.philsms.com', $requestUrl);
-            }
+            foreach ($candidateUrls as $candidateUrl) {
+                if ($candidateUrl === $requestUrl) {
+                    continue;
+                }
 
-            if ($fallbackUrl && $fallbackUrl !== $requestUrl) {
-                Log::warning('PhilSMS Unauthenticated, retrying with alternative URL.', [
+                Log::warning('PhilSMS unauthenticated, retrying with alternative URL.', [
                     'original_url' => $requestUrl,
-                    'fallback_url' => $fallbackUrl
+                    'fallback_url' => $candidateUrl,
                 ]);
 
-                [$response, $httpCode, $error] = $this->executeRequest($data, $activeToken, $fallbackUrl);
-                $requestUrl = $fallbackUrl;
-
+                [$response, $httpCode, $error] = $this->executeRequest($data, $activeToken, $candidateUrl);
+                $requestUrl = $candidateUrl;
                 $decodedResponse = json_decode((string) $response, true);
                 $messageText = strtolower((string) ($decodedResponse['message'] ?? ''));
 
@@ -157,6 +158,10 @@ class SmsService
                     [$response, $httpCode, $error] = $this->executeRequest($data, $activeToken, $requestUrl);
                     $decodedResponse = json_decode((string) $response, true);
                     $messageText = strtolower((string) ($decodedResponse['message'] ?? ''));
+                }
+
+                if (!str_contains($messageText, 'unauthenticated')) {
+                    break;
                 }
             }
         }
