@@ -78,6 +78,7 @@ class SmsService
             'recipient' => $recipient,
             'url' => $this->apiUrl,
             'sender_id' => $data['sender_id'] ?? '(using account default)',
+            'token_prefix' => substr($this->apiToken, 0, 8) . '...',
             'message_preview' => Str::limit($message, 50),
         ]);
 
@@ -101,10 +102,13 @@ class SmsService
         if (
             $error === ''
             && isset($data['sender_id'])
-            && str_contains($messageText, 'sender id')
-            && str_contains($messageText, 'not authorized')
+            && (
+                (str_contains($messageText, 'sender id') && str_contains($messageText, 'not authorized'))
+                || str_contains($messageText, 'unauthenticated')
+            )
         ) {
-            Log::warning('PhilSMS sender_id is not authorized. Retrying without sender_id.', [
+            Log::warning('PhilSMS request failed, retrying without sender_id.', [
+                'error_message' => $messageText,
                 'sender_id' => $data['sender_id'],
                 'recipient' => $recipient,
             ]);
@@ -115,6 +119,19 @@ class SmsService
             [$response, $httpCode, $error] = $this->executeRequest($fallbackData, $this->apiToken);
             $decodedResponse = json_decode((string) $response, true);
             $messageText = strtolower((string) ($decodedResponse['message'] ?? ''));
+        }
+
+        if ($error === '' && str_contains($messageText, 'unauthenticated')) {
+            $fallbackUrl = str_replace('app.philsms.com', 'api.philsms.com', $this->apiUrl);
+            if ($fallbackUrl !== $this->apiUrl) {
+                Log::warning('PhilSMS Unauthenticated, retrying with alternative URL.', [
+                    'original_url' => $this->apiUrl,
+                    'fallback_url' => $fallbackUrl
+                ]);
+                [$response, $httpCode, $error] = $this->executeRequest($data, $this->apiToken);
+                $decodedResponse = json_decode((string) $response, true);
+                $messageText = strtolower((string) ($decodedResponse['message'] ?? ''));
+            }
         }
 
         // Handle errors or log response
