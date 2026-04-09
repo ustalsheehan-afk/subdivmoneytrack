@@ -39,40 +39,6 @@
     }
 }">
 
-    {{-- FLASH MESSAGES --}}
-    @if(session('success'))
-    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6">
-        <div class="flex items-center gap-3">
-            <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                <i class="bi bi-check-circle text-emerald-600"></i>
-            </div>
-            <p class="text-sm font-medium text-emerald-800">{{ session('success') }}</p>
-        </div>
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
-        <div class="flex items-center gap-3">
-            <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                <i class="bi bi-exclamation-triangle text-red-600"></i>
-            </div>
-            <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
-        </div>
-    </div>
-    @endif
-
-    @if(session('warning'))
-    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-        <div class="flex items-center gap-3">
-            <div class="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
-                <i class="bi bi-exclamation-circle text-amber-600"></i>
-            </div>
-            <p class="text-sm font-medium text-amber-800">{{ session('warning') }}</p>
-        </div>
-    </div>
-    @endif
-
     @if($stats['expiring_soon'] > 0)
     <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
         <div class="flex items-center gap-3">

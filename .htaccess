@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Block direct access to hidden and sensitive project files if the project root is ever exposed.
+    RewriteRule (^|/)(\.|\.env|artisan|composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|tailwind\.config\.js|webpack\.mix\.js|backup\.sql|debug_storage\.php|setup_jan2026\.php) - [F,L,NC]
+</IfModule>
+
+<IfModule mod_authz_core.c>
+    <FilesMatch "^(\.|\.env|artisan|composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|tailwind\.config\.js|webpack\.mix\.js|backup\.sql|debug_storage\.php|setup_jan2026\.php)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+<IfModule !mod_authz_core.c>
+    <FilesMatch "^(\.|\.env|artisan|composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|tailwind\.config\.js|webpack\.mix\.js|backup\.sql|debug_storage\.php|setup_jan2026\.php)$">
+        Deny from all
+    </FilesMatch>
+</IfModule>
