@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 class SmsService
 {
     protected $apiToken;
+    protected $apiKey;
     protected $apiUrl;
     protected $senderId;
 
@@ -22,6 +23,10 @@ class SmsService
             config('services.philsms.token')
             ?: config('services.philsms.key')
             ?: env('PHILSMS_API_TOKEN')
+            ?: env('PHILSMS_API_KEY')
+        ));
+        $this->apiKey = trim((string) (
+            config('services.philsms.key')
             ?: env('PHILSMS_API_KEY')
         ));
         $this->apiUrl = trim((string) (
@@ -70,34 +75,28 @@ class SmsService
             'sender_id' => $data['sender_id'],
         ]);
 
-        $ch = curl_init();
-        
-        curl_setopt($ch, CURLOPT_URL, $this->apiUrl);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            "Authorization: Bearer " . $this->apiToken,
-            "Content-Type: application/json",
-            "Accept: application/json"
-        ]);
+        [$response, $httpCode, $error] = $this->executeRequest($data, $this->apiToken);
 
-        // Execute cURL
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        
-        curl_close($ch);
+        $decodedResponse = json_decode((string) $response, true);
+        $messageText = strtolower((string) ($decodedResponse['message'] ?? ''));
+
+        if (
+            $error === ''
+            && str_contains($messageText, 'unauthenticated')
+            && $this->apiKey !== ''
+            && $this->apiKey !== $this->apiToken
+        ) {
+            Log::warning('PhilSMS token rejected, retrying with PHILSMS_API_KEY.');
+            [$response, $httpCode, $error] = $this->executeRequest($data, $this->apiKey);
+            $decodedResponse = json_decode((string) $response, true);
+            $messageText = strtolower((string) ($decodedResponse['message'] ?? ''));
+        }
 
         // Handle errors or log response
         if ($error) {
             Log::error("PhilSMS cURL Error: " . $error, ['recipient' => $recipient]);
             return ['success' => false, 'error' => $error];
         }
-
-        $decodedResponse = json_decode($response, true);
         
         Log::info("PhilSMS Response", [
             'httpCode' => $httpCode,
@@ -136,6 +135,31 @@ class SmsService
             'success' => false,
             'http_code' => $httpCode,
         ]);
+    }
+
+    private function executeRequest(array $data, string $token): array
+    {
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $this->apiUrl);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . trim($token),
+            'Content-Type: application/json',
+            'Accept: application/json',
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+
+        curl_close($ch);
+
+        return [(string) $response, (int) $httpCode, (string) $error];
     }
 
     private function normalizeRecipient(string $recipient): ?string

@@ -36,11 +36,11 @@ return [
     'mailers' => [
         'smtp' => [
             'transport' => 'smtp',
-            'host' => env('MAIL_HOST', 'smtp.mailgun.org'),
+            'host' => trim((string) env('MAIL_HOST', 'smtp.mailgun.org')),
             'port' => env('MAIL_PORT', 587),
-            'encryption' => env('MAIL_ENCRYPTION', 'tls'),
-            'username' => env('MAIL_USERNAME'),
-            'password' => env('MAIL_PASSWORD'),
+            'encryption' => trim((string) env('MAIL_ENCRYPTION', 'tls')),
+            'username' => trim((string) env('MAIL_USERNAME', '')),
+            'password' => trim((string) env('MAIL_PASSWORD', '')),
             'timeout' => env('MAIL_TIMEOUT', 30),
             'local_domain' => env('MAIL_EHLO_DOMAIN'),
         ],
@@ -92,8 +92,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => trim((string) env('MAIL_FROM_ADDRESS', 'hello@example.com')),
+        'name' => trim((string) env('MAIL_FROM_NAME', 'Example')),
     ],
 
     /*

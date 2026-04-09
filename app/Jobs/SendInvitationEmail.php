@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -37,7 +36,7 @@ class SendInvitationEmail implements ShouldQueue
      *
      * @return void
      */
-    public function handle()
+    public function handle(): array
     {
         $platformName = config('app.name', 'Subdivision Dues System');
         $name = trim(implode(' ', array_filter([
@@ -54,7 +53,11 @@ class SendInvitationEmail implements ShouldQueue
         try {
             if (!$email) {
                 Log::warning("Skipping invitation email for invitation {$this->invitation->id}: No email address");
-                return;
+                return [
+                    'channel' => 'email',
+                    'success' => false,
+                    'error' => 'No email address provided.',
+                ];
             }
 
             Mail::raw($message, function ($m) use ($email, $subject) {
@@ -68,14 +71,24 @@ class SendInvitationEmail implements ShouldQueue
             $this->invitation->update([
                 'email_status' => Invitation::DELIVERY_SENT
             ]);
+
+            return [
+                'channel' => 'email',
+                'success' => true,
+                'error' => null,
+            ];
         } catch (Throwable $e) {
             Log::error("Failed to send invitation email to {$email}: " . $e->getMessage());
             
             $this->invitation->update([
                 'email_status' => Invitation::DELIVERY_FAILED
             ]);
-            
-            throw $e;
+
+            return [
+                'channel' => 'email',
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
         }
     }
 }

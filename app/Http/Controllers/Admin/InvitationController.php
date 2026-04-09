@@ -176,9 +176,32 @@ class InvitationController extends Controller
         // Send invitation via Email and SMS
         $notificationService = new NotificationService();
         $registrationLink = route('register.invitation', ['token' => $invitation->token]);
-        $notificationService->sendInvitation($invitation, $registrationLink);
+        $delivery = $notificationService->sendInvitation($invitation, $registrationLink);
         
-        Log::info('Invitation notification dispatched', ['invitation_id' => $invitation->id]);
+        Log::info('Invitation notification dispatched', [
+            'invitation_id' => $invitation->id,
+            'delivery' => $delivery,
+        ]);
+
+        $emailAttempted = (bool) ($delivery['email']['attempted'] ?? false);
+        $emailSuccess = (bool) ($delivery['email']['success'] ?? false);
+        $smsAttempted = (bool) ($delivery['sms']['attempted'] ?? false);
+        $smsSuccess = (bool) ($delivery['sms']['success'] ?? false);
+
+        if (($emailAttempted && !$emailSuccess) || ($smsAttempted && !$smsSuccess)) {
+            $failedChannels = [];
+
+            if ($emailAttempted && !$emailSuccess) {
+                $failedChannels[] = 'Email failed';
+            }
+
+            if ($smsAttempted && !$smsSuccess) {
+                $smsError = trim((string) ($delivery['sms']['error'] ?? ''));
+                $failedChannels[] = $smsError !== '' ? "SMS failed ({$smsError})" : 'SMS failed';
+            }
+
+            return redirect()->route('admin.invitations.index')->with('error', 'Invitation created, but delivery issue: ' . implode(' | ', $failedChannels));
+        }
 
         return redirect()->route('admin.invitations.index')->with('success', 'Invitation created and notification sent successfully.');
     }
@@ -203,14 +226,28 @@ class InvitationController extends Controller
         // Send invitation via Email and SMS
         $notificationService = new NotificationService();
         $registrationLink = route('register.invitation', ['token' => $invitation->token]);
-        $notificationService->sendInvitation($invitation, $registrationLink);
+        $delivery = $notificationService->sendInvitation($invitation, $registrationLink);
         
-        Log::info('Invitation re-sent', ['invitation_id' => $invitation->id]);
+        Log::info('Invitation re-sent', [
+            'invitation_id' => $invitation->id,
+            'delivery' => $delivery,
+        ]);
+
+        $errors = [];
+
+        if (($delivery['email']['attempted'] ?? false) && !($delivery['email']['success'] ?? false)) {
+            $errors[] = 'Email failed';
+        }
+
+        if (($delivery['sms']['attempted'] ?? false) && !($delivery['sms']['success'] ?? false)) {
+            $smsError = trim((string) ($delivery['sms']['error'] ?? ''));
+            $errors[] = $smsError !== '' ? "SMS failed ({$smsError})" : 'SMS failed';
+        }
 
         return response()->json([
-            'success' => true,
+            'success' => empty($errors),
             'link' => route('register.invitation', ['token' => $invitation->token]),
-            'message' => 'Invitation resent.'
+            'message' => empty($errors) ? 'Invitation resent.' : ('Invitation resent with delivery issues: ' . implode(' | ', $errors))
         ]);
     }
 

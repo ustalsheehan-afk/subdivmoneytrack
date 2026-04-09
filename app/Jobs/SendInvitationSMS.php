@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -37,7 +36,7 @@ class SendInvitationSMS implements ShouldQueue
      *
      * @return void
      */
-    public function handle()
+    public function handle(): array
     {
         $platformName = config('app.name', 'Subdivision Dues System');
         $phone = $this->invitation->phone;
@@ -50,20 +49,30 @@ class SendInvitationSMS implements ShouldQueue
             // Skip if no phone number
             if (!$phone) {
                 Log::warning("Skipping SMS for invitation {$this->invitation->id}: No phone number");
-                return;
+                return [
+                    'channel' => 'sms',
+                    'success' => false,
+                    'error' => 'No phone number provided.',
+                ];
             }
 
             // Send SMS via PhilSMS
             $smsService = new SmsService();
             $response = $smsService->send($phone, $message);
 
-            $success = !empty($response['success']) || strtolower($response['status'] ?? '') === 'success';
+            $success = ($response['success'] ?? false) === true || strtolower((string) ($response['status'] ?? '')) === 'success';
 
             if ($success) {
                 $this->invitation->update([
                     'sms_status' => Invitation::DELIVERY_SENT
                 ]);
                 Log::info("SMS sent to {$phone}", ['response' => $response]);
+
+                return [
+                    'channel' => 'sms',
+                    'success' => true,
+                    'error' => null,
+                ];
             } else {
                 $this->invitation->update([
                     'sms_status' => Invitation::DELIVERY_FAILED
@@ -72,6 +81,12 @@ class SendInvitationSMS implements ShouldQueue
                     'response' => $response,
                     'invitation_id' => $this->invitation->id,
                 ]);
+
+                return [
+                    'channel' => 'sms',
+                    'success' => false,
+                    'error' => (string) ($response['message'] ?? $response['error'] ?? 'SMS delivery failed.'),
+                ];
             }
         } catch (Throwable $e) {
             Log::error("Exception sending SMS to {$phone}: " . $e->getMessage());
@@ -79,8 +94,12 @@ class SendInvitationSMS implements ShouldQueue
             $this->invitation->update([
                 'sms_status' => Invitation::DELIVERY_FAILED
             ]);
-            
-            throw $e;
+
+            return [
+                'channel' => 'sms',
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
         }
     }
 }

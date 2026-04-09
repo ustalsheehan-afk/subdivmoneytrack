@@ -30,28 +30,56 @@ class NotificationService
     /**
      * Send an invitation via Email and SMS using background jobs.
      */
-    public function sendInvitation(Invitation $invitation, string $registrationLink)
+    public function sendInvitation(Invitation $invitation, string $registrationLink): array
     {
         $sendAsync = (bool) env('INVITATION_NOTIFICATIONS_ASYNC', false);
+        $results = [
+            'email' => [
+                'attempted' => false,
+                'success' => false,
+                'error' => null,
+            ],
+            'sms' => [
+                'attempted' => false,
+                'success' => false,
+                'error' => null,
+            ],
+        ];
 
         // 1. Email
         if ($invitation->email) {
-            $sendAsync
-                ? SendInvitationEmail::dispatch($invitation, $registrationLink)
-                : SendInvitationEmail::dispatchSync($invitation, $registrationLink);
+            $results['email']['attempted'] = true;
+
+            if ($sendAsync) {
+                SendInvitationEmail::dispatch($invitation, $registrationLink);
+                $results['email']['success'] = true;
+            } else {
+                $emailResult = (new SendInvitationEmail($invitation, $registrationLink))->handle();
+                $results['email']['success'] = (bool) ($emailResult['success'] ?? false);
+                $results['email']['error'] = $emailResult['error'] ?? null;
+            }
         }
 
         // 2. SMS
         if ($invitation->phone) {
-            $sendAsync
-                ? SendInvitationSMS::dispatch($invitation, $registrationLink)
-                : SendInvitationSMS::dispatchSync($invitation, $registrationLink);
+            $results['sms']['attempted'] = true;
+
+            if ($sendAsync) {
+                SendInvitationSMS::dispatch($invitation, $registrationLink);
+                $results['sms']['success'] = true;
+            } else {
+                $smsResult = (new SendInvitationSMS($invitation, $registrationLink))->handle();
+                $results['sms']['success'] = (bool) ($smsResult['success'] ?? false);
+                $results['sms']['error'] = $smsResult['error'] ?? null;
+            }
         }
 
         // 3. Update last sent timestamp
         $invitation->update([
             'last_sent_at' => Carbon::now()
         ]);
+
+        return $results;
     }
 
     public function notifyResident(
