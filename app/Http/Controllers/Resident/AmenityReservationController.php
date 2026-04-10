@@ -15,6 +15,7 @@ use App\Traits\HandlesReservationConflict;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -106,7 +107,7 @@ class AmenityReservationController extends Controller
                     ]);
                 }
             } catch (\Exception $e) {
-                \Log::warning('Failed to create admin notifications for reservation: ' . $e->getMessage());
+                Log::warning('Failed to create admin notifications for reservation: ' . $e->getMessage());
             }
 
             return redirect()->route('resident.amenities.confirmation', $reservation->id);

@@ -32,20 +32,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="glass-card border-emerald-100 bg-emerald-50/50 p-6 animate-fade-in">
-            <div class="flex items-center gap-3 text-emerald-700">
-                <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-200">
-                    <i class="bi bi-check-lg text-lg"></i>
-                </div>
-                <div>
-                    <p class="text-[10px] font-black text-emerald-900 uppercase tracking-widest">Operation Successful</p>
-                    <p class="text-sm font-bold text-emerald-600">{{ session('success') }}</p>
-                </div>
-            </div>
-        </div>
-    @endif
-
     {{-- ===================== --}}
     {{-- TABLE CONTAINER --}}
     {{-- ===================== --}}

@@ -147,8 +147,8 @@ Route::post('reset-password', [PasswordResetController::class, 'update'])
     ->name('password.update');
 
 // Legacy redirects
-Route::get('admin/login', function() { return redirect()->route('login'); });
-Route::get('resident/login', function() { return redirect()->route('login'); });
+Route::get('admin/login', function() { return redirect()->route('login'); })->name('admin.login');
+Route::get('resident/login', function() { return redirect()->route('login'); })->name('resident.login');
 Route::get('resident/forgot-password', function() { return redirect()->route('password.request'); });
 
 /*

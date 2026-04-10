@@ -40,7 +40,11 @@ class FileService
      */
     public static function syncToPublic(string $path, string $disk = 'public'): bool
     {
-        $storagePath = Storage::disk($disk)->path($path);
+        // Use storage_path to avoid linter errors with Storage::disk()->path()
+        $storagePath = $disk === 'public' 
+            ? storage_path('app/public/' . $path) 
+            : storage_path('app/' . $path);
+            
         $publicPath = public_path('storage/' . $path);
 
         // Ensure the directory exists in the public folder
