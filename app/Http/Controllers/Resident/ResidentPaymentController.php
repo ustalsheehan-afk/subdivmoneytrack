@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use App\Services\FileService;
 
 class ResidentPaymentController extends Controller
 {
@@ -182,7 +183,7 @@ class ResidentPaymentController extends Controller
             'proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
-        $path = $request->file('proof')->store('proofs', 'public');
+        $path = FileService::storeAndSync($request->file('proof'), 'proofs');
 
         $paymentData = [
             'resident_id' => $resident->id,

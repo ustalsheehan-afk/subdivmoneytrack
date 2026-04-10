@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Amenity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Services\FileService;
 
 class AmenityController extends Controller
 {
@@ -55,11 +56,11 @@ class AmenityController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('amenities/images', 'public');
+            $validated['image'] = FileService::storeAndSync($request->file('image'), 'amenities/images');
         }
 
         if ($request->hasFile('pdf_rules')) {
-            $validated['rules_path'] = $request->file('pdf_rules')->store('amenities/rules', 'public');
+            $validated['rules_path'] = FileService::storeAndSync($request->file('pdf_rules'), 'amenities/rules');
         }
 
         // Ensure status is stored as string
@@ -114,18 +115,14 @@ class AmenityController extends Controller
 
         if ($request->hasFile('image')) {
             // Delete old image
-            if ($amenity->image) {
-                Storage::disk('public')->delete($amenity->image);
-            }
-            $validated['image'] = $request->file('image')->store('amenities/images', 'public');
+            FileService::deleteAndSync($amenity->image);
+            $validated['image'] = FileService::storeAndSync($request->file('image'), 'amenities/images');
         }
 
         if ($request->hasFile('pdf_rules')) {
             // Delete old pdf
-            if ($amenity->pdf_rules) {
-                Storage::disk('public')->delete($amenity->pdf_rules);
-            }
-            $validated['pdf_rules'] = $request->file('pdf_rules')->store('amenities/rules', 'public');
+            FileService::deleteAndSync($amenity->pdf_rules);
+            $validated['pdf_rules'] = FileService::storeAndSync($request->file('pdf_rules'), 'amenities/rules');
         }
 
         // Handle status (support maintenance mode)
@@ -149,12 +146,8 @@ class AmenityController extends Controller
      */
     public function destroy(Amenity $amenity)
     {
-        if ($amenity->image) {
-            Storage::disk('public')->delete($amenity->image);
-        }
-        if ($amenity->pdf_rules) {
-            Storage::disk('public')->delete($amenity->pdf_rules);
-        }
+        FileService::deleteAndSync($amenity->image);
+        FileService::deleteAndSync($amenity->pdf_rules);
         
         $amenity->delete();
 

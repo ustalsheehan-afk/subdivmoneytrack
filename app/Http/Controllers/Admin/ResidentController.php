@@ -17,6 +17,7 @@ use Throwable;
 use App\Models\Invitation;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use App\Services\FileService;
 
 use App\Traits\LogsActivity;
 
@@ -150,7 +151,7 @@ class ResidentController extends Controller
                 // 2. Handle Photo Upload
                 $photoPath = null;
                 if ($request->hasFile('photo')) {
-                    $photoPath = $request->file('photo')->store('residents', 'public');
+                    $photoPath = FileService::storeAndSync($request->file('photo'), 'residents');
                 }
 
                 // 3. Create Resident Profile
@@ -242,10 +243,8 @@ class ResidentController extends Controller
         unset($data['password']);
 
         if ($request->hasFile('photo')) {
-            if ($resident->photo && Storage::disk('public')->exists($resident->photo)) {
-                Storage::disk('public')->delete($resident->photo);
-            }
-            $data['photo'] = $request->file('photo')->store('residents', 'public');
+            FileService::deleteAndSync($resident->photo);
+            $data['photo'] = FileService::storeAndSync($request->file('photo'), 'residents');
         }
 
         $resident->update($data);
@@ -262,9 +261,7 @@ class ResidentController extends Controller
         $name = $resident->full_name;
         $id = $resident->id;
 
-        if ($resident->photo && Storage::disk('public')->exists($resident->photo)) {
-            Storage::disk('public')->delete($resident->photo);
-        }
+        FileService::deleteAndSync($resident->photo);
 
         $resident->delete();
 
@@ -290,9 +287,7 @@ class ResidentController extends Controller
         $residents = Resident::whereIn('id', $ids)->get();
 
         foreach ($residents as $resident) {
-            if ($resident->photo && Storage::disk('public')->exists($resident->photo)) {
-                Storage::disk('public')->delete($resident->photo);
-            }
+            FileService::deleteAndSync($resident->photo);
             $resident->delete();
         }
 

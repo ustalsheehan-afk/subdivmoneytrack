@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use App\Services\FileService;
 
 use App\Traits\LogsActivity;
 
@@ -354,7 +355,7 @@ class PaymentController extends Controller
 
         $proofPath = null;
         if ($request->hasFile('proof')) {
-            $proofPath = $request->file('proof')->store('temp_proofs', 'public');
+            $proofPath = FileService::storeAndSync($request->file('proof'), 'temp_proofs');
         }
 
         $resident = \App\Models\Resident::findOrFail($validated['resident_id']);
@@ -389,7 +390,14 @@ class PaymentController extends Controller
 
         if ($data['temp_proof']) {
             $newPath = str_replace('temp_proofs/', 'payments/', $data['temp_proof']);
-            \Storage::disk('public')->move($data['temp_proof'], $newPath);
+            
+            // Move in storage
+            Storage::disk('public')->move($data['temp_proof'], $newPath);
+            
+            // Sync to public (delete old temp, copy new payment)
+            FileService::deleteAndSync($data['temp_proof']);
+            FileService::syncToPublic($newPath);
+
             $payment->proof = $newPath;
         }
 
@@ -443,10 +451,8 @@ class PaymentController extends Controller
         ]);
 
         if ($request->hasFile('proof')) {
-            if ($payment->proof) {
-                Storage::disk('public')->delete($payment->proof);
-            }
-            $data['proof'] = $request->file('proof')->store('proofs', 'public');
+            FileService::deleteAndSync($payment->proof);
+            $data['proof'] = FileService::storeAndSync($request->file('proof'), 'proofs');
         }
 
         $payment->update($data);
@@ -463,9 +469,7 @@ class PaymentController extends Controller
     {
         $payment = Payment::findOrFail($id);
 
-        if ($payment->proof) {
-            Storage::disk('public')->delete($payment->proof);
-        }
+        FileService::deleteAndSync($payment->proof);
 
         $payment->delete();
 

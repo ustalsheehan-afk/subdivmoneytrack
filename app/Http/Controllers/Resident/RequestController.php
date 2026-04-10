@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Resident;
 use App\Http\Controllers\Controller;
 use App\Models\ServiceRequest;
 use App\Models\Resident;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Services\FileService;
 
 class RequestController extends Controller
 {
@@ -67,7 +68,7 @@ class RequestController extends Controller
         // Handle Photo Upload
         $photoPath = null;
         if ($request->hasFile('photo')) {
-            $photoPath = $request->file('photo')->store('requests', 'public');
+            $photoPath = FileService::storeAndSync($request->file('photo'), 'requests');
         }
 
         // Try to find amenity if type starts with "Amenity: "

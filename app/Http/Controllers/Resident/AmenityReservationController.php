@@ -9,6 +9,7 @@ use App\Models\Notification;
 use App\Models\ReservationCancellationReason;
 use App\Models\User;
 use App\Services\AmenityReservationBookingService;
+use App\Services\FileService;
 use App\Services\ReservationCancellationService;
 use App\Traits\HandlesReservationConflict;
 use Illuminate\Http\Request;
@@ -63,7 +64,7 @@ class AmenityReservationController extends Controller
             // Handle File Upload
             $proofPath = null;
             if ($request->hasFile('payment_proof')) {
-                $proofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
+                $proofPath = FileService::storeAndSync($request->file('payment_proof'), 'payment_proofs');
             }
 
             $equipment = [];
@@ -165,7 +166,8 @@ class AmenityReservationController extends Controller
             'payment_reference_no' => 'required|string|max:50',
         ]);
 
-        $path = $request->file('payment_proof')->store('payment_proofs', 'public');
+        FileService::deleteAndSync($reservation->payment_proof);
+        $path = FileService::storeAndSync($request->file('payment_proof'), 'payment_proofs');
 
         $reservation->update([
             'payment_status' => 'submitted',
