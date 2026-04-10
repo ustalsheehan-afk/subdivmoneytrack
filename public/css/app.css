@@ -1,10 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --ui-density-scale: 0.875;
+}
+
+html {
+    font-size: calc(16px * var(--ui-density-scale));
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+html[data-ui-density="comfortable"] {
+    --ui-density-scale: 0.875;
+}
+
+html[data-ui-density="compact"] {
+    --ui-density-scale: 0.8125;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f8fafc;
     color: #1e293b;
     margin: 0;
     padding: 0;
+    font-size: 1rem;
+    line-height: 1.5;
 }
+
+.ui-density-toggle {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 9999;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 9999px;
+    background: rgba(15, 23, 42, 0.92);
+    color: #f8fafc;
+    font-weight: 600;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.ui-density-toggle:hover {
+    transform: translateY(-1px);
+    background: rgba(15, 23, 42, 0.98);
+    border-color: rgba(148, 163, 184, 0.42);
+}
+
+.ui-density-toggle:focus-visible {
+    outline: 2px solid #38bdf8;
+    outline-offset: 2px;
+}
+
+.ui-density-toggle__label {
+    font-size: 0.875rem;
+    letter-spacing: 0.01em;
+}
+
+.ui-density-toggle__state {
+    padding: 0.2rem 0.5rem;
+    border-radius: 9999px;
+    background: rgba(148, 163, 184, 0.15);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
 
 nav {
     background-color: #1e3a8a;

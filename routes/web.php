@@ -73,6 +73,33 @@ Route::get('/', function () {
 
 // ✅ FIXED: Invitation Registration (TOKEN REQUIRED)
 Route::get('/register', [InvitationRegistrationController::class, 'show'])->name('register.invitation');
+
+/*
+|--------------------------------------------------------------------------
+| MAINTENANCE ROUTE (SHARED HOSTING FIX)
+|--------------------------------------------------------------------------
+*/
+Route::get('/sys-maintenance', function () {
+    if (!app()->environment('production')) {
+        return 'Not in production environment.';
+    }
+
+    try {
+        // 1. Create Storage Link
+        \Illuminate\Support\Facades\Artisan::call('storage:link');
+        $output1 = \Illuminate\Support\Facades\Artisan::output();
+
+        // 2. Clear Caches
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+        \Illuminate\Support\Facades\Artisan::call('route:clear');
+        $output2 = "Caches cleared successfully.";
+
+        return "<h1>System Maintenance</h1><pre>$output1\n$output2</pre>";
+    } catch (\Exception $e) {
+        return "Error: " . $e->getMessage();
+    }
+})->middleware('web');
 Route::post('/register', [InvitationRegistrationController::class, 'register'])->name('register.invitation.submit');
 
 Route::get('/registration-success', function() {
@@ -280,6 +307,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('invitations', [InvitationController::class, 'store'])->name('invitations.store');
     Route::post('residents/invite', [InvitationController::class, 'store'])->name('residents.invite'); // Alias for backward compatibility
     Route::get('invitations', [InvitationController::class, 'index'])->name('invitations.index');
+    Route::get('invitations/export', [InvitationController::class, 'export'])->name('invitations.export');
     Route::get('invitations/{id}', [InvitationController::class, 'show'])->name('invitations.show');
     Route::post('invitations/{id}/resend', [InvitationController::class, 'resend'])->name('invitations.resend');
     Route::post('invitations/{id}/renew', [InvitationController::class, 'renew'])->name('invitations.renew');

@@ -16,6 +16,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
         <!-- Styles -->
+        <script src="<?php echo e(asset('js/ui-density.js')); ?>"></script>
         <link rel="stylesheet" href="<?php echo e(asset('css/app.css')); ?>">
 
         <!-- Scripts -->

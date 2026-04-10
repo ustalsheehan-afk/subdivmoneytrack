@@ -361,8 +361,8 @@
             .hero-video-wrapper video { display: none; }
             .hero {
                 background: linear-gradient(rgba(13, 31, 28, 0.8), rgba(13, 31, 28, 0.8)), 
-                            url('/images/hero-fallback.jpg') center center no-repeat;
-                background-size: cover;
+                            url('{{ asset('images/hero-fallback.jpg') }}') center center no-repeat !important;
+                background-size: cover !important;
             }
         }
     </style>
@@ -387,7 +387,7 @@
     <section class="hero">
         <div class="hero-video-wrapper">
             <video autoplay muted loop playsinline id="heroVideo">
-                <source src="/images/landing-page.mp4" type="video/mp4">
+                <source src="{{ asset('images/landing-page.mp4') }}" type="video/mp4">
             </video>
         </div>
         <div class="hero-overlay"></div>
@@ -399,9 +399,6 @@
             <div class="hero-actions">
                 <a href="{{ route('login') }}" class="btn-hero btn-primary">
                     <i class="bi bi-rocket-takeoff"></i> Get Started
-                </a>
-                <a href="#features" class="btn-hero btn-outline">
-                    Explore Features
                 </a>
             </div>
         </div>

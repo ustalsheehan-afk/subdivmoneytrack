@@ -24,22 +24,79 @@ class InvitationController extends Controller
     /**
      * List invitations (Dashboard)
      */
-    public function index()
+    public function index(Request $request)
     {
-        $invitations = Invitation::orderBy('created_at', 'desc')->get();
+        $baseQuery = $this->invitationQuery($request);
+        $filteredCount = (clone $baseQuery)->count();
+
+        $invitations = (clone $baseQuery)
+            ->orderByDesc('created_at')
+            ->paginate(10)
+            ->withQueryString();
+
+        $allInvitations = Invitation::query()->get();
 
         $stats = [
-            'all' => $invitations->count(),
-            'pending' => $invitations->where('status', Invitation::STATUS_PENDING)->count(),
-            'accepted' => $invitations->where('status', Invitation::STATUS_ACCEPTED)->count(),
-            'expired' => $invitations->where('status', Invitation::STATUS_EXPIRED)->count(),
-            'expiring_soon' => $invitations->where('status', Invitation::STATUS_PENDING)
+            'all' => $allInvitations->count(),
+            'pending' => $allInvitations->where('status', Invitation::STATUS_PENDING)->count(),
+            'accepted' => $allInvitations->where('status', Invitation::STATUS_ACCEPTED)->count(),
+            'expired' => $allInvitations->where('status', Invitation::STATUS_EXPIRED)->count(),
+            'expiring_soon' => $allInvitations->where('status', Invitation::STATUS_PENDING)
                 ->where('expires_at', '<=', now()->addHours(24))
                 ->where('expires_at', '>', now())
                 ->count(),
         ];
 
-        return view('admin.invitations.index', compact('invitations', 'stats'));
+        return view('admin.invitations.index', compact('invitations', 'stats', 'filteredCount'));
+    }
+
+    public function export(Request $request)
+    {
+        $filename = 'invitations-' . now()->format('Ymd-His') . '.csv';
+
+        $query = $this->invitationQuery($request)
+            ->orderByDesc('created_at');
+
+        return response()->streamDownload(function () use ($query) {
+            $output = fopen('php://output', 'w');
+            fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            fputcsv($output, [
+                'ID',
+                'First Name',
+                'Last Name',
+                'Email',
+                'Phone',
+                'Status',
+                'Email Delivery',
+                'SMS Delivery',
+                'Expires At',
+                'Last Sent At',
+                'Created At',
+            ]);
+
+            $query->chunk(200, function ($invitations) use ($output) {
+                foreach ($invitations as $invitation) {
+                    fputcsv($output, [
+                        $invitation->id,
+                        $invitation->first_name,
+                        $invitation->last_name,
+                        $invitation->email,
+                        $invitation->phone,
+                        $invitation->status,
+                        $invitation->email_status,
+                        $invitation->sms_status,
+                        optional($invitation->expires_at)->format('Y-m-d H:i:s'),
+                        optional($invitation->last_sent_at)->format('Y-m-d H:i:s'),
+                        optional($invitation->created_at)->format('Y-m-d H:i:s'),
+                    ]);
+                }
+            });
+
+            fclose($output);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 
     /**
@@ -48,6 +105,10 @@ class InvitationController extends Controller
     public function show($id)
     {
         $invitation = Invitation::findOrFail($id);
+
+        $daysLeft = $invitation->expires_at
+            ? now()->diffInDays($invitation->expires_at, false)
+            : null;
         
         return response()->json([
             'success' => true,
@@ -60,10 +121,15 @@ class InvitationController extends Controller
                 'token' => $invitation->token,
                 'status' => $invitation->status,
                 'is_expired' => $invitation->isExpired(),
+                'days_left' => $daysLeft,
                 'expires_at' => $invitation->expires_at->format('M d, Y h:i A'),
                 'last_sent' => $invitation->last_sent_at ? $invitation->last_sent_at->diffForHumans() : 'Never',
                 'registration_link' => route('register.invitation', ['token' => $invitation->token]),
                 'platform_name' => config('app.name', 'Subdivision Dues System'),
+                'email_status' => $invitation->email_status ?? Invitation::DELIVERY_PENDING,
+                'sms_status' => $invitation->sms_status ?? Invitation::DELIVERY_PENDING,
+                'created_at' => $invitation->created_at->format('M d, Y h:i A'),
+                'updated_at' => $invitation->updated_at->format('M d, Y h:i A'),
                 'activity' => [
                     [
                         'icon_bg' => 'bg-gray-900',
@@ -364,5 +430,65 @@ class InvitationController extends Controller
         $invitation->update(['status' => Invitation::STATUS_CANCELLED]);
 
         return response()->json(['success' => true, 'message' => 'Cancelled.']);
+    }
+
+    private function invitationQuery(Request $request)
+    {
+        $query = Invitation::query();
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->search);
+
+            $query->where(function ($builder) use ($search) {
+                $builder->where('first_name', 'like', '%' . $search . '%')
+                    ->orWhere('last_name', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%')
+                    ->orWhere('phone', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($request->filled('status') && in_array($request->status, [
+            Invitation::STATUS_PENDING,
+            Invitation::STATUS_ACCEPTED,
+            Invitation::STATUS_EXPIRED,
+            Invitation::STATUS_CANCELLED,
+        ], true)) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('delivery')) {
+            match ($request->delivery) {
+                'email_sent' => $query->where('email_status', Invitation::DELIVERY_SENT),
+                'sms_sent' => $query->where('sms_status', Invitation::DELIVERY_SENT),
+                'pending' => $query->where(function ($builder) {
+                    $builder->where('email_status', Invitation::DELIVERY_PENDING)
+                        ->orWhere('sms_status', Invitation::DELIVERY_PENDING);
+                }),
+                'failed' => $query->where(function ($builder) {
+                    $builder->where('email_status', Invitation::DELIVERY_FAILED)
+                        ->orWhere('sms_status', Invitation::DELIVERY_FAILED);
+                }),
+                default => null,
+            };
+        }
+
+        if ($request->filled('expiry')) {
+            match ($request->expiry) {
+                'active' => $query->where('status', Invitation::STATUS_PENDING)
+                    ->where('expires_at', '>', now()),
+                'expiring_soon' => $query->where('status', Invitation::STATUS_PENDING)
+                    ->whereBetween('expires_at', [now(), now()->addHours(24)]),
+                'expired' => $query->where(function ($builder) {
+                    $builder->where('status', Invitation::STATUS_EXPIRED)
+                        ->orWhere(function ($expiredBuilder) {
+                            $expiredBuilder->where('status', Invitation::STATUS_PENDING)
+                                ->where('expires_at', '<=', now());
+                        });
+                }),
+                default => null,
+            };
+        }
+
+        return $query;
     }
 }

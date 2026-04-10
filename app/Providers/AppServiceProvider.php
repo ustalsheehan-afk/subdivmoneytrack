@@ -75,6 +75,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Fix for Hostinger shared hosting public_html path
+        if ($this->app->environment('production')) {
+            $this->app->bind('path.public', function() {
+                return base_path('public_html');
+            });
+        }
     }
 }
