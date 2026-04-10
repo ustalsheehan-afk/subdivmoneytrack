@@ -74,6 +74,13 @@ Route::get('/', function () {
 // ✅ FIXED: Invitation Registration (TOKEN REQUIRED)
 Route::get('/register', [InvitationRegistrationController::class, 'show'])->name('register.invitation');
 
+use Illuminate\Support\Facades\Artisan;
+
+Route::get('/fix-storage', function () {
+    Artisan::call('storage:link');
+    return 'Storage linked!';
+});
+
 /*
 |--------------------------------------------------------------------------
 | MAINTENANCE ROUTE (SHARED HOSTING FIX)

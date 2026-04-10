@@ -1,6 +1,5 @@
 ssh -p 65002 u174002700@145.79.25.197
 # password: Ustal!12345
-
 cd domains/subdivmoneytrack.site/public_html
 
 # Pull latest code with correct PhilSMS token
