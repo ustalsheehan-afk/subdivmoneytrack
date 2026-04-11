@@ -295,6 +295,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('notifications/sms-templates', [SmsTemplateController::class, 'index'])->name('smsTemplates.index');
     Route::post('notifications/sms-templates', [SmsTemplateController::class, 'update'])->name('smsTemplates.update');
 
+    Route::get('messages/templates', [App\Http\Controllers\Admin\MessageTemplateController::class, 'index'])->name('messages.templates.index');
+    Route::post('messages/templates', [App\Http\Controllers\Admin\MessageTemplateController::class, 'store'])->name('messages.templates.store');
+    Route::put('messages/templates/{template}', [App\Http\Controllers\Admin\MessageTemplateController::class, 'update'])->name('messages.templates.update');
+    Route::delete('messages/templates/{template}', [App\Http\Controllers\Admin\MessageTemplateController::class, 'destroy'])->name('messages.templates.destroy');
+
     // Payments custom actions
     Route::post('payments/bulk-action', [PaymentController::class, 'bulkAction'])->name('payments.bulkAction');
     Route::post('payments/bulk-approve', [PaymentController::class, 'bulkApprovePayments'])->name('payments.bulkApprove');
@@ -426,6 +431,10 @@ Route::middleware(['auth', 'resident'])->prefix('resident')->name('resident.')->
 Route::middleware(['auth', 'resident'])
     ->get('api/notifications', [App\Http\Controllers\Resident\NotificationController::class, 'apiIndex'])
     ->name('resident.notifications.api');
+
+Route::middleware(['auth', 'resident'])
+    ->get('api/message-templates', [App\Http\Controllers\Resident\MessageController::class, 'templatesApi'])
+    ->name('resident.message-templates.api');
 
 
 /*

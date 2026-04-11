@@ -94,13 +94,13 @@
                 <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-110 transition-transform"></div>
                 <h4 class="text-[11px] font-black text-emerald-500 uppercase tracking-widest mb-6 relative z-10">Message Templates</h4>
                 <div class="space-y-3 relative z-10">
-                    <a href="{{ route('resident.messages.create', ['category' => 'payment', 'subject' => 'Payment Inquiry']) }}" class="block p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all text-xs font-bold text-white uppercase tracking-widest">
+                    <a href="{{ route('resident.messages.create', ['category' => 'payment', 'subject' => 'Payment Inquiry', 'open_templates' => 1]) }}" class="block p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all text-xs font-bold text-white uppercase tracking-widest">
                         Payment Inquiry
                     </a>
-                    <a href="{{ route('resident.messages.create', ['category' => 'complaint', 'subject' => 'Service Complaint']) }}" class="block p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all text-xs font-bold text-white uppercase tracking-widest">
+                    <a href="{{ route('resident.messages.create', ['category' => 'complaint', 'subject' => 'Service Complaint', 'open_templates' => 1]) }}" class="block p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all text-xs font-bold text-white uppercase tracking-widest">
                         Service Complaint
                     </a>
-                    <a href="{{ route('resident.messages.create', ['category' => 'reservation', 'subject' => 'Booking Question']) }}" class="block p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all text-xs font-bold text-white uppercase tracking-widest">
+                    <a href="{{ route('resident.messages.create', ['category' => 'reservation', 'subject' => 'Booking Question', 'open_templates' => 1]) }}" class="block p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all text-xs font-bold text-white uppercase tracking-widest">
                         Booking Question
                     </a>
                 </div>
