@@ -8,6 +8,7 @@ use App\Models\Resident;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\FileService;
+use Illuminate\Support\Facades\Storage;
 
 class RequestController extends Controller
 {
@@ -228,5 +229,34 @@ class RequestController extends Controller
 
         return redirect()->route('resident.requests.index')
             ->with('success', 'Your request has been updated successfully!');
+    }
+
+    /**
+     * Delete a resident service request.
+     */
+    public function destroy($id)
+    {
+        $user = Auth::user();
+        $resident = $user?->resident;
+
+        if (!$resident) {
+            abort(403, 'Resident record not found.');
+        }
+
+        $requestItem = ServiceRequest::where('resident_id', $resident->id)->findOrFail($id);
+
+        if ($requestItem->status !== 'pending') {
+            return redirect()->route('resident.requests.index')
+                ->with('error', 'Only pending requests can be deleted.');
+        }
+
+        if ($requestItem->photo) {
+            Storage::disk('public')->delete($requestItem->photo);
+        }
+
+        $requestItem->delete();
+
+        return redirect()->route('resident.requests.index')
+            ->with('success', 'Your request has been deleted successfully.');
     }
 }

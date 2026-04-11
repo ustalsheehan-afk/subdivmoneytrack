@@ -396,7 +396,7 @@ Route::middleware(['auth', 'resident'])->prefix('resident')->name('resident.')->
 
     // Service Requests
     Route::resource('requests', ResidentRequestController::class)
-        ->only(['index', 'create', 'store', 'show', 'edit', 'update'])
+        ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'])
         ->names('requests');
 
     // Contact
@@ -418,9 +418,14 @@ Route::middleware(['auth', 'resident'])->prefix('resident')->name('resident.')->
     Route::get('events', [ResidentDashboardController::class, 'events'])->name('events.index');
 
     // Notifications
+    Route::get('notifications', [App\Http\Controllers\Resident\NotificationController::class, 'index'])->name('notifications.index');
     Route::get('notifications/{id}', [App\Http\Controllers\Resident\NotificationController::class, 'show'])->name('notifications.show');
     Route::post('notifications/mark-all-read', [App\Http\Controllers\Resident\NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
 });
+
+Route::middleware(['auth', 'resident'])
+    ->get('api/notifications', [App\Http\Controllers\Resident\NotificationController::class, 'apiIndex'])
+    ->name('resident.notifications.api');
 
 
 /*

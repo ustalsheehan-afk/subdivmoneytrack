@@ -10,6 +10,54 @@ use Illuminate\Support\Facades\Auth;
 class NotificationController extends Controller
 {
     /**
+     * Show all notifications for the authenticated resident.
+     */
+    public function index()
+    {
+        $resident = Auth::user()->resident;
+
+        if ($resident) {
+            $resident->notifications()
+                ->where('role', Notification::ROLE_RESIDENT)
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
+        }
+
+        return view('resident.notifications.index');
+    }
+
+    /**
+     * Return all notifications for the authenticated resident (latest first).
+     */
+    public function apiIndex()
+    {
+        $resident = Auth::user()->resident;
+
+        $notifications = $resident
+            ? $resident->notifications()
+                ->where('role', Notification::ROLE_RESIDENT)
+                ->latest()
+                ->get()
+                ->map(function (Notification $notification) {
+                    return [
+                        'id' => $notification->id,
+                        'title' => $notification->title,
+                        'message' => $notification->message,
+                        'link' => $notification->link,
+                        'category' => $notification->category,
+                        'is_read' => (bool) $notification->is_read,
+                        'created_at' => optional($notification->created_at)->toIso8601String(),
+                    ];
+                })
+                ->values()
+            : collect();
+
+        return response()->json([
+            'notifications' => $notifications,
+        ]);
+    }
+
+    /**
      * Mark all notifications as read for the authenticated resident.
      */
     public function markAllRead()

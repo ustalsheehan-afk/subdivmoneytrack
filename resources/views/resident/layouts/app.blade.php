@@ -495,7 +495,13 @@ body {
 
                     @if($notifications->isNotEmpty())
                     <div class="p-3 bg-gray-50 border-t border-gray-100 text-center">
-                        <a href="#" class="text-xs font-semibold text-[#4B5563] hover:text-[#1F2937]">View all notifications</a>
+                        <button
+                            type="button"
+                            @click="window.location.href='{{ route('resident.notifications.index') }}'"
+                            class="text-xs font-semibold text-[#4B5563] hover:text-[#1F2937]"
+                        >
+                            View all notifications
+                        </button>
                     </div>
                     @endif
                 </div>

@@ -94,18 +94,28 @@
                                 </td>
 
                                 <td class="px-8 py-6 text-right">
-                                    <div class="flex items-center justify-end gap-3" onclick="event.stopPropagation()">
+                                    <div class="flex items-center justify-end gap-2" onclick="event.stopPropagation()">
                                         <a href="{{ route('resident.requests.show', $request->id) }}" 
-                                           class="w-10 h-10 rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-emerald-500 hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/10 flex items-center justify-center transition-all duration-300"
+                                           class="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition-all duration-300 hover:border-[#B6FF5C] hover:bg-[#B6FF5C]/15 hover:text-slate-900"
                                            title="View Details">
                                             <i class="bi bi-eye-fill text-sm"></i>
                                         </a>
                                         @if($request->status == 'pending')
-                                        <a href="{{ route('resident.requests.edit', $request->id) }}" 
-                                           class="w-10 h-10 rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-amber-500 hover:border-amber-500 hover:shadow-lg hover:shadow-amber-500/10 flex items-center justify-center transition-all duration-300"
-                                           title="Edit Request">
-                                            <i class="bi bi-pencil-square text-sm"></i>
-                                        </a>
+                                            <a href="{{ route('resident.requests.edit', $request->id) }}" 
+                                               class="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition-all duration-300 hover:border-[#B6FF5C] hover:bg-[#B6FF5C]/15 hover:text-slate-900"
+                                               title="Edit Request">
+                                                <i class="bi bi-pencil-square text-sm"></i>
+                                            </a>
+
+                                            <form action="{{ route('resident.requests.destroy', $request->id) }}" method="POST" class="inline-flex" onsubmit="return confirm('Delete this request? This cannot be undone.')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                        class="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition-all duration-300 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                                                        title="Delete Request">
+                                                    <i class="bi bi-trash3-fill text-sm"></i>
+                                                </button>
+                                            </form>
                                         @endif
                                     </div>
                                 </td>
