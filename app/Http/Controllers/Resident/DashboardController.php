@@ -10,11 +10,64 @@ use App\Models\ServiceRequest;
 use App\Models\Due;
 use App\Models\Penalty;
 use App\Models\Notification;
+use App\Models\AmenityReservation;
+use App\Models\MessageThread;
 use App\Models\BoardMember;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
+    public function getSystemNotifications()
+    {
+        $user = Auth::user();
+        $resident = $user?->resident;
+
+        if (!$user || !$resident) {
+            return response()->json([
+                'requests' => ['count' => 0, 'priority' => 'normal'],
+                'payments' => ['count' => 0, 'priority' => 'normal'],
+                'dues' => ['count' => 0, 'priority' => 'normal'],
+                'reservations' => ['count' => 0, 'priority' => 'normal'],
+                'messages' => ['count' => 0, 'priority' => 'normal'],
+            ]);
+        }
+
+        $residentUserId = $user->id;
+
+        return response()->json([
+            'requests' => [
+                'count' => ServiceRequest::where('resident_id', $resident->id)
+                    ->whereIn('status', ['pending', 'in progress', 'open', 'in_progress'])
+                    ->count(),
+                'priority' => 'normal',
+            ],
+            'payments' => [
+                'count' => Payment::where('resident_id', $resident->id)
+                    ->whereIn('status', ['pending', 'submitted'])
+                    ->count(),
+                'priority' => 'normal',
+            ],
+            'dues' => [
+                'count' => Due::where('resident_id', $resident->id)
+                    ->where('status', 'unpaid')
+                    ->count(),
+                'priority' => 'normal',
+            ],
+            'reservations' => [
+                'count' => AmenityReservation::where('resident_id', $residentUserId)
+                    ->whereIn('status', ['pending'])
+                    ->count(),
+                'priority' => 'normal',
+            ],
+            'messages' => [
+                'count' => MessageThread::where('resident_id', $resident->id)
+                    ->whereIn('status', ['pending', 'in_progress'])
+                    ->count(),
+                'priority' => 'normal',
+            ],
+        ]);
+    }
+
     /**
      * Mark all notifications as read for the authenticated resident.
      */

@@ -27,12 +27,13 @@ class AmenityReservationController extends Controller
     {
         $user = Auth::user();
         $resident = $user?->resident;
+        $residentUserId = $user?->id;
 
-        if (!$resident) {
+        if (!$resident || !$residentUserId) {
             return redirect()->route('resident.dashboard')->with('error', 'Resident profile not found.');
         }
 
-        $reservations = AmenityReservation::where('resident_id', $resident->id)
+        $reservations = AmenityReservation::where('resident_id', $residentUserId)
             ->with('amenity')
             ->latest()
             ->paginate(10);
@@ -44,8 +45,9 @@ class AmenityReservationController extends Controller
     {
         $user = Auth::user();
         $resident = $user?->resident;
+        $residentUserId = $user?->id;
 
-        if (!$resident) {
+        if (!$resident || !$residentUserId) {
             return redirect()->route('resident.dashboard')->with('error', 'Resident profile not found.');
         }
 
@@ -74,7 +76,7 @@ class AmenityReservationController extends Controller
             }
 
             $reservation = app(AmenityReservationBookingService::class)->create($amenity, [
-                'resident_id' => $resident->id,
+                'resident_id' => $residentUserId,
                 'customer_type' => 'resident',
                 'booking_source' => 'resident_portal',
                 'date' => $request->date,
@@ -115,7 +117,16 @@ class AmenityReservationController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
-            // Log error if needed
+            Log::error('Resident amenity booking failed', [
+                'error' => $e->getMessage(),
+                'user_id' => $residentUserId,
+                'resident_profile_id' => $resident->id ?? null,
+                'amenity_id' => $amenity->id,
+                'date' => $request->input('date'),
+                'start_time' => $request->input('start_time'),
+                'duration' => $request->input('duration'),
+                'payment_method' => $request->input('payment_method'),
+            ]);
             return back()->withErrors(['error' => 'An error occurred while processing your reservation. Please try again.'])->withInput();
         }
     }
@@ -124,13 +135,14 @@ class AmenityReservationController extends Controller
     {
         $user = Auth::user();
         $resident = $user?->resident;
+        $residentUserId = $user?->id;
 
-        if (!$resident) {
+        if (!$resident || !$residentUserId) {
             abort(403, 'Resident profile not found.');
         }
 
         $reservation = AmenityReservation::where('id', $id)
-            ->where('resident_id', $resident->id)
+            ->where('resident_id', $residentUserId)
             ->with('amenity')
             ->firstOrFail();
 
@@ -149,13 +161,14 @@ class AmenityReservationController extends Controller
     {
         $user = Auth::user();
         $resident = $user?->resident;
+        $residentUserId = $user?->id;
 
-        if (!$resident) {
+        if (!$resident || !$residentUserId) {
             abort(403, 'Resident profile not found.');
         }
 
         $reservation = AmenityReservation::where('id', $id)
-            ->where('resident_id', $resident->id)
+            ->where('resident_id', $residentUserId)
             ->firstOrFail();
 
         if ($reservation->payment_status === 'paid' || $reservation->payment_status === 'submitted') {
@@ -184,13 +197,14 @@ class AmenityReservationController extends Controller
     {
         $user = Auth::user();
         $resident = $user?->resident;
+        $residentUserId = $user?->id;
 
-        if (!$resident) {
+        if (!$resident || !$residentUserId) {
             abort(403, 'Resident profile not found.');
         }
 
         $reservation = AmenityReservation::where('id', $id)
-            ->where('resident_id', $resident->id)
+            ->where('resident_id', $residentUserId)
             ->with('amenity')
             ->firstOrFail();
 
@@ -214,13 +228,14 @@ class AmenityReservationController extends Controller
     {
         $user = Auth::user();
         $resident = $user?->resident;
+        $residentUserId = $user?->id;
 
-        if (!$resident) {
+        if (!$resident || !$residentUserId) {
             abort(403, 'Resident profile not found.');
         }
 
         // Ensure the reservation belongs to the resident
-        if ($reservation->resident_id !== $resident->id) {
+        if ((int) $reservation->resident_id !== (int) $residentUserId) {
             abort(403, 'Unauthorized.');
         }
 
@@ -250,13 +265,14 @@ class AmenityReservationController extends Controller
     {
         $user = Auth::user();
         $resident = $user?->resident;
+        $residentUserId = $user?->id;
 
-        if (!$resident) {
+        if (!$resident || !$residentUserId) {
             abort(403, 'Resident profile not found.');
         }
 
         // Ensure the reservation belongs to the resident
-        if ($reservation->resident_id !== $resident->id) {
+        if ((int) $reservation->resident_id !== (int) $residentUserId) {
             abort(403, 'Unauthorized.');
         }
 
@@ -278,12 +294,13 @@ class AmenityReservationController extends Controller
     {
         $user = Auth::user();
         $resident = $user?->resident;
+        $residentUserId = $user?->id;
 
-        if (!$resident) {
+        if (!$resident || !$residentUserId) {
             abort(403, 'Resident profile not found.');
         }
 
-        if ($reservation->resident_id !== $resident->id) {
+        if ((int) $reservation->resident_id !== (int) $residentUserId) {
             abort(403, 'Unauthorized.');
         }
 

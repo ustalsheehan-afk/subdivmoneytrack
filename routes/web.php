@@ -170,9 +170,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('home', [DashboardController::class, 'index'])->name('home');
     Route::get('about-board', [DashboardController::class, 'board'])->name('about.board');
 
-    // System Notifications API
-    Route::get('system-notifications', [App\Http\Controllers\Admin\NotificationController::class, 'getSystemNotifications'])
-        ->middleware('permission:notifications.view')
+    // System Notifications API (resident-scoped)
+    Route::get('system-notifications', [ResidentDashboardController::class, 'getSystemNotifications'])
         ->name('system-notifications');
 
     // Board Members
