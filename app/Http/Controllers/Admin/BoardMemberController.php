@@ -137,7 +137,7 @@ class BoardMemberController extends Controller
 
         // Use a filesystem path + response()->file() for broad compatibility and
         // to avoid relying on adapter-specific mimeType() methods.
-        $fullPath = Storage::disk('public')->path($path);
+        $fullPath = storage_path('app/public/' . $path);
 
         if (!is_file($fullPath)) {
             abort(404);
