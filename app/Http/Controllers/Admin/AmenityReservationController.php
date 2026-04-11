@@ -16,6 +16,7 @@ use App\Traits\HandlesReservationConflict;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -608,6 +609,8 @@ class AmenityReservationController extends Controller
             return response()->json(['error' => 'Cannot change status of cancelled reservation. Cancelled reservations are immutable for audit purposes.'], 422);
         }
 
+        $residentNotificationId = $reservation->resident?->id;
+
         if ($request->status === 'approved') {
             $start = $reservation->start_time;
             $end = $reservation->end_time;
@@ -626,7 +629,7 @@ class AmenityReservationController extends Controller
         $reservation->update(['status' => $request->status]);
 
         // Notify resident of status change (non-blocking)
-        if ($reservation->resident_id) {
+        if ($residentNotificationId) {
             try {
                 $statusMessage = match($request->status) {
                     'approved' => 'Your reservation for ' . optional($reservation->amenity)->name . ' has been approved!',
@@ -636,7 +639,7 @@ class AmenityReservationController extends Controller
                 };
                 
                 Notification::create([
-                    'resident_id' => $reservation->resident_id,
+                    'resident_id' => $residentNotificationId,
                     'title' => 'Reservation ' . ucfirst($request->status),
                     'message' => $statusMessage,
                     'type' => 'reservation',
@@ -644,7 +647,7 @@ class AmenityReservationController extends Controller
                     'is_read' => false,
                 ]);
             } catch (\Exception $e) {
-                \Log::warning('Failed to create resident notification: ' . $e->getMessage());
+                Log::warning('Failed to create resident notification: ' . $e->getMessage());
             }
         }
 
@@ -747,10 +750,10 @@ class AmenityReservationController extends Controller
             $service->cancel($reservation, Auth::user(), $reason, $request->notes, 'admin_cancelled');
 
             // Notify resident of cancellation (non-blocking)
-            if ($reservation->resident_id) {
+            if ($residentNotificationId = $reservation->resident?->id) {
                 try {
                     Notification::create([
-                        'resident_id' => $reservation->resident_id,
+                        'resident_id' => $residentNotificationId,
                         'title' => 'Reservation Cancelled',
                         'message' => 'Your reservation for ' . optional($reservation->amenity)->name . ' has been cancelled. Reason: ' . $reason->label,
                         'type' => 'reservation',
@@ -758,7 +761,7 @@ class AmenityReservationController extends Controller
                         'is_read' => false,
                     ]);
                 } catch (\Exception $e) {
-                    \Log::warning('Failed to create cancellation notification: ' . $e->getMessage());
+                    Log::warning('Failed to create cancellation notification: ' . $e->getMessage());
                 }
             }
 

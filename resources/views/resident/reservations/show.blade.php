@@ -310,8 +310,8 @@
 
 {{-- Cancellation Modal --}}
 <div id="cancelModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-[32px] shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div class="p-8">
+    <div class="bg-white rounded-[32px] shadow-2xl max-w-md w-full overflow-visible">
+        <div class="max-h-[90vh] overflow-y-auto p-8">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-xl font-black text-gray-900 tracking-tight">Cancel Reservation</h3>
                 <button onclick="closeCancelModal()" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-all">
@@ -324,7 +324,7 @@
                 <div class="space-y-6">
                     <div>
                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Reason for Cancellation</label>
-                        <select name="cancellation_reason_id" required class="w-full p-4 border-2 border-gray-50 bg-gray-50 rounded-[16px] text-sm font-medium focus:ring-0 focus:border-red-500 focus:bg-white transition-all outline-none">
+                        <select name="cancellation_reason_id" required class="relative z-10 w-full p-4 border-2 border-gray-50 bg-gray-50 rounded-[16px] text-sm font-medium focus:ring-0 focus:border-red-500 focus:bg-white transition-all outline-none">
                             <option value="">Select a reason</option>
                             @foreach($cancellationReasons as $reason)
                             <option value="{{ $reason->id }}">{{ $reason->label }}</option>

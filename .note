@@ -5,6 +5,8 @@ cd domains/subdivmoneytrack.site/public_html
 
 # Pull latest code with correct PhilSMS token
 git pull origin main
+# Reset only transactional demo data (safe for admins/config/templates)
+php artisan demo:prepare-reset
 # Clear all caches
 php artisan config:clear
 php artisan cache:clear
