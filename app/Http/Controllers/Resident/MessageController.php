@@ -17,7 +17,12 @@ class MessageController extends Controller
 {
     public function index()
     {
-        $resident = Auth::user();
+        $resident = Auth::user()->resident;
+
+        if (!$resident) {
+            abort(403, 'Resident profile not found.');
+        }
+
         $threads = MessageThread::where('resident_id', $resident->id)
             ->with(['latestMessage'])
             ->orderBy('last_message_at', 'desc')
@@ -46,7 +51,11 @@ class MessageController extends Controller
             'module_id' => 'nullable|integer',
         ]);
 
-        $resident = Auth::user();
+        $resident = Auth::user()->resident;
+
+        if (!$resident) {
+            abort(403, 'Resident profile not found.');
+        }
 
         $thread = DB::transaction(function () use ($request, $resident) {
             $thread = MessageThread::create([
@@ -65,9 +74,9 @@ class MessageController extends Controller
             }
 
             $thread->messages()->create([
-                'sender_type' => get_class(Auth::user()),
-                'sender_id' => Auth::id(),
-                'body' => $request->message,
+                'sender_type' => Resident::class,
+                'sender_id' => $resident->id,
+                'body' => $request->body,
                 'attachment' => $attachmentPath,
             ]);
 
@@ -93,7 +102,11 @@ class MessageController extends Controller
 
     public function show(MessageThread $thread)
     {
-        $this->authorize('view', $thread);
+        $resident = Auth::user()->resident;
+
+        if (!$resident || $thread->resident_id !== $resident->id) {
+            abort(403);
+        }
         
         $thread->load(['messages.sender']);
         
@@ -111,7 +124,9 @@ class MessageController extends Controller
 
     public function reply(Request $request, MessageThread $thread)
     {
-        if ($thread->resident_id !== Auth::id()) {
+        $resident = Auth::user()->resident;
+
+        if (!$resident || $thread->resident_id !== $resident->id) {
             abort(403);
         }
 
@@ -120,15 +135,15 @@ class MessageController extends Controller
             'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        DB::transaction(function () use ($request, $thread) {
+        DB::transaction(function () use ($request, $thread, $resident) {
             $attachmentPath = null;
             if ($request->hasFile('attachment')) {
                 $attachmentPath = $request->file('attachment')->store('messages', 'public');
             }
 
             $thread->messages()->create([
-                'sender_type' => get_class(Auth::user()),
-                'sender_id' => Auth::id(),
+                'sender_type' => Resident::class,
+                'sender_id' => $resident->id,
                 'body' => $request->body,
                 'attachment' => $attachmentPath,
             ]);

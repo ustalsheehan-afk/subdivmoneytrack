@@ -208,6 +208,21 @@
                                             <div :class="msg.is_admin ? 'bg-gray-900 text-white rounded-tr-none shadow-gray-900/10' : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none shadow-sm'"
                                                  class="px-5 py-3 rounded-2xl text-xs font-medium shadow-lg leading-relaxed">
                                                 <p x-text="msg.body" class="whitespace-pre-wrap"></p>
+                                                <template x-if="msg.attachment">
+                                                    <div class="mt-3 pt-3 border-t" :class="msg.is_admin ? 'border-white/10' : 'border-gray-100'">
+                                                        <template x-if="msg.attachment.match(/\.(jpg|jpeg|png|gif|webp)$/i)">
+                                                            <a :href="msg.attachment" target="_blank" class="block overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+                                                                <img :src="msg.attachment" alt="Attachment preview" class="w-full max-h-72 object-cover">
+                                                            </a>
+                                                        </template>
+                                                        <template x-if="!msg.attachment.match(/\.(jpg|jpeg|png|gif|webp)$/i)">
+                                                            <a :href="msg.attachment" target="_blank" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest" :class="msg.is_admin ? 'text-[#B6FF5C]' : 'text-emerald-600'">
+                                                                <i class="bi bi-paperclip"></i>
+                                                                <span>View Attachment</span>
+                                                            </a>
+                                                        </template>
+                                                    </div>
+                                                </template>
                                             </div>
                                         </div>
                                     </template>

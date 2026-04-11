@@ -40,7 +40,7 @@ class AmenityReservationController extends Controller
         $amenities = Amenity::where('status', 'active')->orWhere('status', 'maintenance')->get()->map(function($amenity, $index) {
             $colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1', '#14B8A6'];
             $amenity->color = $colors[$index % count($colors)];
-            $amenity->image_url = $amenity->image ? asset('storage/' . $amenity->image) : null;
+            $amenity->image_url = $amenity->image_url;
             $amenity->capacity = 0;
             return $amenity;
         });
@@ -166,7 +166,7 @@ class AmenityReservationController extends Controller
             $amenity->color = $colors[$index % count($colors)];
             $amenity->capacity = $amenityLoad->get($amenity->id, 0); // Current booked guests
             // Ensure image URL is available or use a default
-            $amenity->image_url = $amenity->image ? asset('storage/' . $amenity->image) : null;
+            $amenity->image_url = $amenity->image_url;
             return $amenity;
         });
 
@@ -334,7 +334,7 @@ class AmenityReservationController extends Controller
             'unit' => $res->customer_unit,
             'amenity_id' => $res->amenity_id,
             'amenity_name' => optional($res->amenity)->name,
-            'amenity_image' => $res->amenity && $res->amenity->image ? asset('storage/' . $res->amenity->image) : null,
+            'amenity_image' => optional($res->amenity)->image_url,
             'date' => $res->date->format('M d, Y'),
             'time_slot' => $res->time_slot,
             'guest_count' => $res->guest_count,
@@ -345,13 +345,32 @@ class AmenityReservationController extends Controller
             'total_price' => $res->total_price,
             'payment_status' => $res->payment_status,
             'payment_method' => $res->payment_method,
-            'payment_proof' => $res->payment_proof ? asset('storage/' . $res->payment_proof) : null,
+            'payment_proof' => $this->storagePublicUrl($res->payment_proof),
             'payment_reference_no' => $res->payment_reference_no,
             'created_at_formatted' => $res->created_at->format('M d, h:i A'),
             'status' => $res->status,
             'cancellation_reason' => $res->cancellation_reason,
             'reference_code' => $res->reference_code,
         ];
+    }
+
+    private function storagePublicUrl(?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        if (preg_match('/^https?:\/\//i', $path) || str_starts_with($path, '//')) {
+            return $path;
+        }
+
+        $normalizedPath = ltrim($path, '/');
+
+        if (str_starts_with($normalizedPath, 'storage/')) {
+            $normalizedPath = substr($normalizedPath, strlen('storage/'));
+        }
+
+        return asset('storage/' . $normalizedPath);
     }
 
     public function verifyPayment(AmenityReservation $reservation)

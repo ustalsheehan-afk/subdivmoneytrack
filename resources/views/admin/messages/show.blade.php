@@ -80,9 +80,19 @@
                                     {{ $message->body }}
                                     @if($message->attachment)
                                         <div class="mt-3 pt-3 border-t {{ $message->isFromAdmin() ? 'border-white/10' : 'border-gray-50' }}">
-                                            <a href="{{ asset('storage/' . $message->attachment) }}" target="_blank" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest {{ $message->isFromAdmin() ? 'text-[#B6FF5C]' : 'text-emerald-600' }}">
-                                                <i class="bi bi-paperclip"></i> View Attachment
-                                            </a>
+                                            @php
+                                                $attachmentUrl = asset('storage/' . $message->attachment);
+                                                $isImageAttachment = preg_match('/\.(jpg|jpeg|png|gif|webp)$/i', $message->attachment);
+                                            @endphp
+                                            @if($isImageAttachment)
+                                                <a href="{{ $attachmentUrl }}" target="_blank" class="block overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+                                                    <img src="{{ $attachmentUrl }}" alt="Attachment preview" class="w-full max-h-72 object-cover">
+                                                </a>
+                                            @else
+                                                <a href="{{ $attachmentUrl }}" target="_blank" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest {{ $message->isFromAdmin() ? 'text-[#B6FF5C]' : 'text-emerald-600' }}">
+                                                    <i class="bi bi-paperclip"></i> View Attachment
+                                                </a>
+                                            @endif
                                         </div>
                                     @endif
                                 </div>

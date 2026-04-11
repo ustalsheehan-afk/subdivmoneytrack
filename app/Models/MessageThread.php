@@ -57,9 +57,15 @@ class MessageThread extends Model
         return $this->hasOne(Message::class)->latestOfMany();
     }
 
-    public function unreadMessagesCount()
+    public function unreadMessagesCount($senderTypes = null)
     {
-        return $this->messages()->where('is_read', false)->count();
+        $query = $this->messages()->where('is_read', false);
+
+        if (!is_null($senderTypes)) {
+            $query->whereIn('sender_type', (array) $senderTypes);
+        }
+
+        return $query->count();
     }
 
     public function module()

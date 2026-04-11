@@ -40,16 +40,16 @@
                 <div class="divide-y divide-gray-50">
                     @forelse($threads as $thread)
                         @php
-                            $unreadCount = $thread->unreadMessagesCount();
+                            $unreadCount = $thread->unreadMessagesCount([\App\Models\User::class, \App\Models\Admin::class]);
                             $latestMessage = $thread->latestMessage;
-                            $isReplied = $latestMessage && $latestMessage->user_id != auth()->id();
+                            $isReplied = in_array($thread->status, ['replied', 'in_progress', 'closed'], true);
                         @endphp
                         <a href="{{ route('resident.messages.show', $thread->id) }}" 
                            class="block p-8 hover:bg-emerald-50/20 transition-all group relative"
                            x-show="filter === 'all' || 
                                   (filter === 'unread' && {{ $unreadCount > 0 ? 'true' : 'false' }}) || 
                                   (filter === 'replied' && {{ $isReplied ? 'true' : 'false' }})">
-                            @if($thread->unreadMessagesCount() > 0)
+                            @if($unreadCount > 0)
                                 <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-emerald-500 rounded-r-full"></div>
                             @endif
                             

@@ -301,8 +301,8 @@
                                 </h3>
                                 <div class="flex items-start gap-6 bg-gray-50 p-6 rounded-[32px] border border-gray-100">
                                     <div class="w-32 h-32 rounded-[24px] overflow-hidden shrink-0 shadow-xl border-4 border-white">
-                                        @if($amenity->image)
-                                            <img src="{{ Storage::url($amenity->image) }}" class="w-full h-full object-cover">
+                                        @if($amenity->image_url)
+                                            <img src="{{ $amenity->image_url }}" class="w-full h-full object-cover" alt="{{ $amenity->name }}">
                                         @else
                                             <div class="w-full h-full bg-white flex items-center justify-center">
                                                 <i class="bi bi-building text-4xl text-gray-200"></i>

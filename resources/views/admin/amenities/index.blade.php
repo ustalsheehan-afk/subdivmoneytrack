@@ -53,8 +53,8 @@
                         <td class="p-5">
                             <div class="flex items-center gap-4">
                                 <div class="relative shrink-0">
-                                    @if($amenity->image)
-                                        <img src="{{ Storage::url($amenity->image) }}" class="w-14 h-14 rounded-2xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-500 border border-gray-100" alt="{{ $amenity->name }}">
+                                    @if($amenity->image_url)
+                                        <img src="{{ $amenity->image_url }}" class="w-14 h-14 rounded-2xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-500 border border-gray-100" alt="{{ $amenity->name }}">
                                     @else
                                         <div class="w-14 h-14 rounded-2xl bg-gray-50 text-gray-300 flex items-center justify-center text-2xl border border-gray-100 shadow-sm group-hover:scale-105 transition-transform duration-500">
                                             <i class="bi bi-building"></i>

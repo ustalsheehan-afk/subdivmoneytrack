@@ -5,7 +5,6 @@ namespace App\Services;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Str;
 
 class FileService
 {
@@ -44,18 +43,28 @@ class FileService
         $storagePath = $disk === 'public' 
             ? storage_path('app/public/' . $path) 
             : storage_path('app/' . $path);
-            
-        $publicPath = public_path('storage/' . $path);
 
-        // Ensure the directory exists in the public folder
-        $publicDirectory = dirname($publicPath);
-        if (!File::exists($publicDirectory)) {
-            File::makeDirectory($publicDirectory, 0755, true);
-        }
+        // Copy to all candidate public paths used across shared-hosting setups.
+        $targetPaths = array_unique([
+            public_path('storage/' . $path),
+            base_path('storage/' . $path),
+        ]);
 
         // Copy the file if it exists in storage
         if (File::exists($storagePath)) {
-            return File::copy($storagePath, $publicPath);
+            $copied = false;
+
+            foreach ($targetPaths as $targetPath) {
+                $targetDirectory = dirname($targetPath);
+
+                if (!File::exists($targetDirectory)) {
+                    File::makeDirectory($targetDirectory, 0755, true);
+                }
+
+                $copied = File::copy($storagePath, $targetPath) || $copied;
+            }
+
+            return $copied;
         }
 
         return false;
@@ -79,10 +88,16 @@ class FileService
             Storage::disk($disk)->delete($path);
         }
 
-        // 2. Delete from public/storage
-        $publicPath = public_path('storage/' . $path);
-        if (File::exists($publicPath)) {
-            File::delete($publicPath);
+        // 2. Delete from all synced public paths
+        $targetPaths = array_unique([
+            public_path('storage/' . $path),
+            base_path('storage/' . $path),
+        ]);
+
+        foreach ($targetPaths as $targetPath) {
+            if (File::exists($targetPath)) {
+                File::delete($targetPath);
+            }
         }
     }
 }

@@ -60,8 +60,8 @@
                                 <div class="flex items-center gap-5">
                                     
                                     <div class="relative shrink-0">
-                                        @if($reservation->amenity->image)
-                                            <img src="{{ Storage::url($reservation->amenity->image) }}" 
+                                        @if($reservation->amenity->image_url)
+                                            <img src="{{ $reservation->amenity->image_url }}" 
                                                  class="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-sm group-hover:scale-105 transition-transform duration-500">
                                         @else
                                             <div class="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-300 border-2 border-white shadow-sm">

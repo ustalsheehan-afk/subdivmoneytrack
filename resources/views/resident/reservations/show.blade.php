@@ -270,8 +270,8 @@
                                 Verification Proof
                             </p>
                             <div class="relative rounded-[32px] overflow-hidden border border-gray-100 group/proof shadow-xl hover:shadow-2xl transition-all duration-700">
-                                <img src="{{ Storage::url($reservation->payment_proof) }}" class="w-full h-64 object-cover transform group-hover/proof:scale-110 transition-transform duration-1000">
-                                <a href="{{ Storage::url($reservation->payment_proof) }}" target="_blank" 
+                                <img src="{{ Storage::disk('public')->url($reservation->payment_proof) }}" class="w-full h-64 object-cover transform group-hover/proof:scale-110 transition-transform duration-1000">
+                                <a href="{{ Storage::disk('public')->url($reservation->payment_proof) }}" target="_blank" 
                                     class="absolute inset-0 bg-[#081412]/80 opacity-0 group-hover/proof:opacity-100 transition-all duration-500 flex flex-col items-center justify-center backdrop-blur-sm">
                                     <div class="bg-white/10 p-6 rounded-full backdrop-blur-md border border-white/20 transform scale-50 group-hover/proof:scale-100 transition-transform duration-500 mb-4 shadow-2xl">
                                         <i class="bi bi-arrows-fullscreen text-white text-3xl"></i>

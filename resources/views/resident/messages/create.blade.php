@@ -47,7 +47,37 @@
 
             {{-- Sidebar Options --}}
             <div class="space-y-6">
-                <div class="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-6">
+                <div class="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-6"
+                     x-data="{
+                        attachmentName: '',
+                        attachmentPreview: '',
+                        attachmentType: '',
+                        setAttachment(event) {
+                            const file = event.target.files[0];
+
+                            if (!file) {
+                                this.clearAttachment();
+                                return;
+                            }
+
+                            if (this.attachmentPreview) {
+                                URL.revokeObjectURL(this.attachmentPreview);
+                            }
+
+                            this.attachmentName = file.name;
+                            this.attachmentType = file.type || '';
+                            this.attachmentPreview = URL.createObjectURL(file);
+                        },
+                        clearAttachment() {
+                            if (this.attachmentPreview) {
+                                URL.revokeObjectURL(this.attachmentPreview);
+                            }
+
+                            this.attachmentName = '';
+                            this.attachmentPreview = '';
+                            this.attachmentType = '';
+                        }
+                     }">
                     <div class="space-y-2">
                         <label class="text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Category</label>
                         <div class="relative">
@@ -64,11 +94,30 @@
 
                     <div class="space-y-2">
                         <label class="text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Attachment (Optional)</label>
-                        <label class="block w-full px-6 py-4 rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 hover:bg-emerald-50/50 hover:border-emerald-200 transition-all cursor-pointer text-center group">
-                            <input type="file" name="attachment" class="hidden">
+                        <label for="resident-message-attachment" class="block w-full px-6 py-4 rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 hover:bg-emerald-50/50 hover:border-emerald-200 transition-all cursor-pointer text-center group">
+                            <input id="resident-message-attachment" x-ref="attachmentInput" type="file" name="attachment" accept="image/*,.pdf" class="sr-only" @change="setAttachment($event)">
                             <i class="bi bi-paperclip text-lg text-gray-400 group-hover:text-emerald-600"></i>
                             <span class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1 group-hover:text-emerald-600">Choose File</span>
                         </label>
+                        <div class="mt-3 space-y-3" x-show="attachmentName" x-cloak>
+                            <div class="rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
+                                <template x-if="attachmentType.startsWith('image/')">
+                                    <img :src="attachmentPreview" alt="Attachment preview" class="w-full max-h-56 object-cover rounded-xl border border-gray-100">
+                                </template>
+                                <template x-if="!attachmentType.startsWith('image/')">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                            <i class="bi bi-paperclip text-lg"></i>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p class="text-[10px] font-black uppercase tracking-widest text-gray-900 truncate" x-text="attachmentName"></p>
+                                            <p class="text-[9px] font-bold uppercase tracking-widest text-gray-400">Ready to upload</p>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                            <button type="button" class="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500" @click="clearAttachment(); $refs.attachmentInput.value = ''">Remove file</button>
+                        </div>
                     </div>
                 </div>
 

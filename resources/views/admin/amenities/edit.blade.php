@@ -59,7 +59,7 @@
               equipmentList: {{ json_encode($amenity->equipment ?? []) }},
               addEquipment() { this.equipmentList.push({ name: '', price: '' }); },
               removeEquipment(index) { this.equipmentList.splice(index, 1); },
-              imagePreview: {{ json_encode($amenity->image ? Storage::url($amenity->image) : null) }},
+              imagePreview: {{ json_encode($amenity->image_url) }},
               fileChosen(event) {
                   this.fileToDataUrl(event, src => this.imagePreview = src)
               },
@@ -315,7 +315,7 @@
                             <p class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mt-0.5">Guidelines & Policies</p>
                         </div>
                         @if($amenity->pdf_rules)
-                            <a href="{{ Storage::url($amenity->pdf_rules) }}" target="_blank" class="text-[10px] font-black text-emerald-600 uppercase tracking-widest hover:text-emerald-700 transition-colors">View</a>
+                            <a href="{{ Storage::disk('public')->url($amenity->pdf_rules) }}" target="_blank" class="text-[10px] font-black text-emerald-600 uppercase tracking-widest hover:text-emerald-700 transition-colors">View</a>
                         @endif
                     </div>
                 </div>

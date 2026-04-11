@@ -426,7 +426,7 @@ function adminReservationWizard() {
         guest: { name: '', contact: '', email: '' },
         guestNameError: '',
         guestContactError: '',
-        amenities: {!! json_encode($amenities->map(fn ($amenity) => ['id' => $amenity->id, 'name' => $amenity->name, 'description' => $amenity->description, 'price' => $amenity->price, 'max_capacity' => $amenity->max_capacity, 'days_available' => $amenity->days_available ?? [], 'image_url' => $amenity->image ? asset('storage/' . $amenity->image) : null])->values()) !!},
+        amenities: {!! json_encode($amenities->map(fn ($amenity) => ['id' => $amenity->id, 'name' => $amenity->name, 'description' => $amenity->description, 'price' => $amenity->price, 'max_capacity' => $amenity->max_capacity, 'days_available' => $amenity->days_available ?? [], 'image_url' => $amenity->image_url])->values()) !!},
         residents: {!! json_encode($residents->map(fn ($resident) => ['user_id' => $resident->user_id, 'name' => $resident->full_name, 'contact' => $resident->contact_number, 'email' => $resident->email, 'block' => $resident->block, 'lot' => $resident->lot])->values()) !!},
         get filteredResidents() {
             if (!this.residentSearch) return this.residents;

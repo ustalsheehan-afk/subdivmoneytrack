@@ -96,7 +96,7 @@
             <div class="space-y-8">
                 @if($announcement->image)
                     <div class="w-full rounded-[24px] overflow-hidden border border-gray-100 shadow-xl relative group/img bg-gray-50">
-                        <img src="{{ Storage::url($announcement->image) }}" 
+                        <img src="{{ Storage::disk('public')->url($announcement->image) }}" 
                              class="w-full h-auto object-cover max-h-[400px] cursor-pointer hover:scale-[1.02] transition-all duration-700" 
                              alt="{{ $announcement->title }}"
                              onclick="window.open(this.src,'_blank')">

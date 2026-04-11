@@ -27,8 +27,8 @@
                 @endphp
                 <div class="glass-card overflow-hidden group hover:-translate-y-1 transition-all duration-300 hover:shadow-xl hover:border-emerald-200">
                     <div class="relative h-36 bg-gray-50 overflow-hidden">
-                        @if($amenity->image)
-                            <img src="{{ Storage::url($amenity->image) }}" alt="{{ $amenity->name }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]">
+                        @if($amenity->image_url)
+                            <img src="{{ $amenity->image_url }}" alt="{{ $amenity->name }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]">
                         @else
                             <div class="w-full h-full flex items-center justify-center text-gray-200">
                                 <i class="bi bi-building text-4xl"></i>
