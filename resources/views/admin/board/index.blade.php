@@ -116,7 +116,7 @@
                 {{-- Profile Section --}}
                 <div class="flex flex-col items-center text-center mt-8 mb-8">
                     <div class="relative mb-6">
-                        <img src="{{ $member->photo ? asset('storage/' . $member->photo) . '?v=' . ($member->updated_at?->timestamp ?? time()) : asset('CDlogo.jpg') }}" 
+                        <img src="{{ $member->photo ? route('admin.board.photo', ['path' => $member->photo]) . '?v=' . ($member->updated_at?->timestamp ?? time()) : asset('CDlogo.jpg') }}" 
                              onerror="this.onerror=null; this.src='{{ asset('CDlogo.jpg') }}';"
                              class="w-32 h-32 rounded-[32px] object-cover border-4 border-white shadow-2xl group-hover:scale-105 transition-transform duration-500 relative z-10">
                         <div class="absolute -inset-2 bg-emerald-500/5 rounded-[40px] blur-xl group-hover:bg-emerald-500/10 transition-all"></div>

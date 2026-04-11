@@ -142,7 +142,7 @@
                                     <div id="imagePreviewContainer" class="{{ $board->photo ? '' : 'hidden' }}">
                                         <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 mb-2 block">Photo Preview</label>
                                         <div class="relative inline-block group">
-                                            <img id="imagePreview" src="{{ $board->photo ? asset('storage/' . $board->photo) . '?v=' . ($board->updated_at?->timestamp ?? time()) : '#' }}" alt="Preview" class="w-48 h-48 rounded-[32px] object-cover shadow-2xl border-4 border-white">
+                                            <img id="imagePreview" src="{{ $board->photo ? route('admin.board.photo', ['path' => $board->photo]) . '?v=' . ($board->updated_at?->timestamp ?? time()) : '#' }}" alt="Preview" class="w-48 h-48 rounded-[32px] object-cover shadow-2xl border-4 border-white">
                                             <button type="button" onclick="clearImage()" class="absolute -top-3 -right-3 w-10 h-10 bg-red-500 text-white rounded-2xl flex items-center justify-center shadow-lg hover:bg-red-600 transition-all active:scale-95">
                                                 <i class="bi bi-trash-fill"></i>
                                             </button>
@@ -190,7 +190,7 @@ function clearImage() {
     const label = document.getElementById('photoLabel');
 
     input.value = '';
-    preview.src = '{{ $board->photo ? asset("storage/" . $board->photo) . "?v=" . ($board->updated_at?->timestamp ?? time()) : "#" }}';
+    preview.src = '{{ $board->photo ? route("admin.board.photo", ["path" => $board->photo]) . "?v=" . ($board->updated_at?->timestamp ?? time()) : "#" }}';
     if (preview.src.endsWith('#')) {
         container.classList.add('hidden');
         label.textContent = 'Upload Photo';

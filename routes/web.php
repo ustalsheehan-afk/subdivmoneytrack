@@ -173,6 +173,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Board Members
     Route::resource('board', BoardMemberController::class);
     Route::post('board/{board}/toggle', [BoardMemberController::class, 'toggleStatus'])->name('board.toggle');
+    Route::get('board-photo/{path}', [BoardMemberController::class, 'photo'])
+        ->where('path', '.*')
+        ->name('board.photo');
 
     // Announcements
     Route::get('announcements/trashed', [AnnouncementController::class, 'trashed'])->name('announcements.trashed');

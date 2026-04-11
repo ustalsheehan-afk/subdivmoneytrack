@@ -121,4 +121,35 @@ class BoardMemberController extends Controller
         $board->update(['is_active' => !$board->is_active]);
         return response()->json(['success' => true]);
     }
+
+    public function photo(string $path)
+    {
+        $path = ltrim($path, '/');
+
+        // Prevent path traversal & keep scope tight to board member uploads.
+        if (!str_starts_with($path, 'board-members/')) {
+            abort(404);
+        }
+
+        if (!Storage::disk('public')->exists($path)) {
+            abort(404);
+        }
+
+        $mime = Storage::disk('public')->mimeType($path) ?? 'application/octet-stream';
+        $stream = Storage::disk('public')->readStream($path);
+
+        if ($stream === false) {
+            abort(404);
+        }
+
+        return response()->stream(function () use ($stream) {
+            fpassthru($stream);
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }, 200, [
+            'Content-Type' => $mime,
+            'Cache-Control' => 'private, max-age=3600',
+        ]);
+    }
 }
