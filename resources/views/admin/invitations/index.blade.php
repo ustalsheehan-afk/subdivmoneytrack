@@ -5,7 +5,7 @@
 
 @section('content')
 @php
-    $activeFilters = request()->only(['search', 'status', 'delivery', 'expiry']);
+    $activeFilters = request()->only(['search', 'status', 'delivery']);
     $hasActiveFilters = collect($activeFilters)->filter(fn ($value) => filled($value))->isNotEmpty();
 @endphp
 <div class="space-y-8 animate-fade-in pb-20" x-data="{ 
@@ -49,7 +49,7 @@
     </div>
     @endif
 
-    <div class="bg-white border border-gray-100 rounded-[32px] p-8 relative overflow-hidden group shadow-sm">
+    <div class="glass-card p-8 relative overflow-hidden group rounded-2xl">
         <div class="absolute -right-20 -top-20 w-64 h-64 bg-slate-500/5 rounded-full blur-3xl group-hover:bg-slate-500/10 transition-all duration-700"></div>
         
         <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6 relative z-10">
@@ -77,9 +77,9 @@
             ['label' => 'Accepted', 'value' => $stats['accepted'], 'icon' => 'bi-check2-circle'],
             ['label' => 'Expired', 'value' => $stats['expired'], 'icon' => 'bi-exclamation-triangle']
         ] as $card)
-        <div class="bg-white border border-gray-100 rounded-[24px] p-5 shadow-sm">
+        <div class="glass-card p-5 rounded-2xl">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-600 shrink-0">
+                <div class="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-600 shrink-0">
                     <i class="bi {{ $card['icon'] }} text-lg"></i>
                 </div>
                 <div>
@@ -91,22 +91,22 @@
         @endforeach
     </div>
 
-    <form method="GET" action="{{ route('admin.invitations.index') }}" class="bg-white border border-gray-100 rounded-[24px] p-4 lg:p-5 shadow-sm">
+    <form method="GET" action="{{ route('admin.invitations.index') }}" class="glass-card p-4 lg:p-5 rounded-2xl">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
-            <div class="lg:col-span-4">
+            <div class="lg:col-span-5">
                 <div class="relative group" title="Search by name, email, or phone">
                     <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-gray-600 transition-colors"></i>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Name, email, or phone"
                            onkeypress="if(event.key === 'Enter') this.form.submit()"
-                           class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium text-gray-700 focus:bg-white focus:border-gray-400 focus:ring-4 focus:ring-gray-100 transition-all outline-none">
+                           class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:bg-white focus:border-gray-400 focus:ring-4 focus:ring-gray-100 transition-all outline-none">
                 </div>
             </div>
 
             <div class="lg:col-span-2">
                 <div class="relative group" title="Filter by Status">
                     <i class="bi bi-funnel absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-gray-600 transition-colors"></i>
-                    <select name="status" onchange="this.form.submit()" class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium text-gray-700 focus:bg-white focus:border-gray-400 focus:ring-4 focus:ring-gray-100 transition-all outline-none">
-                        <option value="">All Statuses</option>
+                    <select name="status" onchange="this.form.submit()" class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:bg-white focus:border-gray-400 focus:ring-4 focus:ring-gray-100 transition-all outline-none">
+                        <option value="">All</option>
                         <option value="pending" @selected(request('status') === 'pending')>Pending</option>
                         <option value="accepted" @selected(request('status') === 'accepted')>Accepted</option>
                         <option value="expired" @selected(request('status') === 'expired')>Expired</option>
@@ -118,8 +118,8 @@
             <div class="lg:col-span-2">
                 <div class="relative group" title="Filter by Delivery Status">
                     <i class="bi bi-truck absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-gray-600 transition-colors"></i>
-                    <select name="delivery" onchange="this.form.submit()" class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium text-gray-700 focus:bg-white focus:border-gray-400 focus:ring-4 focus:ring-gray-100 transition-all outline-none">
-                        <option value="">Any Delivery</option>
+                    <select name="delivery" onchange="this.form.submit()" class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:bg-white focus:border-gray-400 focus:ring-4 focus:ring-gray-100 transition-all outline-none">
+                        <option value="">All</option>
                         <option value="email_sent" @selected(request('delivery') === 'email_sent')>Email Sent</option>
                         <option value="sms_sent" @selected(request('delivery') === 'sms_sent')>SMS Sent</option>
                         <option value="pending" @selected(request('delivery') === 'pending')>Pending</option>
@@ -128,23 +128,11 @@
                 </div>
             </div>
 
-            <div class="lg:col-span-2">
-                <div class="relative group" title="Filter by Expiry">
-                    <i class="bi bi-calendar-x absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-gray-600 transition-colors"></i>
-                    <select name="expiry" onchange="this.form.submit()" class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium text-gray-700 focus:bg-white focus:border-gray-400 focus:ring-4 focus:ring-gray-100 transition-all outline-none">
-                        <option value="">Any Timing</option>
-                        <option value="active" @selected(request('expiry') === 'active')>Active</option>
-                        <option value="expiring_soon" @selected(request('expiry') === 'expiring_soon')>Expiring Soon</option>
-                        <option value="expired" @selected(request('expiry') === 'expired')>Expired</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="lg:col-span-2 flex items-center gap-3 lg:justify-end">
-                <a href="{{ route('admin.invitations.index') }}" class="h-12 w-12 flex items-center justify-center rounded-2xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-all shadow-sm" title="Reset Filters">
+            <div class="lg:col-span-3 flex items-center gap-3 lg:justify-end">
+                <a href="{{ route('admin.invitations.index') }}" class="h-12 w-12 flex items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-all shadow-sm" title="Reset Filters">
                     <i class="bi bi-arrow-counterclockwise text-lg"></i>
                 </a>
-                <button type="button" onclick="window.dispatchEvent(new CustomEvent('open-invite-modal'))" class="h-12 w-12 flex items-center justify-center rounded-2xl bg-[#081412] text-[#B6FF5C] hover:bg-[#0f2520] transition-all shadow-sm" title="Invite Resident">
+                <button type="button" onclick="window.dispatchEvent(new CustomEvent('open-invite-modal'))" class="h-12 w-12 flex items-center justify-center rounded-xl bg-[#081412] text-[#B6FF5C] hover:bg-[#0f2520] transition-all shadow-sm" title="Invite Resident">
                     <i class="bi bi-person-plus-fill text-lg"></i>
                 </button>
             </div>
@@ -163,7 +151,7 @@
 
     <div class="flex flex-col lg:flex-row gap-8 items-start min-h-[700px]">
         <div class="lg:w-[64%] min-w-0">
-            <div class="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden flex flex-col">
+            <div class="glass-card rounded-2xl overflow-hidden flex flex-col">
                 <div class="overflow-x-auto custom-scrollbar">
                     <table class="w-full text-left border-collapse">
                         <thead>
@@ -261,7 +249,7 @@
         </div>
 
         <div class="lg:w-[36%] space-y-4 lg:sticky lg:top-32 h-fit">
-            <div class="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden">
+            <div class="glass-card rounded-2xl overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/30 flex items-center justify-between">
                     <div class="flex items-center gap-2.5">
                         <div class="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
@@ -280,53 +268,50 @@
                         <div class="w-6 h-6 border-2 border-gray-100 border-t-gray-900 rounded-full animate-spin"></div>
                     </div>
 
-                    <div x-show="invitation && !loading" class="space-y-5">
-                        <div class="flex items-center justify-between gap-4">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <div class="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-emerald-400 text-sm font-bold shrink-0" x-text="invitation.first_name[0] + invitation.last_name[0]"></div>
-                                <div class="min-w-0">
-                                    <h2 class="text-[15px] font-bold text-gray-900 tracking-tight leading-none mb-1 truncate" x-text="invitation.first_name + ' ' + invitation.last_name"></h2>
-                                    <p class="text-[11px] text-gray-400 truncate" x-text="invitation.email"></p>
+                    <template x-if="invitation && !loading">
+                        <div class="space-y-5">
+                            <div class="flex items-center justify-between gap-4">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center text-emerald-400 text-sm font-bold shrink-0" x-text="invitation.first_name[0] + invitation.last_name[0]"></div>
+                                    <div class="min-w-0">
+                                        <h2 class="text-[15px] font-bold text-gray-900 tracking-tight leading-none mb-1 truncate" x-text="invitation.first_name + ' ' + invitation.last_name"></h2>
+                                        <p class="text-[11px] text-gray-400 truncate" x-text="invitation.email"></p>
+                                    </div>
+                                </div>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest bg-gray-50 text-gray-500 border border-gray-100" x-text="invitation.is_expired ? 'Expired' : invitation.status"></span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2.5">
+                                <div class="rounded-xl border border-gray-50 bg-gray-50/30 p-3">
+                                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.1em]">Phone</p>
+                                    <p class="mt-0.5 text-[12px] font-semibold text-gray-900" x-text="invitation.phone"></p>
+                                </div>
+                                <div class="rounded-xl border border-gray-50 bg-gray-50/30 p-3">
+                                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.1em]">Expires</p>
+                                    <p class="mt-0.5 text-[12px] font-semibold text-gray-900" x-text="invitation.expires_at"></p>
+                                </div>
+                                <div class="rounded-xl border border-gray-50 bg-gray-50/30 p-3">
+                                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.1em]">Last Sent</p>
+                                    <p class="mt-0.5 text-[12px] font-semibold text-gray-900" x-text="invitation.last_sent"></p>
+                                </div>
+                                <div class="rounded-xl border border-gray-50 bg-gray-50/30 p-3">
+                                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.1em]">Days Left</p>
+                                    <p class="mt-0.5 text-[12px] font-semibold text-gray-900" x-text="invitation.is_expired ? 'Expired' : (invitation.days_left !== null ? invitation.days_left : 'N/A')"></p>
                                 </div>
                             </div>
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest bg-gray-50 text-gray-500 border border-gray-100" x-text="invitation.is_expired ? 'Expired' : invitation.status"></span>
-                        </div>
 
-                        <div class="grid grid-cols-2 gap-2.5">
-                            <div class="rounded-xl border border-gray-50 bg-gray-50/30 p-3">
-                                <p class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.1em]">Phone</p>
-                                <p class="mt-0.5 text-[12px] font-semibold text-gray-900" x-text="invitation.phone"></p>
-                            </div>
-                            <div class="rounded-xl border border-gray-50 bg-gray-50/30 p-3">
-                                <p class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.1em]">Expires</p>
-                                <p class="mt-0.5 text-[12px] font-semibold text-gray-900" x-text="invitation.expires_at"></p>
-                            </div>
-                            <div class="rounded-xl border border-gray-50 bg-gray-50/30 p-3">
-                                <p class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.1em]">Last Sent</p>
-                                <p class="mt-0.5 text-[12px] font-semibold text-gray-900" x-text="invitation.last_sent"></p>
-                            </div>
-                            <div class="rounded-xl border border-gray-50 bg-gray-50/30 p-3">
-                                <p class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.1em]">Days Left</p>
-                                <p class="mt-0.5 text-[12px] font-semibold text-gray-900" x-text="invitation.is_expired ? 'Expired' : (invitation.days_left !== null ? invitation.days_left : 'N/A')"></p>
+                            <div class="rounded-xl border border-gray-100 bg-white p-3.5 space-y-2.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.1em]">Email Status</span>
+                                    <span class="text-[10px] font-semibold text-gray-700" x-text="invitation.email_status"></span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.1em]">SMS Status</span>
+                                    <span class="text-[10px] font-semibold text-gray-700" x-text="invitation.sms_status"></span>
+                                </div>
                             </div>
                         </div>
-
-                        <div class="rounded-xl border border-gray-100 bg-white p-3.5 space-y-2.5">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.1em]">Email Status</span>
-                                <span class="text-[10px] font-semibold text-gray-700" x-text="invitation.email_status"></span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.1em]">SMS Status</span>
-                                <span class="text-[10px] font-semibold text-gray-700" x-text="invitation.sms_status"></span>
-                            </div>
-                            <div class="pt-2.5 border-t border-gray-50">
-                                <button type="button" @click="copyInviteLink(invitation.registration_link)" class="w-full h-9 rounded-xl bg-gray-900 text-emerald-400 text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-all">
-                                    Copy Registration Link
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    </template>
 
                     <div x-show="!invitation && !loading" class="py-12 text-center">
                         <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-gray-200 mx-auto mb-3">
@@ -337,69 +322,73 @@
                 </div>
             </div>
 
-            <div class="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden" x-show="invitation">
-                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/30 flex items-center gap-2.5">
-                    <div class="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
-                        <i class="bi bi-lightning-charge-fill text-xs"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-gray-900 uppercase tracking-[0.1em]">Actions</span>
-                </div>
-
-                <div class="p-5 space-y-2.5">
-                    <button type="button" @click="copyInviteLink(invitation.registration_link)" class="w-full h-10 rounded-xl bg-gray-900 text-emerald-400 text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2">
-                        <i class="bi bi-link-45deg"></i>
-                        Copy Link
-                    </button>
-                    <div class="grid grid-cols-2 gap-2.5">
-                        <button type="button" @click="resendInvite(invitation.id)" :disabled="invitation.status === 'accepted' || invitation.is_expired" class="h-10 rounded-xl bg-white border border-gray-200 text-gray-600 text-[9px] font-bold uppercase tracking-widest hover:bg-gray-50 transition-all disabled:opacity-50">
-                            Resend
-                        </button>
-                        <button type="button" @click="renewInvite(invitation.id)" :disabled="invitation.status === 'accepted'" class="h-10 rounded-xl bg-white border border-gray-200 text-gray-600 text-[9px] font-bold uppercase tracking-widest hover:bg-gray-50 transition-all disabled:opacity-50">
-                            Renew
-                        </button>
-                    </div>
-                    <button type="button" @click="cancelInvite(invitation.id)" :disabled="invitation.status === 'accepted' || invitation.status === 'cancelled'" class="w-full h-10 rounded-xl bg-red-50 text-red-600 text-[9px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all disabled:opacity-50">
-                        Cancel Invitation
-                    </button>
-                </div>
-            </div>
-
-            <div class="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden" x-show="invitation">
-                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/30 flex items-center gap-2.5">
-                    <div class="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
-                        <i class="bi bi-clock-history text-xs"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-gray-900 uppercase tracking-[0.1em]">Activity</span>
-                </div>
-
-                <div class="p-5 space-y-4">
-                    <template x-for="(item, index) in invitation.activity" :key="index">
-                        <div class="flex items-start gap-3">
-                            <div class="w-2 h-2 rounded-full mt-1.5" :class="item.icon_bg"></div>
-                            <div>
-                                <p class="text-[12px] font-semibold text-gray-900 leading-tight" x-text="item.title"></p>
-                                <p class="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5" x-text="item.time"></p>
+            <template x-if="invitation">
+                <div class="space-y-4">
+                    <div class="glass-card rounded-2xl overflow-hidden">
+                        <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/30 flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
+                                <i class="bi bi-lightning-charge-fill text-xs"></i>
                             </div>
+                            <span class="text-[10px] font-bold text-gray-900 uppercase tracking-[0.1em]">Actions</span>
                         </div>
-                    </template>
+
+                        <div class="p-5 space-y-2.5">
+                            <button type="button" @click="copyInviteLink(invitation.registration_link)" class="w-full h-10 rounded-xl bg-gray-900 text-emerald-400 text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2">
+                                <i class="bi bi-link-45deg"></i>
+                                Copy Link
+                            </button>
+                            <div class="grid grid-cols-2 gap-2.5">
+                                <button type="button" @click="resendInvite(invitation.id)" :disabled="invitation.status === 'accepted' || invitation.is_expired" class="h-10 rounded-xl bg-white border border-gray-200 text-gray-600 text-[9px] font-bold uppercase tracking-widest hover:bg-gray-50 transition-all disabled:opacity-50">
+                                    Resend
+                                </button>
+                                <button type="button" @click="renewInvite(invitation.id)" :disabled="invitation.status === 'accepted'" class="h-10 rounded-xl bg-white border border-gray-200 text-gray-600 text-[9px] font-bold uppercase tracking-widest hover:bg-gray-50 transition-all disabled:opacity-50">
+                                    Renew
+                                </button>
+                            </div>
+                            <button type="button" @click="cancelInvite(invitation.id)" :disabled="invitation.status === 'accepted' || invitation.status === 'cancelled'" class="w-full h-10 rounded-xl bg-red-50 text-red-600 text-[9px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all disabled:opacity-50">
+                                Cancel Invitation
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-2xl overflow-hidden">
+                        <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/30 flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
+                                <i class="bi bi-clock-history text-xs"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-gray-900 uppercase tracking-[0.1em]">Activity</span>
+                        </div>
+
+                        <div class="p-5 space-y-4">
+                            <template x-for="(item, index) in invitation.activity" :key="index">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-2 h-2 rounded-full mt-1.5" :class="item.icon_bg"></div>
+                                    <div>
+                                        <p class="text-[12px] font-semibold text-gray-900 leading-tight" x-text="item.title"></p>
+                                        <p class="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5" x-text="item.time"></p>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </template>
         </div>
     </div>
 </div>
 
 {{-- INVITE MODAL --}}
 @push('modals')
-<div id="invite-modal" 
-    x-data="{ 
+<template x-teleport="body">
+<div id="invite-modal"
+    x-data="{
         show: false,
         open() { this.show = true; document.body.style.overflow = 'hidden'; },
         close() { this.show = false; document.body.style.overflow = 'auto'; }
-    }" 
+    }"
     x-show="show"
     x-on:open-invite-modal.window="open()"
     x-on:close-invite-modal.window="close()"
-    x-teleport="body"
     class="fixed inset-0 z-[100] flex items-center justify-center p-4"
     x-cloak>
     
@@ -422,11 +411,11 @@
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100 scale-100 translate-y-0"
          x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-         class="bg-white w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden relative z-10 border border-gray-100">
+         class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden relative z-10 border border-gray-100">
         
         <div class="px-10 py-8 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-gray-900 flex items-center justify-center text-emerald-400 shadow-lg shadow-gray-900/20">
+                <div class="w-12 h-12 rounded-xl bg-gray-900 flex items-center justify-center text-emerald-400 shadow-lg shadow-gray-900/20">
                     <i class="bi bi-person-plus-fill text-xl"></i>
                 </div>
                 <div>
@@ -435,7 +424,7 @@
                 </div>
             </div>
             <button @click="$dispatch('close-invite-modal')" 
-                    class="w-10 h-10 rounded-2xl bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-100 transition-all shadow-sm flex items-center justify-center">
+                    class="w-10 h-10 rounded-xl bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-100 transition-all shadow-sm flex items-center justify-center">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
@@ -446,12 +435,12 @@
                 <div class="space-y-3">
                     <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">First Name</label>
                     <input type="text" name="first_name" required placeholder="Enter first name"
-                           class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none">
+                           class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none">
                 </div>
                 <div class="space-y-3">
                     <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Last Name</label>
                     <input type="text" name="last_name" required placeholder="Enter last name"
-                           class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none">
+                           class="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none">
                 </div>
             </div>
             
@@ -460,7 +449,7 @@
                 <div class="relative group">
                     <i class="bi bi-envelope absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors"></i>
                     <input type="email" name="email" required placeholder="name@example.com"
-                           class="w-full pl-12 pr-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none">
+                           class="w-full pl-12 pr-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none">
                 </div>
             </div>
             
@@ -469,13 +458,13 @@
                 <div class="relative group">
                     <i class="bi bi-phone absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors"></i>
                     <input type="text" name="phone" placeholder="+63 9xx xxx xxxx"
-                           class="w-full pl-12 pr-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none">
+                           class="w-full pl-12 pr-6 py-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none">
                 </div>
             </div>
 
             <div class="pt-6 flex items-center gap-4">
                 <button type="button" @click="$dispatch('close-invite-modal')" 
-                        class="flex-1 px-8 py-5 bg-white border border-gray-200 text-gray-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all">
+                        class="flex-1 px-8 py-5 bg-white border border-gray-200 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all">
                     Cancel
                 </button>
                 <button type="submit" 
@@ -486,11 +475,12 @@
         </form>
     </div>
 </div>
+</template>
 @endpush
 
 <style>
 .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background-color: #E2E8F0; border-radius: 20px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background-color: #E2E8F0; border-radius: 10px; }
 .custom-scrollbar::-webkit-scrollbar-track { background-color: transparent; }
 [x-cloak] { display: none !important; }
 </style>
