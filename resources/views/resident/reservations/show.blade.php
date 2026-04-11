@@ -3,37 +3,37 @@
 @section('title', 'Reservation Details')
 
 @section('content')
-<div class="h-full bg-[#F8F9FB] overflow-y-auto custom-scrollbar">
+<div class="min-h-[calc(100vh-4rem)] bg-[#F6F7F9] overflow-y-auto custom-scrollbar">
     {{-- Top Navigation Bar --}}
-    <div class="bg-white border-b border-gray-100 px-8 py-5 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+    <div class="bg-white/90 backdrop-blur-sm border-b border-gray-100 px-6 sm:px-8 py-4 flex items-center justify-between sticky top-0 z-30 shadow-[0_1px_0_rgba(15,23,42,0.04)]">
         <div class="flex items-center gap-4">
-            <a href="{{ route('resident.my-reservations.index') }}" class="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 border border-transparent hover:border-emerald-100 transition-all group">
+            <a href="{{ route('resident.my-reservations.index') }}" class="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-50 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 border border-gray-100 transition-all group">
                 <i class="bi bi-arrow-left text-lg group-hover:-translate-x-0.5 transition-transform"></i>
             </a>
             <div>
-                <h1 class="text-xl font-black text-gray-900 tracking-tight">Reservation Details</h1>
-                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Manage your amenity booking</p>
+                <h1 class="text-lg sm:text-xl font-black text-gray-900 tracking-tight">Reservation Details</h1>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.28em]">Manage your amenity booking</p>
             </div>
         </div>
         <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 border border-emerald-400">
+            <div class="w-9 h-9 rounded-lg bg-emerald-500 text-white flex items-center justify-center shadow-sm border border-emerald-400/60">
                 <i class="bi bi-person-fill"></i>
             </div>
-            <span class="text-xs font-black text-gray-700 uppercase tracking-widest">{{ Auth::user()->first_name }}</span>
+            <span class="text-xs font-black text-gray-700 uppercase tracking-[0.22em]">{{ Auth::user()->first_name }}</span>
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-6 py-10 animate-fade-in">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 animate-fade-in">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
             
             {{-- LEFT PANEL: Reservation Details --}}
-            <div class="lg:col-span-7 space-y-8">
+            <div class="lg:col-span-7 space-y-6 sm:space-y-8">
                 
                 {{-- Rejection Note (Conditional) --}}
                 @if($reservation->status === 'rejected' || $reservation->rejection_reason)
-                <div class="bg-red-50 border border-red-100 rounded-[32px] p-8 shadow-lg shadow-red-500/5">
-                    <div class="flex items-start gap-6">
-                        <div class="w-12 h-12 rounded-2xl bg-red-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-red-500/20">
+                <div class="bg-red-50 border border-red-100 rounded-2xl p-6 sm:p-8 shadow-sm">
+                    <div class="flex items-start gap-4 sm:gap-6">
+                        <div class="w-12 h-12 rounded-xl bg-red-500 flex items-center justify-center text-white shrink-0 shadow-sm">
                             <i class="bi bi-exclamation-triangle-fill text-xl"></i>
                         </div>
                         <div>
@@ -46,9 +46,9 @@
 
                 {{-- Cancellation Note (Conditional) --}}
                 @if($reservation->status === 'cancelled')
-                <div class="bg-gray-50 border border-gray-100 rounded-[32px] p-8 shadow-lg shadow-gray-500/5">
-                    <div class="flex items-start gap-6">
-                        <div class="w-12 h-12 rounded-2xl bg-gray-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-gray-500/20">
+                <div class="bg-gray-50 border border-gray-100 rounded-2xl p-6 sm:p-8 shadow-sm">
+                    <div class="flex items-start gap-4 sm:gap-6">
+                        <div class="w-12 h-12 rounded-xl bg-gray-500 flex items-center justify-center text-white shrink-0 shadow-sm">
                             <i class="bi bi-x-circle-fill text-xl"></i>
                         </div>
                         <div>
@@ -63,15 +63,15 @@
                 @endif
 
                 {{-- Main Details Card --}}
-                <div class="glass-card overflow-hidden">
-                    <div class="p-10">
-                        <div class="flex items-start justify-between mb-12">
+                <div class="glass-card overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+                    <div class="p-6 sm:p-8 lg:p-10">
+                        <div class="flex items-start justify-between gap-6 mb-8 sm:mb-10">
                             <div class="space-y-3">
-                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/15">
                                     <i class="bi bi-building text-emerald-600 text-[10px]"></i>
-                                    <span class="text-[9px] font-black text-emerald-600 uppercase tracking-[0.2em]">Amenity Booking</span>
+                                    <span class="text-[9px] font-black text-emerald-600 uppercase tracking-[0.24em]">Amenity Booking</span>
                                 </div>
-                                <h2 class="text-4xl font-black text-gray-900 tracking-tight leading-none">{{ $reservation->amenity->name }}</h2>
+                                <h2 class="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight leading-none">{{ $reservation->amenity->name }}</h2>
                                 <p class="text-gray-400 font-black text-[10px] uppercase tracking-widest">Booking ID: #{{ str_pad($reservation->id, 6, '0', STR_PAD_LEFT) }}</p>
                             </div>
                             <div class="text-right">
@@ -96,12 +96,12 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                             {{-- Date --}}
-                            <div class="bg-gray-50 p-6 rounded-[24px] border border-gray-100 group hover:bg-white hover:shadow-xl transition-all duration-500">
+                            <div class="bg-gray-50 p-5 sm:p-6 rounded-2xl border border-gray-100 group hover:bg-white hover:shadow-sm transition-all duration-300">
                                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Reservation Date</p>
                                 <div class="flex items-center gap-5">
-                                    <div class="w-12 h-12 rounded-2xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 border border-emerald-400 group-hover:scale-110 transition-transform">
+                                    <div class="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-sm border border-emerald-400/60 group-hover:scale-105 transition-transform">
                                         <i class="bi bi-calendar-event text-xl"></i>
                                     </div>
                                     <p class="text-xl font-black text-gray-900 tracking-tight tabular-nums">{{ $reservation->date->format('F j, Y') }}</p>
@@ -109,10 +109,10 @@
                             </div>
 
                             {{-- Time Slot --}}
-                            <div class="bg-gray-50 p-6 rounded-[24px] border border-gray-100 group hover:bg-white hover:shadow-xl transition-all duration-500">
+                            <div class="bg-gray-50 p-5 sm:p-6 rounded-2xl border border-gray-100 group hover:bg-white hover:shadow-sm transition-all duration-300">
                                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Time Slot</p>
                                 <div class="flex items-center gap-5">
-                                    <div class="w-12 h-12 rounded-2xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 border border-emerald-400 group-hover:scale-110 transition-transform">
+                                    <div class="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-sm border border-emerald-400/60 group-hover:scale-105 transition-transform">
                                         <i class="bi bi-clock text-xl"></i>
                                     </div>
                                     <p class="text-xl font-black text-gray-900 tracking-tight tabular-nums">{{ $reservation->time_slot }}</p>
@@ -120,10 +120,10 @@
                             </div>
 
                             {{-- Guests --}}
-                            <div class="bg-gray-50 p-6 rounded-[24px] border border-gray-100 group hover:bg-white hover:shadow-xl transition-all duration-500">
+                            <div class="bg-gray-50 p-5 sm:p-6 rounded-2xl border border-gray-100 group hover:bg-white hover:shadow-sm transition-all duration-300">
                                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Guest Count</p>
                                 <div class="flex items-center gap-5">
-                                    <div class="w-12 h-12 rounded-2xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 border border-emerald-400 group-hover:scale-110 transition-transform">
+                                    <div class="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-sm border border-emerald-400/60 group-hover:scale-105 transition-transform">
                                         <i class="bi bi-people text-xl"></i>
                                     </div>
                                     <p class="text-xl font-black text-gray-900 tracking-tight tabular-nums">{{ $reservation->guest_count }} People</p>
@@ -149,11 +149,11 @@
                                 <span class="w-8 h-px bg-gray-200"></span>
                                 Equipment Add-ons
                             </h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 @foreach($reservation->equipment_addons as $item)
-                                <div class="flex justify-between items-center p-6 rounded-[24px] bg-gray-50 border border-gray-100 hover:bg-white hover:shadow-xl hover:border-emerald-100 transition-all duration-500 group">
+                                <div class="flex justify-between items-center p-5 rounded-2xl bg-gray-50 border border-gray-100 hover:bg-white hover:shadow-sm transition-all duration-300 group">
                                     <span class="text-gray-900 font-black text-sm flex items-center gap-4">
-                                        <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-gray-100 text-emerald-500 group-hover:scale-110 transition-transform">
+                                        <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center border border-gray-100 text-emerald-500 group-hover:scale-105 transition-transform">
                                             <i class="bi bi-plus-lg"></i>
                                         </div>
                                         {{ $item['name'] }}
@@ -170,17 +170,17 @@
 
             {{-- RIGHT PANEL: Payment Status --}}
             <div class="lg:col-span-5">
-                <div class="bg-white border border-gray-100 rounded-[40px] p-10 shadow-2xl h-full flex flex-col relative overflow-hidden group/card">
-                    <div class="absolute -right-20 -top-20 w-64 h-64 bg-brand-accent/5 rounded-full blur-3xl group-hover/card:bg-brand-accent/10 transition-all duration-700"></div>
+                <div class="bg-white border border-gray-100 rounded-2xl p-6 sm:p-8 shadow-sm h-full flex flex-col relative overflow-hidden group/card">
+                    <div class="absolute -right-20 -top-20 w-64 h-64 bg-brand-accent/5 rounded-full blur-3xl group-hover/card:bg-brand-accent/8 transition-all duration-700"></div>
                     
-                    <h3 class="text-gray-900 font-black text-xl mb-10 tracking-tight relative z-10">Payment Overview</h3>
+                    <h3 class="text-gray-900 font-black text-xl mb-8 tracking-tight relative z-10">Payment Overview</h3>
 
                     {{-- Dynamic Status Indicator --}}
                     <div class="mb-10 relative z-10">
                         @if($reservation->payment_status === 'paid')
-                            <div class="flex flex-col items-center text-center p-12 bg-emerald-500 rounded-[32px] border border-emerald-400 relative overflow-hidden group/status shadow-xl shadow-emerald-500/20">
+                            <div class="flex flex-col items-center text-center p-10 bg-emerald-500 rounded-2xl border border-emerald-400 relative overflow-hidden group/status shadow-sm">
                                 <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-                                <div class="w-24 h-24 bg-white text-emerald-500 rounded-[28px] shadow-2xl flex items-center justify-center mb-6 transform rotate-3 hover:rotate-0 transition-transform duration-500 relative z-10 border-4 border-emerald-100">
+                                <div class="w-20 h-20 bg-white text-emerald-500 rounded-xl shadow-sm flex items-center justify-center mb-5 transform rotate-1 hover:rotate-0 transition-transform duration-500 relative z-10 border border-emerald-100">
                                     <i class="bi bi-patch-check-fill text-5xl"></i>
                                 </div>
                                 <span class="font-black text-black text-2xl block tracking-tight relative z-10 uppercase">Verified</span>
@@ -189,17 +189,17 @@
                                 </p>
                             </div>
                         @elseif($reservation->payment_status === 'submitted')
-                            <div class="flex flex-col items-center text-center p-12 bg-[#081412] rounded-[32px] border border-white/5 relative overflow-hidden group/status shadow-2xl">
+                            <div class="flex flex-col items-center text-center p-10 bg-[#081412] rounded-2xl border border-white/5 relative overflow-hidden group/status shadow-sm">
                                 <div class="absolute -right-10 -top-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl"></div>
-                                <div class="w-24 h-24 bg-white/5 text-blue-400 rounded-[28px] shadow-sm flex items-center justify-center mb-6 animate-pulse border border-white/10">
+                                <div class="w-20 h-20 bg-white/5 text-blue-400 rounded-xl shadow-sm flex items-center justify-center mb-5 animate-pulse border border-white/10">
                                     <i class="bi bi-shield-check text-5xl"></i>
                                 </div>
                                 <span class="font-black text-white text-2xl block tracking-tight uppercase">In Review</span>
                                 <p class="text-white/40 text-[10px] font-black mt-3 uppercase tracking-[0.2em]">Waiting for Admin</p>
                             </div>
                         @elseif($reservation->payment_method === 'cash')
-                            <div class="flex flex-col items-center text-center p-12 bg-orange-50 rounded-[32px] border border-orange-100 relative overflow-hidden shadow-lg shadow-orange-500/5">
-                                <div class="w-24 h-24 bg-white text-orange-500 rounded-[28px] shadow-xl flex items-center justify-center mb-6 transform -rotate-3 hover:rotate-0 transition-transform duration-500 border-4 border-orange-50">
+                            <div class="flex flex-col items-center text-center p-10 bg-orange-50 rounded-2xl border border-orange-100 relative overflow-hidden shadow-sm">
+                                <div class="w-20 h-20 bg-white text-orange-500 rounded-xl shadow-sm flex items-center justify-center mb-5 transform -rotate-1 hover:rotate-0 transition-transform duration-500 border border-orange-50">
                                     <i class="bi bi-cash-stack text-5xl"></i>
                                 </div>
                                 <span class="font-black text-orange-900 text-2xl block tracking-tight uppercase">Pending Cash</span>
@@ -207,8 +207,8 @@
                             </div>
                         @else 
                             {{-- Pending GCash --}}
-                            <div class="flex flex-col items-center text-center p-12 bg-orange-50 rounded-[32px] border border-orange-100 relative overflow-hidden shadow-lg shadow-orange-500/5">
-                                <div class="w-24 h-24 bg-white text-orange-500 rounded-[28px] shadow-xl flex items-center justify-center mb-6 border-4 border-orange-50">
+                            <div class="flex flex-col items-center text-center p-10 bg-orange-50 rounded-2xl border border-orange-100 relative overflow-hidden shadow-sm">
+                                <div class="w-20 h-20 bg-white text-orange-500 rounded-xl shadow-sm flex items-center justify-center mb-5 border border-orange-50">
                                     <i class="bi bi-wallet2 text-5xl"></i>
                                 </div>
                                 <span class="font-black text-orange-900 text-2xl block tracking-tight uppercase">Proof Required</span>
@@ -360,7 +360,7 @@
 
 <style>
     .btn-cancel {
-        @apply inline-flex items-center gap-3 px-8 py-4 bg-red-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl hover:bg-red-600 transition-all active:scale-95 border border-red-400;
+        @apply inline-flex items-center gap-3 px-8 py-4 bg-red-500 text-white text-[11px] font-black uppercase tracking-widest rounded-lg hover:bg-red-600 transition-all active:scale-95 border border-red-400/50;
     }
 </style>
 
@@ -407,13 +407,6 @@ document.getElementById('cancelForm').addEventListener('submit', function(e) {
         btn.disabled = false;
         btn.innerHTML = originalText;
     });
-});
-
-// Close modal when clicking outside
-document.getElementById('cancelModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeCancelModal();
-    }
 });
 </script>
 
