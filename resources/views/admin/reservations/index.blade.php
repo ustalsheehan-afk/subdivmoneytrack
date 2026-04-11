@@ -41,7 +41,7 @@
                     </button>
                 </div>
                 
-                <button @click="activityLogOpen = true" class="btn-premium flex items-center gap-3 group">
+                <button @click="openActivityLog()" class="btn-premium flex items-center gap-3 group">
                     <i class="bi bi-clock-history text-brand-accent group-hover:rotate-12 transition-transform"></i>
                     <span>Activity Log</span>
                 </button>
@@ -163,7 +163,7 @@
                 </template>
 
                 {{-- Empty State --}}
-                <div x-show="actionable.length === 0" class="glass-card py-20 text-center animate-zoom-in">
+                <div x-show="actionable.length === 0 && cancelledReservations.length === 0" class="glass-card py-20 text-center animate-zoom-in">
                     <div class="w-20 h-20 bg-emerald-50 rounded-[32px] flex items-center justify-center mx-auto mb-6 text-emerald-500 shadow-inner">
                         <i class="bi bi-check-all text-4xl"></i>
                     </div>
@@ -564,6 +564,14 @@
                         </div>
                     </div>
                 </template>
+
+                <div x-show="activities.length === 0" class="text-center py-16">
+                    <div class="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 text-gray-300 flex items-center justify-center mx-auto mb-4">
+                        <i class="bi bi-journal-text text-2xl"></i>
+                    </div>
+                    <p class="text-sm font-black text-gray-700 uppercase tracking-widest">No Activity Yet</p>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mt-2">Audit entries will appear after reservation actions</p>
+                </div>
             </div>
         </div>
     </div>
@@ -582,7 +590,7 @@
 <script>
     function reservationCalendar() {
         return {
-            currentDate: '{{ now()->format("Y-m-d") }}',
+            currentDate: '{{ request("date", now()->format("Y-m-d")) }}',
             amenities: [],
             reservations: [],
             actionable: [],
@@ -762,6 +770,13 @@
                 date.setDate(date.getDate() + days);
                 this.currentDate = date.toISOString().split('T')[0];
                 this.fetchData();
+            },
+
+            async openActivityLog() {
+                if (this.activities.length === 0) {
+                    await this.fetchData();
+                }
+                this.activityLogOpen = true;
             },
 
             formatHour(hour) {
