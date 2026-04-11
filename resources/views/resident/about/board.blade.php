@@ -15,7 +15,9 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         @foreach ($boardMembers as $member)
             @php
-                $photoUrl = $member->photo ? asset('storage/' . $member->photo) : asset('images/default-member.jpg');
+                $photoUrl = $member->photo
+                    ? route('board.photo.public', ['path' => $member->photo]) . '?v=' . ($member->updated_at?->timestamp ?? time())
+                    : asset('images/default-member.jpg');
                 $email = trim((string) ($member->email ?? ''));
                 $phoneRaw = trim((string) ($member->phone ?? ''));
                 $phoneTel = preg_replace('/[^\d\+]/', '', $phoneRaw);

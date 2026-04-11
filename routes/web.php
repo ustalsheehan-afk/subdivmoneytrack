@@ -116,6 +116,11 @@ Route::get('/registration-success', function() {
 Route::get('/announcements', [AnnouncementController::class, 'public'])->name('announcements.public');
 Route::get('/verify-receipt/{id}', [PaymentController::class, 'verifyReceipt'])->name('payments.verify');
 
+// Public-safe board photo endpoint (serves files from storage/app/public/board-members)
+Route::get('board-photo/{path}', [BoardMemberController::class, 'photo'])
+    ->where('path', '.*')
+    ->name('board.photo.public');
+
 // Simple Debug Route
 Route::get('/test-invite/{token}', function($token) {
     $invitation = \App\Models\Invitation::where('token', $token)->first();
