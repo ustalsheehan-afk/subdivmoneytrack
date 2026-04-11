@@ -23,6 +23,36 @@ class AmenityReservationController extends Controller
 {
     use HandlesReservationConflict;
 
+    private function ensureCancellationReasonsSeeded(): void
+    {
+        if (!DB::connection()->getSchemaBuilder()->hasTable('reservation_cancellation_reasons')) {
+            return;
+        }
+
+        $eligibleCount = ReservationCancellationReason::query()
+            ->where('active', true)
+            ->whereIn('scope', ['resident', 'both'])
+            ->count();
+
+        if ($eligibleCount > 0) {
+            return;
+        }
+
+        $defaults = [
+            ['label' => 'Schedule conflict', 'scope' => 'resident', 'active' => true, 'sort_order' => 1],
+            ['label' => 'Change of plans', 'scope' => 'resident', 'active' => true, 'sort_order' => 2],
+            ['label' => 'Unexpected emergency', 'scope' => 'resident', 'active' => true, 'sort_order' => 3],
+            ['label' => 'No longer needed', 'scope' => 'resident', 'active' => true, 'sort_order' => 4],
+            ['label' => 'Other', 'scope' => 'both', 'active' => true, 'sort_order' => 99],
+        ];
+
+        DB::transaction(function () use ($defaults) {
+            foreach ($defaults as $reason) {
+                ReservationCancellationReason::query()->create($reason);
+            }
+        });
+    }
+
     public function index()
     {
         $user = Auth::user();
@@ -145,6 +175,8 @@ class AmenityReservationController extends Controller
             ->where('resident_id', $residentUserId)
             ->with('amenity')
             ->firstOrFail();
+
+        $this->ensureCancellationReasonsSeeded();
 
         $cancellationReasons = ReservationCancellationReason::where('active', true)
             ->where(function($q) {
