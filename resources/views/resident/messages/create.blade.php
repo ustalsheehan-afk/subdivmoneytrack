@@ -4,13 +4,14 @@
 @section('page-title', 'New Message')
 
 @section('content')
-<div class="max-w-5xl mx-auto pb-20" x-data="messageComposer({
-    initialCategory: @json(old('category', $category ?? 'general')),
-    initialSubject: @json(old('subject', $subject)),
-    initialBody: @json(old('body')),
+<div class="max-w-5xl mx-auto pb-20" x-data='messageComposer({
+    initialCategory: @json(old("category", $category ?? "general")),
+    initialSubject: @json(old("subject", $subject)),
+    initialBody: @json(old("body")),
     openTemplates: @json((bool) ($openTemplates ?? false)),
-    endpoint: @json(url('/api/message-templates'))
-})" x-init="init()">
+    preloadedTemplates: @json($preloadedTemplates ?? null),
+    endpoint: @json(url("/api/message-templates"))
+})' x-init="init()">
     <div class="flex items-center gap-4 mb-8">
         <a href="{{ route('resident.messages.index') }}" class="w-12 h-12 flex items-center justify-center rounded-2xl border border-gray-100 text-gray-400 hover:text-emerald-600 hover:border-emerald-100 hover:bg-emerald-50 transition-all">
             <i class="bi bi-arrow-left text-lg"></i>
@@ -37,7 +38,7 @@
                     <div class="space-y-2">
                         <label class="text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Category</label>
                         <div class="relative">
-                            <select name="category" x-model="selectedCategory" @change="onCategoryChange" class="w-full px-6 py-4 rounded-2xl border border-gray-100 bg-gray-50/50 text-sm font-bold appearance-none focus:bg-white focus:border-emerald-500 transition-all outline-none">
+                            <select name="category" x-model="selectedCategory" @change="onCategoryChange()" class="w-full px-6 py-4 rounded-2xl border border-gray-100 bg-gray-50/50 text-sm font-bold appearance-none focus:bg-white focus:border-emerald-500 transition-all outline-none">
                                 <option value="general">General Inquiry</option>
                                 <option value="payment">Payment Concern</option>
                                 <option value="complaint">Complaint</option>
@@ -159,6 +160,7 @@
 function messageComposer(config) {
     return {
         endpoint: config.endpoint,
+        preloadedTemplates: config.preloadedTemplates || null,
         selectedCategory: config.initialCategory || 'general',
         subject: config.initialSubject || '',
         body: config.initialBody || '',
@@ -238,6 +240,11 @@ function messageComposer(config) {
         },
 
         async preloadTemplates() {
+            if (this.preloadedTemplates && Object.keys(this.preloadedTemplates).length > 0) {
+                this.groupedTemplates = this.preloadedTemplates;
+                return;
+            }
+
             this.templatesLoading = true;
             this.templatesError = '';
 

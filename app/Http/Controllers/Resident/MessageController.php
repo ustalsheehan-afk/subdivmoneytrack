@@ -41,8 +41,35 @@ class MessageController extends Controller
         $subject = $request->query('subject');
         $category = $request->query('category', MessageTemplate::CATEGORY_GENERAL);
         $openTemplates = (bool) $request->boolean('open_templates');
-        
-        return view('resident.messages.create', compact('moduleType', 'moduleId', 'subject', 'category', 'openTemplates'));
+
+        // Preload templates server-side so the dropdown works even if the templates API
+        // is blocked by route/config caching or the browser cannot reach the endpoint.
+        // Always provide up to 10 templates per category (DB-first, then defaults).
+        $preloadedTemplates = [];
+        $dbTemplates = collect();
+        if (Schema::hasTable('message_templates')) {
+            $dbTemplates = MessageTemplate::query()
+                ->active()
+                ->orderByDesc('use_count')
+                ->orderByDesc('last_used_at')
+                ->orderBy('title')
+                ->get();
+        }
+
+        $merged = $this->mergeWithDefaultTemplates($dbTemplates, null);
+        $preloadedTemplates = $merged
+            ->groupBy('category')
+            ->map(fn ($items) => $items->values())
+            ->toArray();
+
+        return view('resident.messages.create', compact(
+            'moduleType',
+            'moduleId',
+            'subject',
+            'category',
+            'openTemplates',
+            'preloadedTemplates'
+        ));
     }
 
     public function store(Request $request)

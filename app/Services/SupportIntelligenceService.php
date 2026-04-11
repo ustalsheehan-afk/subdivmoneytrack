@@ -66,13 +66,13 @@ class SupportIntelligenceService
             ],
             'billing' => [
                 "Hello $residentName, I'm checking your account records now. One moment please.",
-                "You can view your latest statement in the 'Dues' section of the app. Would you like me to send a direct link?",
+                "You can view your latest statement in the 'Dues' section of the portal. Would you like me to send a direct link?",
                 "I've verified your payment. Your status is now updated to 'Good Standing'.",
                 "Your payment is currently being processed. It usually takes 24-48 hours to reflect in your account."
             ],
             'amenity' => [
                 "Hello $residentName, let me check the availability for those dates. One moment.",
-                "The clubhouse is available for your requested time! You can proceed with the reservation in the app.",
+                "The clubhouse is available for your requested time! You can proceed with the reservation in the portal.",
                 "I'm sorry, but that time slot is already booked. Would you like to check alternative dates?",
                 "Your reservation request has been received and is currently under review by the management."
             ],
@@ -130,7 +130,7 @@ class SupportIntelligenceService
             ],
             'billing' => [
                 ['label' => 'Verifying', 'text' => "We are currently verifying your payment records. Please wait for an update."],
-                ['label' => 'Statement', 'text' => "You can view your latest statement in the Dues section of the app."],
+                ['label' => 'Statement', 'text' => "You can view your latest statement in the Dues section of the portal."],
                 ['label' => 'Payment Rec', 'text' => "We have received your payment. Thank you!"],
             ],
             'amenity' => [

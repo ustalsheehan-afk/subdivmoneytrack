@@ -234,7 +234,17 @@
                         <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex flex-col gap-4 shrink-0 overflow-hidden">
                             {{-- Suggestion Pills (Dynamic) --}}
                             <div class="relative group">
-                                <div class="overflow-x-auto whitespace-nowrap flex gap-3 no-scrollbar scroll-smooth pb-1" id="suggestionScroll">
+                                <button type="button"
+                                        @click="scrollChips('sug', -240)"
+                                        x-show="chipScroll.sug.canLeft"
+                                        x-cloak
+                                        class="hidden md:flex items-center justify-center absolute left-1 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 border border-gray-200 text-gray-600 shadow-sm opacity-0 group-hover:opacity-60 hover:opacity-100 transition z-10">
+                                    <i class="bi bi-chevron-left text-sm"></i>
+                                </button>
+
+                                <div x-ref="sugScroll"
+                                     @scroll.passive="updateChipScroll('sug')"
+                                     class="overflow-x-auto flex flex-nowrap gap-3 no-scrollbar scroll-smooth pb-1">
                                     <div class="flex items-center gap-2 opacity-50 shrink-0">
                                         <i class="bi bi-stars text-emerald-500 text-sm"></i>
                                         <span class="text-[10px] font-black uppercase tracking-widest">Smart Replies:</span>
@@ -246,13 +256,33 @@
                                         </button>
                                     </template>
                                 </div>
+
+                                <button type="button"
+                                        @click="scrollChips('sug', 240)"
+                                        x-show="chipScroll.sug.canRight"
+                                        x-cloak
+                                        class="hidden md:flex items-center justify-center absolute right-1 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 border border-gray-200 text-gray-600 shadow-sm opacity-0 group-hover:opacity-60 hover:opacity-100 transition z-10">
+                                    <i class="bi bi-chevron-right text-sm"></i>
+                                </button>
+
                                 {{-- Fade indicators --}}
-                                <div class="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-gray-50/80 to-transparent pointer-events-none"></div>
+                                <div x-show="chipScroll.sug.canLeft" x-cloak class="absolute left-0 top-0 bottom-0 w-10 bg-gradient-to-r from-gray-50/90 to-transparent pointer-events-none"></div>
+                                <div x-show="chipScroll.sug.canRight" x-cloak class="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-gray-50/90 to-transparent pointer-events-none"></div>
                             </div>
 
                             {{-- Category Templates (Static) --}}
                             <div class="relative group border-t border-gray-100 pt-3">
-                                <div class="overflow-x-auto whitespace-nowrap flex gap-3 no-scrollbar scroll-smooth pb-1">
+                                <button type="button"
+                                        @click="scrollChips('temp', -240)"
+                                        x-show="chipScroll.temp.canLeft"
+                                        x-cloak
+                                        class="hidden md:flex items-center justify-center absolute left-1 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 border border-gray-200 text-gray-600 shadow-sm opacity-0 group-hover:opacity-60 hover:opacity-100 transition z-10">
+                                    <i class="bi bi-chevron-left text-sm"></i>
+                                </button>
+
+                                <div x-ref="tempScroll"
+                                     @scroll.passive="updateChipScroll('temp')"
+                                     class="overflow-x-auto flex flex-nowrap gap-3 no-scrollbar scroll-smooth pb-1">
                                     <div class="flex items-center gap-2 opacity-50 shrink-0">
                                         <i class="bi bi-journal-text text-blue-500 text-sm"></i>
                                         <span class="text-[10px] font-black uppercase tracking-widest">Common Templates:</span>
@@ -264,8 +294,18 @@
                                         </button>
                                     </template>
                                 </div>
+
+                                <button type="button"
+                                        @click="scrollChips('temp', 240)"
+                                        x-show="chipScroll.temp.canRight"
+                                        x-cloak
+                                        class="hidden md:flex items-center justify-center absolute right-1 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 border border-gray-200 text-gray-600 shadow-sm opacity-0 group-hover:opacity-60 hover:opacity-100 transition z-10">
+                                    <i class="bi bi-chevron-right text-sm"></i>
+                                </button>
+
                                 {{-- Fade indicators --}}
-                                <div class="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-gray-50/80 to-transparent pointer-events-none"></div>
+                                <div x-show="chipScroll.temp.canLeft" x-cloak class="absolute left-0 top-0 bottom-0 w-10 bg-gradient-to-r from-gray-50/90 to-transparent pointer-events-none"></div>
+                                <div x-show="chipScroll.temp.canRight" x-cloak class="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-gray-50/90 to-transparent pointer-events-none"></div>
                             </div>
                         </div>
 
@@ -312,10 +352,46 @@
             sending: false,
             loading: false,
             loadingThread: false,
+            chipScroll: {
+                sug: { canLeft: false, canRight: false },
+                temp: { canLeft: false, canRight: false },
+            },
 
             init() {
                 this.fetchThreads();
                 setInterval(() => this.fetchThreads(), 30000);
+                window.addEventListener('resize', () => this.initChipScroll());
+            },
+
+            getChipScrollEl(type) {
+                if (type === 'sug') return this.$refs.sugScroll;
+                if (type === 'temp') return this.$refs.tempScroll;
+                return null;
+            },
+
+            initChipScroll() {
+                this.$nextTick(() => {
+                    this.updateChipScroll('sug');
+                    this.updateChipScroll('temp');
+                });
+            },
+
+            updateChipScroll(type) {
+                const el = this.getChipScrollEl(type);
+                if (!el) return;
+
+                const maxScrollLeft = el.scrollWidth - el.clientWidth;
+                this.chipScroll[type].canLeft = el.scrollLeft > 0;
+                this.chipScroll[type].canRight = el.scrollLeft < (maxScrollLeft - 1);
+            },
+
+            scrollChips(type, delta) {
+                const el = this.getChipScrollEl(type);
+                if (!el) return;
+
+                el.scrollBy({ left: delta, behavior: 'smooth' });
+                setTimeout(() => this.updateChipScroll(type), 200);
+                setTimeout(() => this.updateChipScroll(type), 450);
             },
 
             async fetchThreads() {
@@ -357,6 +433,7 @@
                     }
                     this.currentThread = await response.json();
                     this.scrollToBottom();
+                    this.initChipScroll();
                 } catch (e) {
                     console.error('Thread Load Error:', e);
                     // Only alert if it's not a background refresh

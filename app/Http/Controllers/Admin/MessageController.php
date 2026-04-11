@@ -263,13 +263,13 @@ class MessageController extends Controller
                     break;
                 case 'reject_reservation':
                     $thread->update(['status' => 'closed']);
-                    $autoReply = "I'm sorry, but we cannot fulfill this reservation request at this time. Please check the app for available slots.";
+                    $autoReply = "I'm sorry, but we cannot fulfill this reservation request at this time. Please check the portal for available slots.";
                     break;
                 case 'assign_staff':
                     $autoReply = "I've assigned a staff member to handle your maintenance request. They will be in touch shortly.";
                     break;
                 case 'send_payment_link':
-                    $autoReply = "You can settle your balance directly through the 'Payments' section in the app. Here is a quick link: " . route('resident.payments.index');
+                    $autoReply = "You can settle your balance directly through the 'Payments' section in the portal. Here is a quick link: " . route('resident.payments.index');
                     break;
                 case 'mark_as_paid':
                     $thread->update(['status' => 'closed']);
