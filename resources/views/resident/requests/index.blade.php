@@ -61,8 +61,8 @@
                                 <td class="px-8 py-6">
                                     <div class="flex items-center gap-5">
                                         <div class="relative shrink-0">
-                                            @if($request->photo)
-                                                <img src="{{ asset('storage/' . $request->photo) }}" 
+                                            @if($request->photo_url)
+                                                <img src="{{ $request->photo_url }}" 
                                                      class="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-md group-hover:scale-110 transition-transform duration-500">
                                             @else
                                                 <div class="w-14 h-14 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">

@@ -60,7 +60,10 @@
               addEquipment() { this.equipmentList.push({ name: '', price: '' }); },
               removeEquipment(index) { this.equipmentList.splice(index, 1); },
               imagePreview: null,
+              imageFileName: 'No file selected',
+              openImagePicker() { this.$refs.imageInput.click() },
               fileChosen(event) {
+                  this.imageFileName = event.target.files[0]?.name || 'No file selected'
                   this.fileToDataUrl(event, src => this.imagePreview = src)
               },
               fileToDataUrl(event, callback) {
@@ -270,27 +273,33 @@
                 {{-- Image Upload --}}
                 <div class="glass-card p-8 space-y-6">
                     <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Amenity Photo</label>
-                    <div class="relative group/upload">
-                        <div class="border-2 border-dashed border-gray-100 rounded-3xl p-8 text-center bg-gray-50/50 group-hover/upload:bg-emerald-50/30 group-hover/upload:border-emerald-200 transition-all duration-300">
-                            <input type="file" name="image" accept="image/*" @change="fileChosen"
-                                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                            
-                            <div x-show="!imagePreview" class="space-y-3">
-                                <div class="w-16 h-16 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center mx-auto text-emerald-500 group-hover/upload:scale-110 transition-transform duration-500">
-                                    <i class="bi bi-cloud-arrow-up text-2xl"></i>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] font-black text-gray-900 uppercase tracking-widest">Upload Image</p>
-                                    <p class="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-tighter">PNG, JPG up to 5MB</p>
-                                </div>
-                            </div>
+                    <div class="rounded-3xl border-2 border-dashed border-gray-100 bg-gray-50/50 p-8 text-center transition-all duration-300 hover:border-emerald-200 hover:bg-emerald-50/30">
+                        <input type="file" name="image" accept="image/*" x-ref="imageInput" @change="fileChosen" class="hidden">
 
-                            <div x-show="imagePreview" class="relative z-20 animate-fade-in">
-                                <img :src="imagePreview" class="h-40 mx-auto rounded-2xl object-cover shadow-xl ring-8 ring-white/50">
-                                <div class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 backdrop-blur-sm border border-gray-100 text-[9px] font-black text-gray-500 uppercase tracking-widest shadow-sm">
-                                    <i class="bi bi-arrow-repeat"></i> Change Photo
-                                </div>
+                        <div x-show="!imagePreview" class="space-y-4">
+                            <div class="w-16 h-16 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center mx-auto text-emerald-500">
+                                <i class="bi bi-cloud-arrow-up text-2xl"></i>
                             </div>
+                            <div>
+                                <p class="text-[10px] font-black text-gray-900 uppercase tracking-widest">Upload Image</p>
+                                <p class="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-tighter">PNG, JPG up to 5MB</p>
+                            </div>
+                        </div>
+
+                        <div x-show="imagePreview" class="relative z-20 animate-fade-in space-y-4">
+                            <img :src="imagePreview" class="h-40 mx-auto rounded-2xl object-cover shadow-xl ring-8 ring-white/50">
+                            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 backdrop-blur-sm border border-gray-100 text-[9px] font-black text-gray-500 uppercase tracking-widest shadow-sm">
+                                <i class="bi bi-arrow-repeat"></i> Change Photo
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex flex-col items-center gap-3">
+                            <button type="button" @click="openImagePicker()" class="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-[10px] font-black uppercase tracking-widest text-gray-700 border border-gray-200 shadow-sm transition-colors hover:border-emerald-200 hover:text-emerald-700">
+                                <i class="bi bi-folder2-open"></i>
+                                Choose Photo
+                            </button>
+                            <p class="text-[9px] font-bold uppercase tracking-tighter text-gray-400" x-text="imageFileName"></p>
+                        </div>
                         </div>
                     </div>
                 </div>

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 class ServiceRequest extends Model
 {
@@ -40,6 +42,51 @@ class ServiceRequest extends Model
     public function amenity()
     {
         return $this->belongsTo(Amenity::class, 'amenity_id');
+    }
+
+    public function getPhotoUrlAttribute(): ?string
+    {
+        if (! $this->photo) {
+            return null;
+        }
+
+        if (preg_match('/^https?:\/\//i', $this->photo) || str_starts_with($this->photo, '//')) {
+            return $this->photo;
+        }
+
+        $normalizedPath = str_replace('\\', '/', trim((string) $this->photo));
+        $normalizedPath = ltrim($normalizedPath, '/');
+
+        $candidates = [$normalizedPath];
+
+        foreach (['storage/app/public/', 'app/public/', 'public/', 'storage/'] as $prefix) {
+            if (str_starts_with($normalizedPath, $prefix)) {
+                $candidates[] = substr($normalizedPath, strlen($prefix));
+            }
+        }
+
+        $basename = basename($normalizedPath);
+        if (! str_contains($normalizedPath, '/') && $basename !== '.' && $basename !== '..') {
+            $candidates[] = 'requests/' . $basename;
+        }
+
+        if (str_starts_with($normalizedPath, 'requests/')) {
+            $candidates[] = 'requests/' . basename($normalizedPath);
+        }
+
+        foreach (array_unique($candidates) as $candidate) {
+            $candidate = ltrim($candidate, '/');
+
+            if ($candidate === '') {
+                continue;
+            }
+
+            if (Storage::disk('public')->exists($candidate) || File::exists(public_path('storage/' . $candidate))) {
+                return asset('storage/' . $candidate);
+            }
+        }
+
+        return null;
     }
 
     public const STATUS_PENDING  = 'pending';

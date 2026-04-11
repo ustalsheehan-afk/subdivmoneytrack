@@ -81,17 +81,17 @@
                             <label for="photo"
                                    class="flex items-center justify-center gap-3 w-full px-6 py-4 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl text-[10px] font-black text-gray-400 uppercase tracking-widest hover:border-emerald-500 hover:bg-emerald-500/5 hover:text-emerald-600 transition-all cursor-pointer">
                                 <i class="bi bi-camera-fill text-lg"></i>
-                                <span id="photoLabel">{{ $requestItem->photo ? 'Change Photo' : 'Upload Photo' }}</span>
+                                <span id="photoLabel">{{ $requestItem->photo_url ? 'Change Photo' : 'Upload Photo' }}</span>
                             </label>
                         </div>
                     </div>
 
                     {{-- Image Preview --}}
-                    <div id="imagePreviewContainer" class="{{ $requestItem->photo ? '' : 'hidden' }} pt-8 border-t border-gray-50 text-center animate-fade-in">
+                        <div id="imagePreviewContainer" class="{{ $requestItem->photo_url ? '' : 'hidden' }} pt-8 border-t border-gray-50 text-center animate-fade-in">
                         <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">PHOTO PREVIEW</p>
                         <div class="relative inline-block group/preview">
                             <div class="absolute inset-0 bg-emerald-500/20 rounded-[32px] blur-xl"></div>
-                            <img id="imagePreview" src="{{ $requestItem->photo ? asset('storage/' . $requestItem->photo) : '#' }}" 
+                                <img id="imagePreview" src="{{ $requestItem->photo_url ?? '#' }}" 
                                  class="max-h-64 rounded-[32px] border-4 border-white shadow-2xl relative z-10">
                             <button type="button" onclick="clearImage()"
                                     class="absolute -top-3 -right-3 w-10 h-10 bg-red-500 text-white rounded-2xl flex items-center justify-center shadow-2xl hover:bg-red-600 hover:scale-110 transition-all z-20 border-4 border-white">
@@ -162,7 +162,7 @@ function clearImage(){
     const label = document.getElementById('photoLabel');
 
     input.value = '';
-    preview.src = '{{ $requestItem->photo ? asset("storage/" . $requestItem->photo) : "#" }}';
+    preview.src = '{{ $requestItem->photo_url ?? "#" }}';
     if (preview.src.endsWith('#')) {
         container.classList.add('hidden');
         label.textContent = 'Upload Photo';

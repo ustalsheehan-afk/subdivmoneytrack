@@ -67,11 +67,11 @@
                         {{ $requestItem->description }}
                     </div>
 
-                    @if($requestItem->photo)
+                    @if($requestItem->photo_url)
                         <div class="mt-8">
                             <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Attached evidence</p>
-                            <button type="button" class="group block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" onclick="window.open('{{ asset('storage/' . $requestItem->photo) }}', '_blank')">
-                                <img src="{{ asset('storage/' . $requestItem->photo) }}" alt="Request attachment" class="max-h-96 w-full object-cover transition-transform duration-300 group-hover:scale-[1.01]">
+                            <button type="button" class="group block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" onclick="window.open('{{ $requestItem->photo_url }}', '_blank')">
+                                <img src="{{ $requestItem->photo_url }}" alt="Request attachment" class="max-h-96 w-full object-cover transition-transform duration-300 group-hover:scale-[1.01]">
                             </button>
                         </div>
                     @endif
