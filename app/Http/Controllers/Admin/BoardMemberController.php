@@ -135,20 +135,15 @@ class BoardMemberController extends Controller
             abort(404);
         }
 
-        $mime = Storage::disk('public')->mimeType($path) ?? 'application/octet-stream';
-        $stream = Storage::disk('public')->readStream($path);
+        // Use a filesystem path + response()->file() for broad compatibility and
+        // to avoid relying on adapter-specific mimeType() methods.
+        $fullPath = Storage::disk('public')->path($path);
 
-        if ($stream === false) {
+        if (!is_file($fullPath)) {
             abort(404);
         }
 
-        return response()->stream(function () use ($stream) {
-            fpassthru($stream);
-            if (is_resource($stream)) {
-                fclose($stream);
-            }
-        }, 200, [
-            'Content-Type' => $mime,
+        return response()->file($fullPath, [
             'Cache-Control' => 'private, max-age=3600',
         ]);
     }
