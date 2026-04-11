@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BoardMember;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class BoardMemberController extends Controller
 {
@@ -56,7 +57,11 @@ class BoardMemberController extends Controller
         $data['order_index'] = 0; // Default
 
         if ($request->hasFile('photo')) {
-            $data['photo'] = $request->file('photo')->store('board-members', 'public');
+            Storage::disk('public')->makeDirectory('board-members');
+            $file = $request->file('photo');
+            $filename = Str::uuid()->toString() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storePubliclyAs('board-members', $filename, 'public');
+            $data['photo'] = $path;
         }
 
         BoardMember::create($data);
@@ -89,7 +94,11 @@ class BoardMemberController extends Controller
             if ($board->photo) {
                 Storage::disk('public')->delete($board->photo);
             }
-            $data['photo'] = $request->file('photo')->store('board-members', 'public');
+            Storage::disk('public')->makeDirectory('board-members');
+            $file = $request->file('photo');
+            $filename = Str::uuid()->toString() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storePubliclyAs('board-members', $filename, 'public');
+            $data['photo'] = $path;
         }
 
         $board->update($data);
