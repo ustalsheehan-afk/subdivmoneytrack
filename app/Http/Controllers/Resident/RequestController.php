@@ -8,7 +8,6 @@ use App\Models\Resident;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\FileService;
-use Illuminate\Support\Facades\Storage;
 
 class RequestController extends Controller
 {
@@ -218,11 +217,9 @@ class RequestController extends Controller
 
         // Handle Photo Update
         if ($request->hasFile('photo')) {
-            // Delete old photo if exists
-            if ($requestItem->photo) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($requestItem->photo);
-            }
-            $updateData['photo'] = $request->file('photo')->store('requests', 'public');
+            // Keep upload/delete behavior consistent with shared-hosting sync strategy.
+            FileService::deleteAndSync($requestItem->photo);
+            $updateData['photo'] = FileService::storeAndSync($request->file('photo'), 'requests');
         }
 
         $requestItem->update($updateData);
@@ -250,9 +247,7 @@ class RequestController extends Controller
                 ->with('error', 'Only pending requests can be deleted.');
         }
 
-        if ($requestItem->photo) {
-            Storage::disk('public')->delete($requestItem->photo);
-        }
+        FileService::deleteAndSync($requestItem->photo);
 
         $requestItem->delete();
 
