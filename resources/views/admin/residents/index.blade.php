@@ -63,7 +63,7 @@
         <div class="flex-1 max-w-md">
             <form method="GET" action="{{ route('admin.residents.index') }}" class="relative group">
                 <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-600 transition-colors"></i>
-                <input type="text" name="search" value="{{ request('search') }}" 
+                <input id="searchInput" type="text" name="search" value="{{ request('search') }}" autocomplete="off"
                     placeholder="Search name, email, or property..." 
                     class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all placeholder-gray-400">
                 
@@ -341,6 +341,20 @@
                 closeAllDropdowns();
             }
         });
+
+        // Live search (debounced) for the Residents list
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            const form = searchInput.closest('form');
+            let searchDebounceTimer;
+
+            searchInput.addEventListener('input', function () {
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(() => {
+                    if (form) form.submit();
+                }, 350);
+            });
+        }
     });
 
     // ---------------------------------------------------------
