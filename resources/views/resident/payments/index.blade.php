@@ -166,6 +166,10 @@
                                 $displayStatus = strtolower($due->display_status ?? $due->status);
                                 $isPaid = $displayStatus === 'paid';
                                 $isPending = $displayStatus === 'pending';
+                                $approvedPayment = $due->payments
+                                    ->where('status', \App\Models\Payment::STATUS_APPROVED)
+                                    ->sortByDesc('date_paid')
+                                    ->first();
 
                                 $statusLabel = match($displayStatus) {
                                     'paid' => 'Paid',
@@ -223,9 +227,17 @@
                                             Processing
                                         </button>
                                     @else
-                                        <div class="flex items-center justify-end gap-1 text-emerald-600">
-                                            <i class="bi bi-check-lg text-lg"></i>
-                                        </div>
+                                        @if($approvedPayment)
+                                            <a href="{{ route('resident.payments.receipt', $approvedPayment->id) }}"
+                                               class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
+                                                <i class="bi bi-receipt text-xs"></i>
+                                                Receipt
+                                            </a>
+                                        @else
+                                            <div class="flex items-center justify-end gap-1 text-emerald-600">
+                                                <i class="bi bi-check-lg text-lg"></i>
+                                            </div>
+                                        @endif
                                     @endif
                                 </td>
                             </tr>
@@ -241,6 +253,10 @@
                         $displayStatus = strtolower($due->display_status ?? $due->status);
                         $isPaid = $displayStatus === 'paid';
                         $isPending = $displayStatus === 'pending';
+                        $approvedPayment = $due->payments
+                            ->where('status', \App\Models\Payment::STATUS_APPROVED)
+                            ->sortByDesc('date_paid')
+                            ->first();
 
                         $statusLabel = match($displayStatus) {
                             'paid' => 'Paid',
@@ -297,9 +313,17 @@
                                         Processing
                                     </button>
                                 @else
-                                    <div class="flex items-center justify-end gap-1 text-emerald-600">
-                                        <i class="bi bi-check-lg"></i>
-                                    </div>
+                                    @if($approvedPayment)
+                                        <a href="{{ route('resident.payments.receipt', $approvedPayment->id) }}"
+                                           class="inline-flex items-center justify-center gap-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-lg transition-colors shadow-sm">
+                                            <i class="bi bi-receipt"></i>
+                                            Receipt
+                                        </a>
+                                    @else
+                                        <div class="flex items-center justify-end gap-1 text-emerald-600">
+                                            <i class="bi bi-check-lg"></i>
+                                        </div>
+                                    @endif
                                 @endif
                             </div>
                         </div>

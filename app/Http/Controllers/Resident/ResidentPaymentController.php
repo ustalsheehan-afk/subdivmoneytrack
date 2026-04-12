@@ -209,4 +209,31 @@ class ResidentPaymentController extends Controller
         return redirect()->route('resident.payments.index')
             ->with('success', 'Payment submitted! Please wait for admin approval.');
     }
+
+    /**
+     * Show receipt for an approved resident due payment.
+     */
+    public function receipt($id)
+    {
+        $user = Auth::user();
+        $resident = $user?->resident;
+
+        if (! $resident) {
+            return redirect()->route('resident.dashboard')->with('error', 'Resident profile not found.');
+        }
+
+        $payment = Payment::with(['resident', 'due'])
+            ->where('id', $id)
+            ->where('resident_id', $resident->id)
+            ->where('status', Payment::STATUS_APPROVED)
+            ->whereNotNull('due_id')
+            ->first();
+
+        if (! $payment) {
+            return redirect()->route('resident.payments.index')
+                ->with('error', 'Receipt is only available for approved payments.');
+        }
+
+        return view('admin.payments.receipt', compact('payment'));
+    }
 }

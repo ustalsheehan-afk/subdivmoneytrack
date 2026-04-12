@@ -401,6 +401,7 @@ Route::middleware(['auth', 'resident'])->prefix('resident')->name('resident.')->
     Route::get('payments', [ResidentPaymentController::class, 'index'])->name('payments.index');
     Route::get('payments/{id}/pay', [ResidentPaymentController::class, 'pay'])->name('payments.pay'); 
     Route::post('payments/{id}/process', [ResidentPaymentController::class, 'processPayment'])->name('payments.process');
+    Route::get('payments/{id}/receipt', [ResidentPaymentController::class, 'receipt'])->name('payments.receipt');
 
     // Penalties
     Route::get('penalties', [ResidentPenaltyController::class, 'index'])->name('penalties.index');
