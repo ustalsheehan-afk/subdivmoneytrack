@@ -309,25 +309,72 @@
                             </div>
                         </div>
 
-                        {{-- Simplified Reply Box --}}
+                        {{-- Improved Reply Box --}}
                         <div class="px-6 py-4 bg-white border-t border-gray-100 shrink-0">
-                            <div class="relative group">
-                                <div class="absolute left-4 top-4">
+                            <div class="flex items-end gap-3">
+                                {{-- Left Side: Toggle & Attach --}}
+                                <div class="flex items-center gap-2 mb-1">
                                     <button @click="isInternal = !isInternal" 
-                                            :class="isInternal ? 'text-amber-500 bg-amber-50 border-amber-200 shadow-lg' : 'text-gray-300 hover:text-emerald-500 hover:bg-gray-50'"
-                                            class="w-10 h-10 rounded-xl border border-transparent flex items-center justify-center transition-all" title="Toggle Internal Note">
+                                            :class="isInternal ? 'text-amber-500 bg-amber-50 border-amber-200 shadow-lg' : 'text-gray-400 hover:text-emerald-500 hover:bg-gray-50'"
+                                            class="w-10 h-10 rounded-xl border border-transparent flex items-center justify-center transition-all shrink-0" title="Toggle Internal Note">
                                         <i class="bi" :class="isInternal ? 'bi-shield-lock-fill' : 'bi-shield-lock'" class="text-lg"></i>
                                     </button>
+
+                                    <input x-ref="attachmentInput"
+                                           type="file"
+                                           class="hidden"
+                                           accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip,.rar"
+                                           @change="setAttachment($event)">
+
+                                    <button @click="$refs.attachmentInput.click()"
+                                        class="w-10 h-10 bg-white border border-gray-200 text-gray-400 rounded-xl hover:text-emerald-600 hover:border-emerald-200 transition-all flex items-center justify-center shrink-0"
+                                        title="Attach file">
+                                        <i class="bi bi-paperclip text-lg"></i>
+                                    </button>
                                 </div>
-                                <textarea x-model="replyBody" :placeholder="isInternal ? 'Write an internal coordination note...' : 'Type your message here...'" 
-                                    class="w-full pl-16 pr-32 py-4 rounded-2xl bg-gray-50 border border-gray-200 text-xs font-medium focus:bg-white focus:border-emerald-500 outline-none transition-all resize-none shadow-inner" rows="2"></textarea>
+
+                                {{-- Center: Message Input --}}
+                                <div class="flex-1 min-w-0">
+                                    <textarea x-model="replyBody" 
+                                        :placeholder="isInternal ? 'Write an internal coordination note...' : 'Type your message here...'" 
+                                        class="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 text-sm font-medium focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none transition-all resize-none shadow-inner" 
+                                        rows="1"
+                                        @input="$el.style.height = 'auto'; $el.style.height = $el.scrollHeight + 'px'"
+                                        style="max-height: 150px; min-height: 48px;"></textarea>
+                                </div>
                                 
-                                <button @click="sendReply" :disabled="!replyBody.trim() || sending" 
-                                    class="absolute right-3 bottom-3 px-6 h-10 bg-gray-900 text-emerald-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:shadow-2xl hover:shadow-emerald-500/20 disabled:opacity-50 transition-all flex items-center gap-2 active:scale-95">
-                                    <span x-show="!sending">Send</span>
-                                    <i x-show="!sending" class="bi bi-send-fill text-xs"></i>
-                                    <i x-show="sending" class="bi bi-arrow-repeat animate-spin"></i>
-                                </button>
+                                {{-- Right Side: Send Button --}}
+                                <div class="mb-1">
+                                    <button @click="sendReply" :disabled="(!replyBody.trim() && !attachmentFile) || sending" 
+                                        class="w-12 h-12 bg-gray-900 text-emerald-400 rounded-2xl flex items-center justify-center hover:shadow-xl hover:shadow-emerald-500/20 disabled:opacity-50 transition-all active:scale-95 shrink-0">
+                                        <i x-show="!sending" class="bi bi-send-fill text-lg"></i>
+                                        <i x-show="sending" class="bi bi-arrow-repeat animate-spin"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{-- Previews --}}
+                            <div class="flex flex-wrap gap-4 mt-3">
+                                <template x-if="attachmentName">
+                                    <div class="px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center gap-3">
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            <i class="bi bi-paperclip text-emerald-600"></i>
+                                            <span class="text-[10px] font-bold text-emerald-800 truncate max-w-[200px]" x-text="attachmentName"></span>
+                                        </div>
+                                        <button @click="clearAttachment()" class="text-[10px] font-black uppercase tracking-widest text-emerald-700 hover:text-emerald-900">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                </template>
+
+                                <template x-if="attachmentPreview">
+                                    <div class="relative group">
+                                        <img :src="attachmentPreview" alt="Attachment preview" class="h-20 w-20 object-cover rounded-xl border border-gray-200 shadow-sm">
+                                        <button @click="clearAttachment()" class="absolute -top-2 -right-2 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center text-red-500 shadow-sm opacity-0 group-hover:opacity-100 transition-all">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -348,6 +395,9 @@
             selectedThreadId: null,
             currentThread: null,
             replyBody: '',
+            attachmentFile: null,
+            attachmentName: '',
+            attachmentPreview: '',
             isInternal: false,
             sending: false,
             loading: false,
@@ -444,21 +494,24 @@
             },
 
             async sendReply() {
-                if (!this.replyBody.trim() || this.sending) return;
+                if ((!this.replyBody.trim() && !this.attachmentFile) || this.sending) return;
                 this.sending = true;
 
                 try {
+                    const formData = new FormData();
+                    formData.append('body', this.replyBody);
+                    formData.append('is_internal', this.isInternal ? '1' : '0');
+                    if (this.attachmentFile) {
+                        formData.append('attachment', this.attachmentFile);
+                    }
+
                     const response = await fetch(`{{ url('admin/messages/support') }}/${this.selectedThreadId}/reply`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'X-Requested-With': 'XMLHttpRequest'
                         },
-                        body: JSON.stringify({ 
-                            body: this.replyBody,
-                            is_internal: this.isInternal
-                        })
+                        body: formData
                     });
                     
                     const data = await response.json();
@@ -466,12 +519,47 @@
                         this.currentThread.messages.push(data.message);
                         if (!this.isInternal) this.currentThread.status = 'replied';
                         this.replyBody = '';
+                        this.clearAttachment();
                         this.isInternal = false;
                         this.scrollToBottom();
                         this.fetchThreads();
                     }
                 } finally {
                     this.sending = false;
+                }
+            },
+
+            setAttachment(event) {
+                const file = event.target.files[0];
+                if (!file) {
+                    this.clearAttachment();
+                    return;
+                }
+
+                this.attachmentFile = file;
+                this.attachmentName = file.name;
+
+                if (this.attachmentPreview) {
+                    URL.revokeObjectURL(this.attachmentPreview);
+                    this.attachmentPreview = '';
+                }
+
+                if ((file.type || '').startsWith('image/')) {
+                    this.attachmentPreview = URL.createObjectURL(file);
+                }
+            },
+
+            clearAttachment() {
+                if (this.attachmentPreview) {
+                    URL.revokeObjectURL(this.attachmentPreview);
+                }
+
+                this.attachmentFile = null;
+                this.attachmentName = '';
+                this.attachmentPreview = '';
+
+                if (this.$refs.attachmentInput) {
+                    this.$refs.attachmentInput.value = '';
                 }
             },
 

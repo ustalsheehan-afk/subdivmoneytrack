@@ -159,9 +159,9 @@ class MessageController extends Controller
     public function reply(Request $request, MessageThread $thread)
     {
         $request->validate([
-            'body' => 'required|string',
+            'body' => 'nullable|string|required_without:attachment',
             'is_internal' => 'boolean',
-            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,csv,txt,zip,rar|max:10240',
         ]);
 
         $message = DB::transaction(function () use ($request, $thread) {
@@ -170,12 +170,17 @@ class MessageController extends Controller
                 $attachmentPath = $request->file('attachment')->store('messages', 'public');
             }
 
+            $body = trim((string) $request->input('body', ''));
+            if ($body === '' && $attachmentPath) {
+                $body = 'Sent an attachment.';
+            }
+
             $isInternal = $request->boolean('is_internal');
 
             $msg = $thread->messages()->create([
                 'sender_type' => User::class,
                 'sender_id' => Auth::id(),
-                'body' => $request->body,
+                'body' => $body,
                 'attachment' => $attachmentPath,
                 'is_internal' => $isInternal,
             ]);
