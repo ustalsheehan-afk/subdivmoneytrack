@@ -267,14 +267,10 @@ body::before {
 
 .input-custom:focus + .input-icon { color: var(--brand-accent); }
 
-.password-toggle {
-    position: absolute;
-    right: 1rem; /* move closer to edge */
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    cursor: pointer;
-    z-index: 2;
+/* Keep only the browser native reveal button and make it visible on dark input */
+input[type="password"]::-ms-reveal {
+    filter: invert(1) brightness(2);
+    opacity: 1;
 }
 
 /* BUTTON */
@@ -310,13 +306,15 @@ body::before {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
+    gap: 0.75rem;
     margin-top: 1.5rem;
 }
 
 .remember-me { display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.875rem; cursor: pointer; }
 .remember-me input { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--glass-border); background: transparent; cursor: pointer; }
 
-.forgot-link { color: var(--brand-accent); font-size: 0.875rem; font-weight: 600; text-decoration: none; transition: var(--transition-smooth); }
+.forgot-link { color: var(--brand-accent); font-size: 0.875rem; font-weight: 600; text-decoration: none; transition: var(--transition-smooth); display: inline-flex; align-items: center; line-height: 1; }
 .forgot-link:hover { opacity: 0.8; }
 
 .signup-footer { text-align: center; margin-top: 3rem; color: var(--text-muted); font-size: 0.875rem; }
@@ -419,11 +417,12 @@ body::before {
         font-size: 0.95rem;
     }
 
-    /* Stack Footer Elements */
+    /* Keep footer controls aligned on one row */
     .form-footer {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
         margin-top: 1.25rem;
     }
 
@@ -505,7 +504,6 @@ input:-webkit-autofill:focus {
                     <div class="input-wrapper">
                         <input type="password" id="password" name="password" class="input-custom" placeholder="Enter your password" required>
                         <i class="bi bi-lock input-icon"></i>
-                        <i class="bi bi-eye password-toggle" onclick="togglePassword()"></i>
                     </div>
                 </div>
 
@@ -523,25 +521,10 @@ input:-webkit-autofill:focus {
             </form>
 
             <div class="signup-footer animate-reveal delay-7">
-                Don't have an account? <a href="#">Contact Admin</a>
+                Don't have an account? <a href="mailto:{{ config('mail.from.address', 'support@subdivmoneytrack.site') }}?subject={{ rawurlencode('Account Access Request') }}">Contact Admin</a>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-function togglePassword() {
-    const passwordInput = document.getElementById('password');
-    const toggleIcon = document.querySelector('.password-toggle');
-    
-    if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        toggleIcon.classList.replace('bi-eye', 'bi-eye-slash');
-    } else {
-        passwordInput.type = 'password';
-        toggleIcon.classList.replace('bi-eye-slash', 'bi-eye');
-    }
-}
-</script>
 
 @endsection
