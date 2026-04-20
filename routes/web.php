@@ -81,6 +81,22 @@ Route::get('/fix-storage', function () {
     return 'Storage linked!';
 });
 
+// Fallback for message attachments when public/storage symlink is missing on shared hosting.
+Route::get('storage/messages/{path}', function (string $path) {
+    $path = ltrim($path, '/');
+
+    if (str_contains($path, '..')) {
+        abort(404);
+    }
+
+    $relativePath = 'messages/' . $path;
+    if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($relativePath)) {
+        abort(404);
+    }
+
+    return response()->file(storage_path('app/public/' . $relativePath));
+})->where('path', '.*');
+
 /*
 |--------------------------------------------------------------------------
 | MAINTENANCE ROUTE (SHARED HOSTING FIX)
